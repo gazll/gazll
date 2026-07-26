@@ -21,20 +21,20 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
 
-      # Variables, not Secrets: neither value is a secret (the browser needs
-      # both and they are readable in the page source). Keeping them out of
-      # the repo only stops GitHub scraping; real protection is the ID token
-      # check in Code.gs. Unset -> site still deploys, in offline mode.
+      # Read from Secrets. Note these are not actually secret — the browser
+      # needs both, so they are readable in the deployed page source. Storing
+      # them here only keeps them out of the repo; real protection is the ID
+      # token check in Code.gs. Unset -> site still deploys, in offline mode.
       - name: Generate config.js
         env:
-          CLIENT_ID: ${{ vars.GAZL_GOOGLE_CLIENT_ID }}
-          SCRIPT_URL: ${{ vars.GAZL_SCRIPT_URL }}
+          CLIENT_ID: ${{ secrets.GAZL_GOOGLE_CLIENT_ID }}
+          SCRIPT_URL: ${{ secrets.GAZL_SCRIPT_URL }}
         run: |
           # Report lengths, not values: enough to tell "unset" from "set" when
           # the site comes up Offline, without needing to read the values.
@@ -42,7 +42,7 @@ jobs:
           echo "GAZL_SCRIPT_URL:       ${#SCRIPT_URL} chars"
 
           if [ -z "$CLIENT_ID" ] || [ -z "$SCRIPT_URL" ]; then
-            echo "::warning::Variables not visible to this run - deploying in OFFLINE mode. Check: (1) they are under Variables, not Secrets; (2) they are on THIS repo; (3) the run started after the variables were saved - re-run if not."
+            echo "::warning::Secrets not visible to this run - deploying in OFFLINE mode. Check: (1) names are exactly GAZL_GOOGLE_CLIENT_ID and GAZL_SCRIPT_URL; (2) they are on THIS repo, under Secrets > Actions; (3) the run started after they were saved - re-run if not."
           else
             echo "Sync enabled."
           fi
@@ -65,11 +65,11 @@ jobs:
           done
           [ "$fail" -eq 0 ] || exit 1
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: public
 
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
