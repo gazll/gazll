@@ -9,7 +9,7 @@
    localStorage and holds its queue until a token exists again. */
 import { GOOGLE_CLIENT_ID, SCRIPT_URL } from '../config.js';
 
-const GIS_SRC = 'https://accounts.google.com/gsi/client';
+const GIS_SRC = 'https://accounts.google.com/gsi/client?hl=en';
 const SESSION_KEY = 'gazl.session';
 const SKEW_MS = 90_000;   // expire early so an in-flight request cannot die mid-way
 
@@ -29,7 +29,7 @@ export const Auth = {
   get enabled() { return Boolean(GOOGLE_CLIENT_ID && SCRIPT_URL); },
   get user() { return this.session; },
   get isAdmin() { return this.session?.role === 'admin'; },
-  get displayName() { return this.session?.name || this.session?.email || 'Bạn'; },
+  get displayName() { return this.session?.name || this.session?.email || 'You'; },
   get avatar() { return this.session?.picture || ''; },
 
   /** A usable token, or null. Checked before every request. */
@@ -164,7 +164,7 @@ function loadGis() {
     s.src = GIS_SRC;
     s.async = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Không tải được Google Identity Services.'));
+    s.onerror = () => reject(new Error('Could not load Google Identity Services.'));
     document.head.appendChild(s);
   });
   return gisReady;
@@ -187,11 +187,11 @@ export function mountAuthUI(el) {
 
 function chipHtml() {
   if (!Auth.enabled) {
-    return '<span class="authchip offline" title="Chưa cấu hình backend — tiến độ chỉ lưu trên máy này. Xem README để bật sync.">'
+    return '<span class="authchip offline" title="Backend is not configured. Progress is saved on this device only. See README to enable sync.">'
       + '<span class="dot"></span>Offline</span>';
   }
   if (Auth.error) {
-    return '<span class="authchip error" title="' + esc(Auth.error) + '"><span class="dot"></span>Lỗi đăng nhập</span>';
+    return '<span class="authchip error" title="' + esc(Auth.error) + '"><span class="dot"></span>Sign-in error</span>';
   }
   if (!Auth.ready) return '<span class="authchip loading">…</span>';
 
@@ -204,14 +204,14 @@ function chipHtml() {
   // Keep the identity visible while expired, so it reads as "re-auth", not "signed out".
   if (Auth.expired) {
     return '<div class="authchip stale">' + av
-      + '<div class="gis-holder" id="gisBtn" title="Phiên đã hết hạn, đăng nhập lại để tiếp tục sync"></div>'
-      + '<button class="btn-signout" id="btnSignOut" title="Đăng xuất" aria-label="Đăng xuất">⏻</button></div>';
+      + '<div class="gis-holder" id="gisBtn" title="Your session expired. Sign in again to continue syncing."></div>'
+      + '<button class="btn-signout" id="btnSignOut" title="Sign out" aria-label="Sign out">⏻</button></div>';
   }
 
   return '<div class="authchip signed">' + av
     + '<span class="authname" title="' + esc(Auth.session.email) + '">' + esc(shortName(Auth.displayName)) + '</span>'
     + (Auth.isAdmin ? '<span class="rolebadge">ADMIN</span>' : '')
-    + '<button class="btn-signout" id="btnSignOut" title="Đăng xuất" aria-label="Đăng xuất">⏻</button>'
+    + '<button class="btn-signout" id="btnSignOut" title="Sign out" aria-label="Sign out">⏻</button>'
     + '</div>';
 }
 
@@ -221,10 +221,11 @@ function renderSignInButton(holder) {
     try {
       google.accounts.id.renderButton(holder, {
         type: 'standard', theme: 'outline', size: 'medium',
-        shape: 'pill', text: 'signin', logo_alignment: 'center'
+        shape: 'pill', text: 'signin_with', logo_alignment: 'center',
+        locale: 'en'
       });
     } catch (e) {
-      holder.innerHTML = '<button class="btn-ghost">Đăng nhập</button>';
+      holder.innerHTML = '<button class="btn-ghost">Sign in</button>';
       holder.querySelector('button').addEventListener('click', () => Auth.signIn());
     }
   }).catch(() => { holder.textContent = ''; });
