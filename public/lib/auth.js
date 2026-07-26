@@ -5,16 +5,16 @@
 
    The token lives one hour and GIS does not refresh it. We schedule a silent
    renewal before expiry; if that cannot happen quietly the sign-in button
-   comes back. Nothing is lost either way — the store keeps writing to
-   localStorage and holds its queue until a token exists again. */
+   comes back. The credential exists in JavaScript memory only — never in
+   localStorage/sessionStorage — while study data keeps its own offline queue. */
 import { GOOGLE_CLIENT_ID, SCRIPT_URL } from '../config.js';
 
 const GIS_SRC = 'https://accounts.google.com/gsi/client?hl=en';
-const SESSION_KEY = 'gazl.session';
+const LEGACY_SESSION_KEY = 'gazl.session';
 const SKEW_MS = 90_000;   // expire early so an in-flight request cannot die mid-way
 
 const listeners = new Set();
-function emit() { for (const fn of listeners) { try { fn(Auth); } catch (e) { console.warn(e); } } }
+function emit() { for (const fn of listeners) { try { fn(Auth); } catch (e) {} } }
 
 let gisReady = null;
 let renewTimer = null;
@@ -22,7 +22,7 @@ let renewTimer = null;
 export const Auth = {
   /** { sub, email, name, picture, role, token, exp } or null. */
   session: null,
-  /** Set once the stored session has been checked, to avoid a UI flash. */
+  /** Set once startup has discarded any legacy persisted credential. */
   ready: false,
   error: null,
 
@@ -45,9 +45,12 @@ export const Auth = {
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
 
   async init() {
+    // Versions before July 2026 persisted the full ID token. Remove that
+    // credential before rendering anything, even when sync is disabled.
+    clearLegacySession();
+    this.session = null;
     if (!this.enabled) { this.ready = true; emit(); return; }
 
-    this.session = readSession();
     this.ready = true;
     emit();
 
@@ -63,21 +66,21 @@ export const Auth = {
       if (!this.token) google.accounts.id.prompt();
       scheduleRenew();
     } catch (e) {
-      this.error = e.message || String(e);
-      console.warn('[gazl] GIS failed:', e);
+      this.error = 'Could not load Google sign-in.';
       emit();
     }
   },
 
   signIn() {
     if (!this.enabled) return;
-    try { google.accounts.id.prompt(); } catch (e) { console.warn(e); }
+    try { google.accounts.id.prompt(); }
+    catch (e) { this.error = 'Could not open Google sign-in.'; emit(); }
   },
 
   signOut() {
     clearTimeout(renewTimer);
     this.session = null;
-    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+    clearLegacySession();
     // Without this, auto_select signs straight back in.
     try { google.accounts.id.disableAutoSelect(); } catch (e) {}
     emit();
@@ -89,7 +92,6 @@ export const Auth = {
     this.session.role = profile.role || 'user';
     if (profile.name) this.session.name = profile.name;
     if (profile.picture) this.session.picture = profile.picture;
-    writeSession(this.session);
     emit();
   }
 };
@@ -112,7 +114,6 @@ function onCredential(response) {
     token,
     exp: Number(claims.exp) * 1000
   };
-  writeSession(Auth.session);
   scheduleRenew();
   emit();
 }
@@ -127,14 +128,8 @@ function scheduleRenew() {
   }, Math.max(5_000, wait));
 }
 
-function readSession() {
-  try {
-    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-    return s && s.token && s.sub ? s : null;
-  } catch (e) { return null; }
-}
-function writeSession(s) {
-  try { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); } catch (e) {}
+function clearLegacySession() {
+  try { localStorage.removeItem(LEGACY_SESSION_KEY); } catch (e) {}
 }
 
 /**
@@ -150,10 +145,7 @@ function decodeJwt(token) {
     // Via TextDecoder so accented names survive.
     const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
     return JSON.parse(new TextDecoder().decode(bytes));
-  } catch (e) {
-    console.warn('[gazl] unreadable JWT:', e);
-    return null;
-  }
+  } catch (e) { return null; }
 }
 
 function loadGis() {

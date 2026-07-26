@@ -26,6 +26,9 @@ export async function call(action, payload = {}, idToken = null) {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // see note above
       body: JSON.stringify({ action, payload, idToken }),
+      cache: 'no-store',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
       redirect: 'follow'
     });
   } catch (e) {

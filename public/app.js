@@ -268,7 +268,6 @@ function wireHeader() {
   const apply = () => {
     queued = false;
     const y = Math.max(0, window.scrollY);
-    header.classList.toggle('condensed', y > 24);
 
     const d = y > lastY ? 1 : y < lastY ? -1 : dir;
     if (d !== dir) { dir = d; anchorY = lastY; }   // turned around: re-anchor
@@ -427,7 +426,6 @@ function mountSyncState(el) {
   // the failure reason — a title tooltip is unreachable on touch devices.
   el.addEventListener('click', () => {
     if (Store.lastError) {
-      console.error('[gazl] last sync error:', Store.lastError);
       alert('Lỗi đồng bộ gần nhất:\n\n' + Store.lastError
         + '\n\nDữ liệu vẫn an toàn trên máy (' + Store.queue.length + ' thay đổi đang chờ).');
     }

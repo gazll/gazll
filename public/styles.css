@@ -18,7 +18,6 @@
     transition:transform .26s ease, box-shadow .2s ease;}
   /* hides on scroll down, returns on scroll up */
   header.top.hidden{transform:translateY(-100%)}
-  header.top.condensed{box-shadow:0 6px 18px -14px rgba(20,35,58,.5)}
   .top-inner{max-width:1120px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:18px;justify-content:space-between;
     transition:padding .2s ease;}
   .brand{display:flex;align-items:center;gap:14px;min-width:0;flex:0 1 auto;max-width:42%}
@@ -71,16 +70,6 @@
   .hdrtoggle:hover{border-color:var(--line-strong);color:var(--emerald)}
   .hdrtoggle:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
   header.top.collapsed .hdrtoggle svg{transform:rotate(180deg)}
-
-  /* condensed once scrolled away from the top */
-  header.top.condensed .top-inner{padding-top:7px;padding-bottom:7px}
-  header.top.condensed .brand p{display:none}
-  header.top.condensed .seal{width:32px;height:32px;font-size:14px}
-  header.top.condensed .ring{width:32px;height:32px}
-  header.top.condensed .ring::after{width:25px;height:25px}
-  header.top.condensed .stepper{padding:5px 16px}
-  header.top.condensed .step{min-width:104px;padding:5px 10px}
-  header.top.condensed .step .slabel{font-size:11px}
 
   /* manually collapsed: a thin bar only */
   header.top.collapsed .top-inner{padding-top:5px;padding-bottom:5px}

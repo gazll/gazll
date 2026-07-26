@@ -77,11 +77,20 @@ Neither `GOOGLE_CLIENT_ID` nor `SCRIPT_URL` is a secret: the browser needs
 both, so they are readable in the deployed page source. Keeping them in repo
 variables only avoids GitHub scraping. This flow uses no client secret at all.
 
+The Google ID token is a credential. It stays in JavaScript memory only:
+never persist it to `localStorage`/`sessionStorage`, include it in an error, or
+write it to any browser/server log. The Sheet itself must keep **General
+access: Restricted** and must not be shared with app users; they access only
+their own rows through the verified Apps Script API.
+
 ## Before pushing
 
 ```bash
 # same check the CI runs
 for f in $(find public -name '*.js'); do node --input-type=module --check < "$f" || echo "FAIL $f"; done
+
+# auth, authorization, row-isolation and error-disclosure regressions
+NODE_NO_WARNINGS=1 node --experimental-vm-modules --test tests/security.test.mjs
 
 # run it
 cd public && python -m http.server 8080
@@ -89,4 +98,3 @@ cd public && python -m http.server 8080
 
 Editing `apps-script/Code.gs` requires Deploy → Manage deployments → New
 version, otherwise the Web App keeps serving the old code.
-

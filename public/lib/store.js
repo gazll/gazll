@@ -51,7 +51,7 @@ export const Store = {
   _pending: false,
 
   onSync(fn) { syncListeners.add(fn); return () => syncListeners.delete(fn); },
-  _emit() { for (const fn of syncListeners) { try { fn(this); } catch (e) { console.warn(e); } } },
+  _emit() { for (const fn of syncListeners) { try { fn(this); } catch (e) {} } },
 
   /* ---------- local ---------- */
 
@@ -187,7 +187,6 @@ export const Store = {
     } catch (e) {
       this.status = e.authExpired ? 'stale' : 'error';
       this.lastError = e.message || String(e);
-      console.warn('[gazl] push failed, queue kept:', e);
     } finally {
       this._emit();
     }
@@ -306,7 +305,6 @@ export const Store = {
       const data = await call('studyLog', {}, token);
       return data.log || [];
     } catch (e) {
-      console.warn('[gazl] studyLog failed:', e);
       return [];
     }
   }

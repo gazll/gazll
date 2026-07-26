@@ -70,11 +70,16 @@ function doPost(e) {
 
     var user = requireUser(req.idToken);       // always first
     var handler = ACTIONS[action];
-    if (!handler) return json({ ok: false, error: 'Action không hợp lệ: ' + action });
+    if (!handler) return json({ ok: false, error: 'Action không hợp lệ.' });
 
     return json({ ok: true, data: handler(user, payload) });
   } catch (err) {
-    return json({ ok: false, error: (err && err.message) || String(err) });
+    return json({
+      ok: false,
+      error: err && err.publicMessage
+        ? err.publicMessage
+        : 'Lỗi máy chủ. Vui lòng thử lại sau.'
+    });
   }
 }
 
@@ -88,19 +93,26 @@ function json(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+/** Marks a deliberately safe client-facing error; all other details stay server-side. */
+function publicError(message) {
+  var err = new Error(message);
+  err.publicMessage = message;
+  return err;
+}
+
 /* ------------------------------------------------------------------ */
 /* Auth                                                                */
 /* ------------------------------------------------------------------ */
 
 /** Verified identity { sub, email, name, picture, role }, or throws. */
 function requireUser(idToken) {
-  if (!idToken) throw new Error('Thiếu idToken — cần đăng nhập.');
-  if (CLIENT_ID.indexOf('PASTE_YOUR') === 0) throw new Error('Backend chưa cấu hình CLIENT_ID.');
+  if (!idToken) throw publicError('Thiếu idToken — cần đăng nhập.');
+  if (CLIENT_ID.indexOf('PASTE_YOUR') === 0) throw publicError('Backend chưa cấu hình CLIENT_ID.');
 
   var identity = verifyIdToken(idToken);
 
   if (ALLOWED_EMAILS.length && ALLOWED_EMAILS.indexOf(identity.email) === -1) {
-    throw new Error('Không được phép: email này chưa nằm trong ALLOWED_EMAILS.');
+    throw publicError('Không được phép: email này chưa nằm trong ALLOWED_EMAILS.');
   }
   return upsertProfile(identity);
 }
@@ -117,25 +129,25 @@ function verifyIdToken(idToken) {
   // could otherwise burn one quota unit per garbage request. Unsigned data,
   // so it filters only — tokeninfo below is what actually verifies.
   var peek = peekJwt(idToken);
-  if (!peek) throw new Error('Token không đúng định dạng.');
-  if (peek.aud !== CLIENT_ID) throw new Error('Token phát cho app khác (aud không khớp).');
-  if (!(Number(peek.exp) > Math.floor(Date.now() / 1000))) throw new Error('Token đã hết hạn.');
+  if (!peek) throw publicError('Token không đúng định dạng.');
+  if (peek.aud !== CLIENT_ID) throw publicError('Token phát cho app khác (aud không khớp).');
+  if (!(Number(peek.exp) > Math.floor(Date.now() / 1000))) throw publicError('Token đã hết hạn.');
 
   var res = UrlFetchApp.fetch(
     'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken),
     { muteHttpExceptions: true });
 
-  if (res.getResponseCode() !== 200) throw new Error('Token không hợp lệ hoặc đã hết hạn.');
+  if (res.getResponseCode() !== 200) throw publicError('Token không hợp lệ hoặc đã hết hạn.');
   var info = JSON.parse(res.getContentText());
 
   // Dropping any of these four opens the door to impersonation.
-  if (info.aud !== CLIENT_ID) throw new Error('Token phát cho app khác (aud không khớp).');
+  if (info.aud !== CLIENT_ID) throw publicError('Token phát cho app khác (aud không khớp).');
   if (info.iss !== 'accounts.google.com' && info.iss !== 'https://accounts.google.com') {
-    throw new Error('Token không do Google phát (iss không khớp).');
+    throw publicError('Token không do Google phát (iss không khớp).');
   }
   var secondsLeft = Number(info.exp) - Math.floor(Date.now() / 1000);
-  if (!(secondsLeft > 0)) throw new Error('Token đã hết hạn.');
-  if (String(info.email_verified) !== 'true') throw new Error('Email chưa được Google xác minh.');
+  if (!(secondsLeft > 0)) throw publicError('Token đã hết hạn.');
+  if (String(info.email_verified) !== 'true') throw publicError('Email chưa được Google xác minh.');
 
   var identity = {
     sub: info.sub,
@@ -211,7 +223,7 @@ var ACTIONS = {
   'push': function (user, p) {
     var progress = asArray(p.progress), notes = asArray(p.notes), log = asArray(p.log);
     if (progress.length + notes.length + log.length > MAX_ROWS_PER_PUSH) {
-      throw new Error('Request quá lớn (giới hạn ' + MAX_ROWS_PER_PUSH + ' dòng).');
+      throw publicError('Request quá lớn (giới hạn ' + MAX_ROWS_PER_PUSH + ' dòng).');
     }
 
     return withLock(function () {
@@ -272,9 +284,9 @@ var ACTIONS = {
   /** One company plus all its questions in a single round-trip. */
   'interviews.save': function (user, p) {
     var c = p.company || {};
-    if (!String(c.name || '').trim()) throw new Error('Tên công ty không được để trống.');
+    if (!String(c.name || '').trim()) throw publicError('Tên công ty không được để trống.');
     var questions = asArray(c.questions);
-    if (questions.length > 200) throw new Error('Tối đa 200 câu hỏi cho một công ty.');
+    if (questions.length > 200) throw publicError('Tối đa 200 câu hỏi cho một công ty.');
 
     return withLock(function () {
       var t = table('interviews');
@@ -314,7 +326,7 @@ var ACTIONS = {
 
   'interviews.delete': function (user, p) {
     var id = String(p.id || '');
-    if (!id) throw new Error('Thiếu id.');
+    if (!id) throw publicError('Thiếu id.');
     return withLock(function () {
       var n = table('interviews').deleteWhere(function (r) { return r.user_id === user.sub && r.id === id; });
       table('interview_questions').deleteWhere(function (r) { return r.user_id === user.sub && r.interview_id === id; });
@@ -324,7 +336,7 @@ var ACTIONS = {
 
   /** Admin-only; hiding the menu client-side is cosmetic, this is the gate. */
   'admin.overview': function (user) {
-    if (user.role !== 'admin') throw new Error('Không được phép: cần quyền admin.');
+    if (user.role !== 'admin') throw publicError('Không được phép: cần quyền admin.');
 
     var count = function (rows, pred) {
       var m = {};
@@ -478,7 +490,7 @@ function findBy(rows, field, val) {
 /** Concurrent requests would otherwise clobber each other's rows. */
 function withLock(fn) {
   var lock = LockService.getScriptLock();
-  if (!lock.tryLock(25000)) throw new Error('Server đang bận, thử lại sau.');
+  if (!lock.tryLock(25000)) throw publicError('Server đang bận, thử lại sau.');
   try { return fn(); } finally { lock.releaseLock(); }
 }
 

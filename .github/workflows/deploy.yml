@@ -27,6 +27,28 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Enforce security guardrails
+        shell: bash
+        run: |
+          tracked_private_files="$(git ls-files public/config.js 'secret/**')"
+          if [ -n "$tracked_private_files" ]; then
+            echo "::error::Private local files must never be tracked:"
+            echo "$tracked_private_files"
+            exit 1
+          fi
+
+          # Character classes keep this pattern from matching its own source.
+          credential_pattern='[-]{5}BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|A[I]za[0-9A-Za-z_-]{35}|g[h][pousr]_[0-9A-Za-z]{20,}|y[a]29\.[0-9A-Za-z_-]+|"client[_]secret"[[:space:]]*:'
+          if git grep -nI -E -e "$credential_pattern" -- .; then
+            echo "::error::A private credential pattern was found in tracked files."
+            exit 1
+          fi
+
+          if grep -RInE 'console\.(log|info|warn|error|debug)|Logger\.log' public apps-script; then
+            echo "::error::Runtime console logging is disabled to prevent accidental data leaks."
+            exit 1
+          fi
+
       # Read from Secrets. Note these are not actually secret — the browser
       # needs both, so they are readable in the deployed page source. Storing
       # them here only keeps them out of the repo; real protection is the ID
@@ -64,6 +86,11 @@ jobs:
             node --input-type=module --check < "$f" || { echo "FAIL $f"; fail=1; }
           done
           [ "$fail" -eq 0 ] || exit 1
+
+      - name: Run security regression tests
+        env:
+          NODE_NO_WARNINGS: '1'
+        run: node --experimental-vm-modules --test tests/security.test.mjs
 
       - uses: actions/configure-pages@v6
 
