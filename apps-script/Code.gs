@@ -19,7 +19,7 @@
  */
 
 /** Must match GOOGLE_CLIENT_ID in the frontend config. */
-var CLIENT_ID = 'PASTE_YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com';
+var CLIENT_ID = '903030402350-hgapha7ttog7ejubaoq94eaevdcv9rf2.apps.googleusercontent.com';
 
 /** Empty = any Google account may sign in, each with private data.
  *  Add emails to lock the backend to just those people. */
