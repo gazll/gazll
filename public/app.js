@@ -252,16 +252,42 @@ function wireHeader() {
   });
 
   // Headroom: hide going down, reveal going up.
-  let last = window.scrollY;
+  //
+  // The threshold is measured from where the current direction STARTED, not
+  // from the previous event. Comparing against the previous event means a few
+  // px of momentum wobble flips the class every frame, and each flip restarts
+  // the .26s transform transition — that is the juddering.
+  const FLIP_PX = 14;    // must travel this far one way before the state flips
+  const TOP_ZONE = 160;  // always visible near the top
+
+  let lastY = Math.max(0, window.scrollY);
+  let anchorY = lastY;   // scroll position where the current direction began
+  let dir = 0;           // 1 down, -1 up
+  let queued = false;
+
   const apply = () => {
+    queued = false;
     const y = Math.max(0, window.scrollY);
     header.classList.toggle('condensed', y > 24);
-    if (header.classList.contains('nav-open') || y <= 160) header.classList.remove('hidden');
-    else if (y > last + 4) header.classList.add('hidden');
-    else if (y < last - 4) header.classList.remove('hidden');
-    last = y;
+
+    const d = y > lastY ? 1 : y < lastY ? -1 : dir;
+    if (d !== dir) { dir = d; anchorY = lastY; }   // turned around: re-anchor
+    lastY = y;
+
+    if (header.classList.contains('nav-open') || y <= TOP_ZONE) {
+      header.classList.remove('hidden');
+      return;
+    }
+    if (dir === 1 && y - anchorY > FLIP_PX) header.classList.add('hidden');
+    else if (dir === -1 && anchorY - y > FLIP_PX) header.classList.remove('hidden');
   };
-  window.addEventListener('scroll', apply, { passive: true });
+
+  // Coalesce to one update per frame; scroll can fire far more often than that.
+  window.addEventListener('scroll', () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(apply);
+  }, { passive: true });
   apply();
 }
 
@@ -396,6 +422,17 @@ function mountSyncState(el) {
   paint();
   Store.onSync(paint);
   Auth.onChange(paint);
+
+  // Click to retry now rather than waiting for the debounce, and to surface
+  // the failure reason — a title tooltip is unreachable on touch devices.
+  el.addEventListener('click', () => {
+    if (Store.lastError) {
+      console.error('[gazl] last sync error:', Store.lastError);
+      alert('Lỗi đồng bộ gần nhất:\n\n' + Store.lastError
+        + '\n\nDữ liệu vẫn an toàn trên máy (' + Store.queue.length + ' thay đổi đang chờ).');
+    }
+    Store.flush();
+  });
 }
 
 /* ---------- startup ---------- */

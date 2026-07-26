@@ -320,7 +320,7 @@
   .headright{display:flex;align-items:center;gap:10px;flex:none}
 
   .syncstate{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.2px;color:var(--muted);
-    display:inline-flex;align-items:center;gap:6px;white-space:nowrap;cursor:default}
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer}
   .syncstate::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--line-strong);flex:none}
   .syncstate.s-synced{color:var(--emerald-deep)}
   .syncstate.s-synced::before{background:var(--emerald)}
