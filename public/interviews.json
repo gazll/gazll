@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "companies": [
+    {
+      "name": "Công ty mẫu (xoá/sửa trong interviews.json)",
+      "role": "Senior Backend Engineer",
+      "date": "2026-06",
+      "result": "pending",
+      "stack": ["Java", "Spring Boot", "PostgreSQL", "Kafka"],
+      "questions": [
+        {
+          "round": "Vòng 1 · Technical",
+          "q": "Giải thích cách `@Transactional` hoạt động và vì sao self-invocation mất transaction?",
+          "a": "Spring tạo **proxy** bao quanh bean; transaction mở/đóng ở proxy. Self-invocation (gọi method nội bộ qua `this`) **không đi qua proxy** nên advice không chạy → mất transaction. Cách xử lý: tách sang bean khác, hoặc tự inject chính mình, hoặc dùng `TransactionTemplate`.",
+          "note": "Trả lời ổn, nhưng nên vẽ thêm sơ đồ proxy để rõ hơn. Cần ôn lại propagation."
+        },
+        {
+          "round": "Vòng 1 · Technical",
+          "q": "Chống double-booking một ghế khi nhiều người đặt cùng lúc?",
+          "a": "Dùng **atomic conditional update** (`UPDATE seats SET status='HELD' WHERE id=? AND status='FREE'`) — thắng cuộc = 1 row affected. Kèm TTL hold + reconciliation.",
+          "note": "Quên nhắc tới hot-seat (hàng nghìn người đua 1 ghế) → lần sau nêu hàng đợi per-flight."
+        }
+      ]
+    }
+  ]
+}

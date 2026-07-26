@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backend Engineering — Technical Mastery Track (16 ngày)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="seal">&lt;/&gt;</div>
+      <div>
+        <h1>Backend Engineering · Technical Mastery Track</h1>
+        <p>JAVA · JVM · SPRING · DATABASE · DISTRIBUTED SYSTEMS · ARCHITECTURE · NETWORK · DEVOPS</p>
+      </div>
+    </div>
+    <nav class="mainnav" id="mainnav" aria-label="Điều hướng chính"></nav>
+    <div class="progress-wrap track-only">
+      <div class="progress-meta">Đã ôn<br><b id="reviewedCount">0</b> / <span id="totalCount">0</span> mục</div>
+      <div class="ring" id="ring"></div>
+    </div>
+    <button class="hdrtoggle" id="hdrToggle" aria-label="Thu gọn header" aria-expanded="true" title="Thu gọn header (phím H)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>
+    </button>
+    <button class="navtoggle" id="navToggle" aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="mainnav">☰</button>
+  </div>
+  <div class="stepper-wrap track-only"><div class="stepper" id="stepper"></div></div>
+</header>
+
+<main>
+  <!-- VIEW: Lộ trình 16 ngày -->
+  <section id="view-track" class="view">
+    <div id="panel" class="day-panel"></div>
+    <nav class="pager">
+      <button class="pbtn prev" id="prevBtn">← Ngày trước</button>
+      <div>
+        <div class="pcenter">Ngày <b id="curDay">1</b> / <span id="totDay">16</span></div>
+        <div class="pdots" id="dots"></div>
+      </div>
+      <button class="pbtn next" id="nextBtn">Ngày tiếp →</button>
+    </nav>
+    <p class="foot-note">Tự trả lời từng mục trước khi mở lời giải — đó là cách luyện hiệu quả nhất.</p>
+  </section>
+
+  <!-- VIEW: các menu khác render vào đây -->
+  <section id="view-host" class="view" hidden></section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
