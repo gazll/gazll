@@ -1,2 +1,7 @@
 .claude/settings.json
 .idea
+
+# Local backend config. Generated at deploy time from GitHub Actions secrets,
+# so it must never be committed. Copy config.example.js to create it locally.
+public/config.js
+secret/

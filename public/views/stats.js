@@ -1,0 +1,175 @@
+/* Stats view — streak, heatmap and per-day track progress.
+   Sourced from study_log (one row per item per day) plus Store.reviewed.
+   Signed out there is only today's data, and the view says so. */
+import { Store } from '../lib/store.js';
+import { Auth } from '../lib/auth.js';
+import { Content } from '../lib/content.js';
+import { escapeHtml as esc } from '../lib/markdown.js';
+import { localDay } from '../lib/ui.js';
+
+const WEEKS = 26;                  // half a year: wide enough, still fits mobile
+const MONTHS = ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'];
+
+export function renderStats() {
+  return '<div id="stRoot"><div class="page"><p class="intro">Đang tải…</p></div></div>';
+}
+
+export function mountStats(host) {
+  const root = host.querySelector('#stRoot');
+  if (!root) return;
+
+  const load = () => Store.fetchStudyLog().then(log => { if (root.isConnected) paint(root, log); });
+  load();
+
+  const off = Auth.onChange(() => { if (!root.isConnected) { off(); return; } load(); });
+}
+
+function paint(root, log) {
+  const byDay = new Map();
+  for (const r of log) {
+    if (!r.opened_at) continue;
+    const d = new Date(r.opened_at);
+    if (isNaN(d)) continue;
+    const key = localDay(d);
+    byDay.set(key, (byDay.get(key) || 0) + 1);
+  }
+
+  const streak = streaks([...byDay.keys()]);
+  const reviewed = Store.reviewed;
+  const dayIds = Content.dayItemIds;
+  const trackDone = [...reviewed].filter(id => dayIds.has(id)).length;
+  const total = Content.totalDayItems;
+
+  let html = '<section class="hero"><div class="hero-head"><div>'
+    + '<h2>Thống kê học tập</h2>'
+    + '<p class="intro">Mỗi lần mở một mục lần đầu trong ngày được ghi lại một dòng — đó là nguồn của biểu đồ dưới.</p>'
+    + '</div></div></section>';
+
+  if (!Auth.session) {
+    html += '<div class="warn"><b>Chưa đăng nhập:</b> chỉ thấy hoạt động của hôm nay trên máy này. '
+      + 'Đăng nhập Google để lưu và xem lại toàn bộ lịch sử.</div>';
+  }
+
+  html += '<div class="stat-row">'
+    + tile('Đã ôn', trackDone + ' / ' + total, total ? Math.round(trackDone / total * 100) + '% lộ trình' : '')
+    + tile('Ngày có học', byDay.size, byDay.size ? 'tổng cộng' : 'chưa có')
+    + tile('Streak hiện tại', streak.current, streak.current ? 'ngày liên tiếp' : 'bắt đầu hôm nay đi')
+    + tile('Streak dài nhất', streak.longest, 'ngày liên tiếp')
+    + '</div>';
+
+  html += heatmap(byDay);
+  html += perDay(reviewed);
+
+  root.innerHTML = html;
+}
+
+function tile(label, value, sub) {
+  return '<div class="stat-tile"><div class="stat-label">' + esc(label) + '</div>'
+    + '<div class="stat-value">' + esc(String(value)) + '</div>'
+    + '<div class="stat-sub">' + esc(sub || '') + '</div></div>';
+}
+
+/* ---------- streak ---------- */
+
+/**
+ * `current` still counts if today is empty but yesterday was not — otherwise
+ * the streak would read as broken every morning before you start.
+ */
+function streaks(dayKeys) {
+  if (!dayKeys.length) return { current: 0, longest: 0 };
+  const days = [...new Set(dayKeys)].sort();
+  const set = new Set(days);
+
+  let longest = 1, run = 1;
+  for (let i = 1; i < days.length; i++) {
+    run = daysApart(days[i - 1], days[i]) === 1 ? run + 1 : 1;
+    if (run > longest) longest = run;
+  }
+
+  const today = localDay();
+  const yesterday = localDay(new Date(Date.now() - 86400000));
+  let cursor = set.has(today) ? today : (set.has(yesterday) ? yesterday : null);
+  let current = 0;
+  while (cursor && set.has(cursor)) {
+    current++;
+    cursor = localDay(new Date(new Date(cursor + 'T12:00:00').getTime() - 86400000));
+  }
+  return { current, longest };
+}
+
+function daysApart(a, b) {
+  // Noon, so DST transitions cannot shift the day count.
+  const ms = new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00');
+  return Math.round(ms / 86400000);
+}
+
+/* ---------- heatmap ---------- */
+
+function heatmap(byDay) {
+  const today = new Date();
+  // Align the grid to whole weeks ending this Saturday.
+  const end = new Date(today);
+  end.setDate(end.getDate() - end.getDay() + 6);
+  const start = new Date(end);
+  start.setDate(start.getDate() - (WEEKS * 7 - 1));
+
+  const max = Math.max(1, ...byDay.values());
+  const cols = [];
+  const monthLabels = [];
+  let cursor = new Date(start);
+
+  for (let w = 0; w < WEEKS; w++) {
+    let cells = '';
+    let labelForWeek = '';
+    for (let d = 0; d < 7; d++) {
+      const key = localDay(cursor);
+      const n = byDay.get(key) || 0;
+      const future = cursor > today;
+      const lvl = future ? 'f' : level(n, max);
+      const title = future ? '' : key + ' · ' + n + ' mục';
+      cells += '<span class="hm-cell lvl-' + lvl + '"'
+        + (title ? ' title="' + title + '"' : '') + '></span>';
+      if (cursor.getDate() <= 7 && d === 0) labelForWeek = MONTHS[cursor.getMonth()];
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    cols.push('<div class="hm-col">' + cells + '</div>');
+    monthLabels.push('<span class="hm-mlabel">' + labelForWeek + '</span>');
+  }
+
+  return '<div class="toolbar"><span class="sectioncount">Hoạt động ' + WEEKS + ' tuần gần nhất</span>'
+    // Own class: .legend is hidden below 760px and its span rules would
+    // repaint the colour swatches.
+    + '<div class="hm-legend"><span>ít</span>'
+    + [0, 1, 2, 3, 4].map(l => '<span class="hm-cell lvl-' + l + '"></span>').join('')
+    + '<span>nhiều</span></div></div>'
+    + '<div class="heatmap-wrap"><div class="heatmap">'
+    + '<div class="hm-months">' + monthLabels.join('') + '</div>'
+    + '<div class="hm-grid">' + cols.join('') + '</div>'
+    + '</div></div>';
+}
+
+function level(n, max) {
+  if (!n) return 0;
+  const r = n / max;
+  if (r <= 0.25) return 1;
+  if (r <= 0.5) return 2;
+  if (r <= 0.75) return 3;
+  return 4;
+}
+
+/* ---------- per-day track progress ---------- */
+
+function perDay(reviewed) {
+  const rows = Content.dayCounts().map(d => {
+    const done = d.ids.filter(id => reviewed.has(id)).length;
+    const pct = d.ids.length ? Math.round(done / d.ids.length * 100) : 0;
+    return '<a class="pd-row" href="#/track" data-day="' + d.n + '">'
+      + '<span class="pd-n">D' + String(d.n).padStart(2, '0') + '</span>'
+      + '<span class="pd-label">' + esc(d.label) + '</span>'
+      + '<span class="pd-bar"><span class="pd-fill" style="width:' + pct + '%"></span></span>'
+      + '<span class="pd-num">' + done + '/' + d.ids.length + '</span></a>';
+  }).join('');
+
+  return '<div class="toolbar"><span class="sectioncount">Tiến độ theo ngày</span></div>'
+    + '<div class="perday">' + rows + '</div>';
+}

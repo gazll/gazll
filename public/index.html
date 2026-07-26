@@ -20,6 +20,10 @@
       </div>
     </div>
     <nav class="mainnav" id="mainnav" aria-label="Điều hướng chính"></nav>
+    <div class="headright">
+      <span class="syncstate" id="syncState"></span>
+      <div class="authbar" id="authbar"></div>
+    </div>
     <div class="progress-wrap track-only">
       <div class="progress-meta">Đã ôn<br><b id="reviewedCount">0</b> / <span id="totalCount">0</span> mục</div>
       <div class="ring" id="ring"></div>
@@ -33,7 +37,7 @@
 </header>
 
 <main>
-  <!-- VIEW: Lộ trình 16 ngày -->
+  <!-- VIEW: 16-day track -->
   <section id="view-track" class="view">
     <div id="panel" class="day-panel"></div>
     <nav class="pager">
@@ -47,10 +51,11 @@
     <p class="foot-note">Tự trả lời từng mục trước khi mở lời giải — đó là cách luyện hiệu quả nhất.</p>
   </section>
 
-  <!-- VIEW: các menu khác render vào đây -->
+  <!-- VIEW: every other menu renders in here -->
   <section id="view-host" class="view" hidden></section>
 </main>
 
-<script src="app.js"></script>
+<!-- type="module" is required: app.js imports from lib/ and views/ -->
+<script type="module" src="app.js"></script>
 </body>
 </html>
