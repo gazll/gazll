@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Fshare Bulk Copy</title>
+<style>
+:root{
+  --bg:#0b0d12;--surface:#13161f;--surface2:#191d29;--surface3:#1e2333;
+  --border:#242a3a;--border2:#2e3650;
+  --text:#e2e8f5;--text2:#a8b4cc;--muted:#566078;
+  --accent:#f5a623;--accent2:#e8962a;--accent-dim:rgba(245,166,35,.1);
+  --blue:#4a9eff;--blue-dim:rgba(74,158,255,.1);
+  --green:#22c55e;--red:#ef4444;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+body.light{
+  --bg:#f0f2f7;--surface:#fff;--surface2:#f6f8fc;--surface3:#eef1f8;
+  --border:#dde2ee;--border2:#c8d0e0;
+  --text:#0f1623;--text2:#4a5568;--muted:#8896b0;
+  --accent:#d97706;--accent2:#b45309;--accent-dim:rgba(217,119,6,.08);
+  --blue:#2563eb;--blue-dim:rgba(37,99,235,.08);
+  --green:#16a34a;--red:#dc2626;
+  --shadow:0 4px 24px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;font-size:14px;min-height:100vh;padding-bottom:96px}
+
+/* nav */
+.topnav{display:flex;align-items:center;gap:12px;padding:0 20px;height:56px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:60}
+.logo{font-weight:800;color:var(--accent);white-space:nowrap;display:flex;align-items:center;gap:8px;font-size:.95rem}
+.search-wrap{flex:1;display:flex;gap:8px;max-width:560px}
+.search-wrap input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;color:var(--text);outline:none}
+.search-wrap input:focus{border-color:var(--accent)}
+.nav-actions{display:flex;gap:6px;margin-left:auto}
+.btn{background:var(--accent);color:#000;font-weight:700;border:none;border-radius:var(--radius-sm);padding:8px 16px;font-size:.85rem;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--accent2)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn2{background:var(--surface3);color:var(--text2);border:1px solid var(--border2);font-weight:600;border-radius:var(--radius-sm);padding:7px 14px;font-size:.8rem;cursor:pointer;white-space:nowrap}
+.btn2:hover{border-color:var(--accent);color:var(--accent)}
+.btn2:disabled{opacity:.4;cursor:not-allowed}
+.icon-btn{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 11px;cursor:pointer;font-size:.78rem;color:var(--text2)}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* home */
+.hero-wrap{min-height:calc(100vh - 152px);display:flex;align-items:center;justify-content:center;padding:32px 16px}
+.hero-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:44px 36px;max-width:600px;width:100%;text-align:center;box-shadow:var(--shadow)}
+.hero-card h1{font-size:1.7rem;font-weight:800;color:var(--accent);margin-bottom:10px}
+.hero-card p{color:var(--text2);margin-bottom:28px;line-height:1.6}
+.hero-form{display:flex;gap:8px}
+.hero-form input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 16px;color:var(--text);outline:none}
+.hero-form input:focus{border-color:var(--accent)}
+.hint{margin-top:16px;font-size:.8rem;color:var(--muted);line-height:1.7}
+.err{min-height:20px;margin-top:12px;color:var(--red);font-size:.85rem}
+
+/* folder view */
+#folderView{display:none}
+.page{max-width:1100px;margin:0 auto;padding:24px 20px}
+.folder-header{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.folder-title{font-size:1.4rem;font-weight:800;color:var(--accent);display:flex;align-items:center;gap:10px;line-height:1.3}
+.folder-path{font-size:.8rem;color:var(--muted);margin-top:6px}
+.folder-path span{color:var(--blue)}
+
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.breadcrumb{display:flex;align-items:center;gap:2px;font-size:.83rem;flex-wrap:wrap;min-height:28px}
+.bc-item{color:var(--blue);cursor:pointer;padding:4px 8px;border-radius:6px;font-weight:500}
+.bc-item:hover{background:var(--blue-dim)}
+.bc-current{color:var(--text);padding:4px 8px;font-weight:600;background:var(--surface2);border-radius:6px}
+.bc-home{color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px}
+.bc-home:hover{background:var(--surface2)}
+.bc-sep{color:var(--muted);user-select:none;font-size:.75rem}
+.sort-wrap{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted)}
+.sort-wrap select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:6px 10px;font-size:.82rem;cursor:pointer;outline:none}
+
+.bulkbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.bulkbar .lbl{font-size:.78rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
+.stats-bar{font-size:.8rem;color:var(--muted);margin-bottom:10px}
+
+/* table */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{padding:11px 14px;text-align:left;font-size:.71rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;background:var(--surface2);border-bottom:1px solid var(--border2)}
+thead th.chk-col,td.chk-col{width:44px;text-align:center;padding-left:14px;padding-right:0}
+thead th:last-child{text-align:right}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody tr.picked{background:var(--accent-dim)}
+td{padding:10px 14px;vertical-align:middle}
+td:last-child{text-align:right}
+td:nth-child(3),td:nth-child(4){width:120px}
+input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+.name-cell{display:flex;align-items:center;gap:10px;min-width:0}
+.file-icon-wrap{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.file-icon-wrap.is-folder{background:var(--accent-dim)}
+.file-icon-wrap.is-file{background:var(--blue-dim)}
+.file-icon{width:16px;height:16px}
+.item-name{font-weight:500;font-size:.89rem;color:var(--text);word-break:break-word}
+.item-folder{color:var(--accent);cursor:pointer}
+.item-folder:hover{text-decoration:underline}
+.item-file-link{color:var(--text);text-decoration:none}
+.item-file-link:hover{color:var(--blue)}
+.size-cell{color:var(--text2);white-space:nowrap;font-size:.82rem;font-variant-numeric:tabular-nums}
+.date-cell{color:var(--muted);white-space:nowrap;font-size:.79rem;font-variant-numeric:tabular-nums}
+.badge{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;border:1px solid transparent}
+.badge-folder{background:var(--accent-dim);color:var(--accent);border-color:rgba(245,166,35,.25)}
+.badge-copy{background:var(--surface3);border-color:var(--border2);color:var(--text2)}
+.badge-copy:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.badge-ok{background:var(--green)!important;color:#fff!important;border-color:var(--green)!important}
+
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:7px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.center-row td{text-align:center;padding:44px;color:var(--muted)}
+
+/* pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px;flex-wrap:wrap}
+.pg-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 13px;color:var(--text2);font-size:.82rem;font-weight:600;cursor:pointer;min-width:38px}
+.pg-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.pg-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.pg-btn:disabled{opacity:.35;cursor:not-allowed}
+.pg-ellipsis{color:var(--muted);padding:7px 4px;user-select:none}
+.pg-info{font-size:.8rem;color:var(--muted);text-align:center;margin-top:8px}
+
+/* selection tray */
+.tray{position:fixed;left:0;right:0;bottom:0;z-index:70;background:var(--surface);border-top:1px solid var(--border2);box-shadow:0 -4px 24px rgba(0,0,0,.3);transform:translateY(110%);transition:transform .22s}
+.tray.on{transform:none}
+.tray-in{max-width:1100px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tray-count{font-weight:800;color:var(--accent);font-size:1.02rem;white-space:nowrap}
+.tray-sub{font-size:.79rem;color:var(--muted);white-space:nowrap}
+.tray-actions{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.tray select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:7px 10px;font-size:.8rem;cursor:pointer;outline:none}
+
+/* scan overlay */
+.ov{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:20px}
+.ov.on{display:flex}
+.ov-card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:26px;width:100%;max-width:460px;box-shadow:var(--shadow)}
+.ov-card h3{font-size:1.05rem;margin-bottom:14px;color:var(--accent)}
+.ov-line{font-size:.83rem;color:var(--text2);margin-bottom:6px;word-break:break-word;line-height:1.5}
+.ov-line b{color:var(--text)}
+.bar{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;margin:14px 0 6px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.ov-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+
+/* list modal */
+.modal{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:20px}
+.modal.on{display:flex}
+.modal-card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:22px;width:100%;max-width:820px;display:flex;flex-direction:column;max-height:86vh}
+.modal-card h3{font-size:1.05rem;margin-bottom:12px;color:var(--accent)}
+.modal-card textarea{flex:1;min-height:320px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:12px;font-family:ui-monospace,Consolas,monospace;font-size:.78rem;line-height:1.6;resize:vertical;outline:none;white-space:pre;overflow:auto}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap}
+
+/* view toggle */
+.seg{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.seg button{background:none;border:none;color:var(--text2);padding:6px 14px;font-size:.8rem;font-weight:600;cursor:pointer}
+.seg button.on{background:var(--accent);color:#000}
+
+/* tree view */
+.file-icon-wrap.sm{width:26px;height:26px}
+.tree-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:none}
+.tree-wrap.on{display:block}
+.tree-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface2);border-bottom:1px solid var(--border2);font-size:.71rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.trow{display:flex;align-items:center;gap:9px;padding:6px 14px;border-bottom:1px solid var(--border);min-height:44px}
+.trow:last-child{border-bottom:none}
+.trow:hover{background:var(--surface2)}
+.trow.picked{background:var(--accent-dim)}
+.tchev{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);border-radius:4px;font-size:.62rem;transition:transform .15s,background .12s}
+.tchev:hover{background:var(--surface3);color:var(--accent)}
+.tchev.open{transform:rotate(90deg)}
+.tchev.leaf{cursor:default;opacity:0;pointer-events:none}
+.tname{flex:1;min-width:0;font-size:.87rem;word-break:break-word;line-height:1.4}
+.tname.dir{color:var(--accent);cursor:pointer;font-weight:600}
+.tname.dir:hover{text-decoration:underline}
+.tname a{color:var(--text);text-decoration:none}
+.tname a:hover{color:var(--blue)}
+.tmeta{font-size:.78rem;color:var(--text2);white-space:nowrap;font-variant-numeric:tabular-nums;flex-shrink:0}
+.tcount{font-size:.72rem;color:var(--muted);white-space:nowrap;flex-shrink:0}
+.tspin{width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+.terr{font-size:.74rem;color:var(--red);flex-shrink:0}
+.tree-empty{padding:44px;text-align:center;color:var(--muted)}
+
+/* persistent "is the tree fully loaded" indicator */
+.tree-prog{padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.tp-row{display:flex;align-items:baseline;gap:10px;margin-bottom:7px;flex-wrap:wrap}
+.tp-label{font-size:.79rem;color:var(--text2);flex:1;min-width:0}
+.tp-label b{color:var(--text);font-variant-numeric:tabular-nums}
+.tp-pct{font-size:.79rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tp-bar{height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.tp-bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .25s}
+.tree-prog.done .tp-bar i{background:var(--green)}
+.tree-prog.done .tp-pct{color:var(--green)}
+.tp-more{background:none;border:none;color:var(--blue);font-size:.76rem;font-weight:700;cursor:pointer;padding:0;white-space:nowrap}
+.tp-more:hover{text-decoration:underline}
+
+.toast{position:fixed;left:50%;bottom:110px;transform:translate(-50%,20px);background:var(--green);color:#fff;font-weight:700;font-size:.85rem;padding:10px 20px;border-radius:20px;z-index:120;opacity:0;pointer-events:none;transition:all .22s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.bad{background:var(--red)}
+
+@media(max-width:680px){
+  .topnav{flex-wrap:wrap;height:auto;padding:10px 12px}
+  .search-wrap{order:3;max-width:100%;width:100%}
+  .page{padding:14px 12px}
+  .date-cell,th.date-col{display:none}
+  td{padding:9px 10px}
+  .tray-actions{margin-left:0;width:100%}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Fshare Bulk Copy
+  </div>
+  <div class="search-wrap">
+    <input type="text" id="navInput" placeholder="Dán URL thư mục Fshare hoặc link code..."/>
+    <button class="btn" id="navBtn">Duyệt</button>
+  </div>
+  <div class="nav-actions">
+    <button class="icon-btn" id="themeBtn" title="Đổi giao diện"></button>
+  </div>
+</nav>
+
+<div id="homeView">
+  <div class="hero-wrap">
+    <div class="hero-card">
+      <div style="font-size:3rem;margin-bottom:16px">📁</div>
+      <h1>Fshare Folder — Copy link hàng loạt</h1>
+      <p>Duyệt thư mục, tích chọn từng tệp hoặc quét đệ quy cả cây thư mục, rồi copy toàn bộ link một lần.</p>
+      <div class="hero-form">
+        <input type="text" id="heroInput" placeholder="https://www.fshare.vn/folder/LINKCODE"/>
+        <button class="btn" id="heroBtn">Duyệt</button>
+      </div>
+      <div class="hint">Lựa chọn được giữ lại khi bạn đổi trang và đi sâu vào thư mục con.</div>
+      <div class="err" id="homeError"></div>
+    </div>
+  </div>
+</div>
+
+<div id="folderView">
+  <div class="page">
+    <div id="folderHeader" class="folder-header"></div>
+
+    <div class="toolbar">
+      <div class="breadcrumb" id="breadcrumb"></div>
+      <div class="sort-wrap">
+        <span class="seg" id="viewSeg">
+          <button data-view="table" class="on">Bảng</button>
+          <button data-view="tree">Cây</button>
+        </span>
+        <span>Sắp xếp:</span>
+        <select id="sortSelect">
+          <option value="type,name">Loại + Tên</option>
+          <option value="name">Tên A-Z</option>
+          <option value="-name">Tên Z-A</option>
+          <option value="-size">Kích thước (lớn trước)</option>
+          <option value="size">Kích thước (nhỏ trước)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bulkbar">
+      <span class="lbl">Chọn nhanh</span>
+      <button class="btn2" id="selPageBtn">Tệp trang này</button>
+      <button class="btn2" id="expandAllBtn">Mở rộng tất cả ↓</button>
+      <button class="btn2" id="collapseAllBtn">Thu gọn</button>
+      <button class="btn2" id="selFolderBtn">Mọi tệp trong thư mục này</button>
+      <button class="btn2" id="selDeepBtn">Quét đệ quy cả cây ↓</button>
+      <button class="btn2" id="selNoneBtn">Bỏ chọn hết</button>
+    </div>
+
+    <div class="stats-bar" id="statsBar"></div>
+    <div id="paginationTop" class="pagination"></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th class="chk-col"><input type="checkbox" id="chkAll" title="Chọn/bỏ mọi tệp trong trang"/></th>
+          <th>Tên mục</th>
+          <th>Kích thước</th>
+          <th class="date-col">Ngày cập nhật</th>
+          <th>Hành động</th>
+        </tr></thead>
+        <tbody id="fileList"></tbody>
+      </table>
+    </div>
+
+    <div class="tree-wrap" id="treeWrap">
+      <div class="tree-head">
+        <span>Cây thư mục — bấm ▸ để nạp cấp con</span>
+        <span id="treeStat"></span>
+      </div>
+      <div class="tree-prog" id="treeProg">
+        <div class="tp-row">
+          <span class="tp-label" id="tpLabel"></span>
+          <button class="tp-more" id="tpMore">Nạp nốt phần còn lại ↓</button>
+          <span class="tp-pct" id="tpPct">0%</span>
+        </div>
+        <div class="tp-bar"><i id="tpBar"></i></div>
+      </div>
+      <div id="treeBody"></div>
+    </div>
+
+    <div id="paginationBot" class="pagination"></div>
+    <div class="pg-info" id="pgInfo"></div>
+  </div>
+</div>
+
+<!-- selection tray -->
+<div class="tray" id="tray">
+  <div class="tray-in">
+    <div>
+      <div class="tray-count" id="trayCount">0 tệp</div>
+      <div class="tray-sub" id="traySub"></div>
+    </div>
+    <div class="tray-actions">
+      <select id="fmtSelect" title="Định dạng khi copy / xuất file">
+        <option value="link">Chỉ link</option>
+        <option value="name-link">Tên — link</option>
+        <option value="link-name">Link — tên</option>
+        <option value="md">Markdown list</option>
+        <option value="full">Tên | Cỡ | Link</option>
+      </select>
+      <button class="btn2" id="viewBtn">Xem danh sách</button>
+      <button class="btn2" id="txtBtn">Tải .txt</button>
+      <button class="btn" id="copyAllBtn">Copy tất cả link</button>
+    </div>
+  </div>
+</div>
+
+<!-- scan progress -->
+<div class="ov" id="scanOv">
+  <div class="ov-card">
+    <h3 id="scanTitle">Đang quét thư mục…</h3>
+    <div class="ov-line">Thư mục đã quét: <b id="scDone">0</b> / <b id="scTotal">0</b></div>
+    <div class="ov-line">Tệp tìm thấy: <b id="scFiles">0</b></div>
+    <div class="ov-line" id="scNow" style="color:var(--muted)"></div>
+    <div class="bar"><i id="scBar"></i></div>
+    <div class="ov-line" id="scErr" style="color:var(--red)"></div>
+    <div class="ov-foot"><button class="btn2" id="scanCancel">Dừng lại</button></div>
+  </div>
+</div>
+
+<!-- list modal -->
+<div class="modal" id="listModal">
+  <div class="modal-card">
+    <h3 id="listTitle">Danh sách link</h3>
+    <textarea id="listArea" spellcheck="false" readonly></textarea>
+    <div class="modal-foot">
+      <button class="btn2" id="listClose">Đóng</button>
+      <button class="btn2" id="listTxt">Tải .txt</button>
+      <button class="btn" id="listCopy">Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// The upstream proxy. It is unauthenticated and sends Access-Control-Allow-Origin: *,
+// so this page can call it from any origin, including file:// and localhost.
+var API        = 'https://fshare.annnekkk.com/api/folder';
+var PAGE_SIZE  = 50;   // server-side hard cap; ?limit= is ignored
+var CONCURRENCY= 6;    // parallel folder fetches; 6 measured clean, upstream is the bottleneck
+var MAX_DEPTH  = 12;   // guard against pathological nesting
+var MAX_FOLDERS= 4000; // guard against a runaway scan
+
+// ── state ───────────────────────────────────────────────────────────────────
+var navStack    = [];          // [{linkcode, name}]
+var currentPage = 1;
+var totalPages  = 1;
+var pageItems   = [];          // items rendered right now
+var sel         = new Map();   // linkcode -> {linkcode,name,size,path,src}
+var selFolders  = new Set();   // folder linkcodes selected as a whole
+var scanAbort   = false;
+var theme       = localStorage.getItem('fsbc-theme') || 'dark';
+
+// Tree view. nodes caches every folder we have already fetched, so collapsing
+// and re-expanding costs nothing and a later "select all" can read from memory.
+var viewMode    = localStorage.getItem('fsbc-view') || 'table';
+var nodes       = new Map();   // linkcode -> {lc,name,items,loaded,loading,expanded,error}
+var treeRoot    = null;
+var quietRender = false;       // suppress repaints during a bulk expand
+
+var $ = function (id) { return document.getElementById(id); };
+
+// ── theme ───────────────────────────────────────────────────────────────────
+function applyTheme() {
+  document.body.classList.toggle('light', theme === 'light');
+  $('themeBtn').textContent = theme === 'dark' ? '☀️ Sáng' : '🌙 Tối';
+}
+
+// ── helpers ─────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtSize(b) {
+  if (!b) return '-';
+  var u = ['B','KB','MB','GB','TB'], i = 0;
+  while (b >= 1024 && i < 4) { b /= 1024; i++; }
+  return b.toFixed(i ? 1 : 0) + ' ' + u[i];
+}
+function fmtDate(s) {
+  if (!s) return '-';
+  var n = Number(s);
+  var d = (!isNaN(n) && n > 1e9) ? new Date(n * 1000) : new Date(s);
+  if (isNaN(d.getTime())) return String(s);
+  var p = function (x) { return ('0' + x).slice(-2); };
+  return p(d.getHours()) + ':' + p(d.getMinutes()) + ' ' +
+         p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear();
+}
+function isFolder(it) {
+  return it.type === 0 || it.type === '0' || it.mimetype === 'folder' || it.ftype === 'folder';
+}
+function fileUrl(lc)   { return 'https://www.fshare.vn/file/' + lc; }
+function folderUrl(lc) { return 'https://www.fshare.vn/folder/' + lc; }
+
+function extractLinkcode(s) {
+  s = (s || '').trim();
+  var m = s.match(/fshare\.vn\/folder\/([A-Za-z0-9]{4,})/i);          if (m) return m[1];
+  m     = s.match(/fshare\.vn(?:%2F)+folder(?:%2F)+([A-Za-z0-9]{4,})/i); if (m) return m[1];
+  m     = s.match(/#([A-Za-z0-9]{4,})/);                              if (m) return m[1];
+  if (/^[A-Za-z0-9]{4,}$/.test(s)) return s;
+  return null;
+}
+
+var toastTimer = null;
+function toast(msg, bad) {
+  var el = $('toast');
+  el.textContent = msg;
+  el.classList.toggle('bad', !!bad);
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { el.classList.remove('on'); }, 2200);
+}
+
+// Clipboard API needs a secure context; fall back to execCommand on file://.
+function copyText(txt) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(txt).catch(legacyCopy.bind(null, txt));
+  }
+  return legacyCopy(txt);
+}
+function legacyCopy(txt) {
+  return new Promise(function (resolve, reject) {
+    var ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    if (ok) resolve(); else reject(new Error('clipboard blocked'));
+  });
+}
+function downloadTxt(text, filename) {
+  var blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+
+// ── API ─────────────────────────────────────────────────────────────────────
+function currentSort() { return $('sortSelect').value; }
+
+function apiFolder(linkcode, page, sort) {
+  var url = API + '?linkcode=' + encodeURIComponent(linkcode) +
+            '&sort=' + encodeURIComponent(sort || currentSort()) +
+            '&page=' + (page || 1);
+  return fetch(url).then(function (res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  });
+}
+
+// Total page count is only exposed through the upstream _links.last URL.
+function pagesOf(data, page, count) {
+  var last = (data && data._links && data._links.last) || '';
+  var m = last.match(/[?&]page=(\d+)/);
+  if (m) return parseInt(m[1], 10);
+  return count < PAGE_SIZE ? page : page + 1;
+}
+
+// Pull every page of one folder and return the flat item list.
+function fetchAllPages(linkcode, sort, onPage) {
+  return apiFolder(linkcode, 1, sort).then(function (d1) {
+    var items = (d1.items || []).slice();
+    var tp = pagesOf(d1, 1, items.length);
+    if (onPage) onPage(1, tp);
+    var chain = Promise.resolve();
+    var _loop = function (p) {
+      chain = chain.then(function () {
+        if (scanAbort) return;
+        return apiFolder(linkcode, p, sort).then(function (dp) {
+          items = items.concat(dp.items || []);
+          if (onPage) onPage(p, tp);
+        });
+      });
+    };
+    for (var p = 2; p <= tp; p++) _loop(p);
+    return chain.then(function () { return {items: items, meta: d1}; });
+  });
+}
+
+// ── selection ───────────────────────────────────────────────────────────────
+function addFile(item, src) {
+  if (sel.has(item.linkcode)) return false;
+  sel.set(item.linkcode, {
+    linkcode: item.linkcode,
+    name: item.name || item.filename || '(no name)',
+    size: item.size || 0,
+    path: item.path || '',
+    src: src || null
+  });
+  return true;
+}
+function removeFile(lc) { sel.delete(lc); }
+
+function clearSelection() {
+  sel.clear();
+  selFolders.clear();
+  renderRowsState();
+  renderTray();
+}
+
+// Drop everything that a given folder's recursive scan contributed.
+function unselectFolder(lc) {
+  selFolders.delete(lc);
+  var kill = [];
+  sel.forEach(function (v, k) { if (v.src === lc) kill.push(k); });
+  kill.forEach(function (k) { sel.delete(k); });
+}
+
+function selTotals() {
+  var bytes = 0;
+  sel.forEach(function (v) { bytes += v.size || 0; });
+  return {count: sel.size, bytes: bytes};
+}
+
+function renderTray() {
+  var t = selTotals();
+  var tray = $('tray');
+  tray.classList.toggle('on', t.count > 0);
+  $('trayCount').textContent = t.count + ' tệp đã chọn';
+  $('traySub').textContent = t.bytes ? 'Tổng ' + fmtSize(t.bytes) : '';
+  document.body.style.paddingBottom = t.count > 0 ? '96px' : '24px';
+}
+
+// Repaint checkbox + row highlight without refetching. Covers both views so a
+// selection made in one shows up immediately in the other.
+function renderRowsState() {
+  var rows = document.querySelectorAll('#fileList tr[data-lc], #treeBody .trow[data-lc]');
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var lc = row.getAttribute('data-lc');
+    var isDir = row.getAttribute('data-dir') === '1';
+    var on = isDir ? selFolders.has(lc) : sel.has(lc);
+    var cb = row.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = on;
+    row.classList.toggle('picked', on);
+  }
+  syncHeaderCheckbox();
+}
+function syncHeaderCheckbox() {
+  var files = pageItems.filter(function (it) { return !isFolder(it); });
+  var picked = files.filter(function (it) { return sel.has(it.linkcode); }).length;
+  var cb = $('chkAll');
+  cb.checked = files.length > 0 && picked === files.length;
+  cb.indeterminate = picked > 0 && picked < files.length;
+}
+
+// ── rendering ───────────────────────────────────────────────────────────────
+function showHome() {
+  $('homeView').style.display = 'block';
+  $('folderView').style.display = 'none';
+  document.title = 'Fshare Bulk Copy';
+}
+function showFolder() {
+  $('homeView').style.display = 'none';
+  $('folderView').style.display = 'block';
+}
+
+function setLoading() {
+  $('fileList').innerHTML =
+    '<tr class="center-row"><td colspan="5"><span class="spinner"></span> Đang tải...</td></tr>';
+}
+function setError(msg) {
+  $('fileList').innerHTML =
+    '<tr class="center-row"><td colspan="5" style="color:var(--red)">' + esc(msg) + '</td></tr>';
+}
+
+function loadFolder(linkcode, page) {
+  currentPage = page || 1;
+  renderBreadcrumb();
+  if (viewMode === 'tree') { openTree(linkcode); return; }
+  setLoading();
+  apiFolder(linkcode, currentPage)
+    .then(function (data) { renderFolder(data, linkcode); })
+    .catch(function (e)   { setError('Lỗi tải thư mục: ' + e.message); });
+}
+
+function renderFolder(data, linkcode) {
+  var current = data.current || {};
+  var items   = Array.isArray(data.items) ? data.items : [];
+  pageItems   = items;
+  totalPages  = pagesOf(data, currentPage, items.length);
+
+  var entry = navStack[navStack.length - 1];
+  var fname = current.name || data.name || entry.name;
+  entry.name = fname;
+
+  if (navStack.length === 1) {
+    var fpath = current.path || '';
+    $('folderHeader').innerHTML =
+      '<div class="folder-title"><svg width="22" height="22" viewBox="0 0 24 24" fill="#f5a623" style="flex-shrink:0"><path d="M10 4H2v16h20V6H12l-2-2z"/></svg>' + esc(fname) + '</div>' +
+      (fpath ? '<div class="folder-path">Fshare:// <span>' + esc(fpath) + '</span></div>' : '');
+    document.title = fname + ' — Fshare Bulk Copy';
+  }
+  renderBreadcrumb();
+
+  var nFolders = 0, nFiles = 0, bytes = 0;
+  items.forEach(function (it) {
+    if (isFolder(it)) nFolders++; else { nFiles++; bytes += it.size || 0; }
+  });
+  $('statsBar').textContent = nFolders + ' thư mục, ' + nFiles + ' tệp' +
+    (bytes ? ' — ' + fmtSize(bytes) : '');
+
+  var tbody = $('fileList');
+  tbody.innerHTML = '';
+  if (!items.length) {
+    tbody.innerHTML = '<tr class="center-row"><td colspan="5">Thư mục trống.</td></tr>';
+    renderPagination(linkcode);
+    return;
+  }
+  items.forEach(function (it) { tbody.appendChild(makeRow(it)); });
+  renderPagination(linkcode);
+  renderRowsState();
+}
+
+function makeRow(item) {
+  var folder = isFolder(item);
+  var lc     = item.linkcode || item.code || '';
+  var name   = item.name || item.filename || '(no name)';
+
+  var tr = document.createElement('tr');
+  tr.setAttribute('data-lc', lc);
+  tr.setAttribute('data-dir', folder ? '1' : '0');
+
+  // checkbox
+  var chkTd = document.createElement('td');
+  chkTd.className = 'chk-col';
+  var cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.title = folder ? 'Chọn cả thư mục này (quét đệ quy)' : 'Chọn tệp này';
+  cb.addEventListener('change', function () {
+    if (folder) onToggleFolder(lc, name, cb);
+    else {
+      if (cb.checked) addFile(item, null); else removeFile(lc);
+      tr.classList.toggle('picked', cb.checked);
+      renderTray();
+      syncHeaderCheckbox();
+    }
+  });
+  chkTd.appendChild(cb);
+
+  // name
+  var nameTd = document.createElement('td');
+  var cell = document.createElement('div');
+  cell.className = 'name-cell';
+  var iconWrap = document.createElement('div');
+  iconWrap.className = 'file-icon-wrap ' + (folder ? 'is-folder' : 'is-file');
+  iconWrap.innerHTML = folder
+    ? '<svg class="file-icon" viewBox="0 0 24 24" fill="#f5a623"><path d="M10 4H2v16h20V6H12l-2-2z"/></svg>'
+    : '<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+  cell.appendChild(iconWrap);
+
+  var nameEl = folder ? document.createElement('span') : document.createElement('a');
+  nameEl.className = 'item-name ' + (folder ? 'item-folder' : 'item-file-link');
+  nameEl.textContent = name;
+  if (folder) {
+    nameEl.addEventListener('click', function () { drillInto(lc, name); });
+  } else {
+    nameEl.href = fileUrl(lc);
+    nameEl.target = '_blank';
+    nameEl.rel = 'noopener noreferrer';
+  }
+  cell.appendChild(nameEl);
+  nameTd.appendChild(cell);
+
+  var sizeTd = document.createElement('td');
+  sizeTd.className = 'size-cell';
+  sizeTd.textContent = folder ? 'Thư mục' : fmtSize(item.size || 0);
+
+  var dateTd = document.createElement('td');
+  dateTd.className = 'date-cell';
+  dateTd.textContent = fmtDate(item.modified || item.updated || item.created || '');
+
+  var actTd = document.createElement('td');
+  var badge = document.createElement('span');
+  badge.className = 'badge ' + (folder ? 'badge-folder' : 'badge-copy');
+  badge.textContent = folder ? 'Mở' : 'Copy link';
+  if (folder) {
+    badge.addEventListener('click', function () { drillInto(lc, name); });
+  } else {
+    badge.addEventListener('click', function () {
+      copyText(fileUrl(lc)).then(function () {
+        var orig = badge.textContent;
+        badge.textContent = 'Đã copy!';
+        badge.classList.add('badge-ok');
+        setTimeout(function () { badge.textContent = orig; badge.classList.remove('badge-ok'); }, 1500);
+      }).catch(function () { toast('Trình duyệt chặn clipboard', true); });
+    });
+  }
+  actTd.appendChild(badge);
+
+  tr.appendChild(chkTd);
+  tr.appendChild(nameTd);
+  tr.appendChild(sizeTd);
+  tr.appendChild(dateTd);
+  tr.appendChild(actTd);
+  return tr;
+}
+
+// ── navigation ──────────────────────────────────────────────────────────────
+function startFolder(lc) {
+  navStack = [{linkcode: lc, name: lc}];
+  showFolder();
+  loadFolder(lc, 1);
+}
+function drillInto(lc, name) {
+  navStack.push({linkcode: lc, name: name});
+  loadFolder(lc, 1);
+}
+function navTo(idx) {
+  navStack = navStack.slice(0, idx + 1);
+  loadFolder(navStack[navStack.length - 1].linkcode, 1);
+}
+function currentLc() {
+  return navStack.length ? navStack[navStack.length - 1].linkcode : null;
+}
+
+function renderBreadcrumb() {
+  var bc = $('breadcrumb');
+  bc.innerHTML = '';
+  var home = document.createElement('span');
+  home.className = 'bc-home';
+  home.textContent = '🏠 Trang chủ';
+  home.addEventListener('click', function () { location.hash = ''; showHome(); });
+  bc.appendChild(home);
+  navStack.forEach(function (n, i) {
+    var sep = document.createElement('span');
+    sep.className = 'bc-sep';
+    sep.textContent = '›';
+    bc.appendChild(sep);
+    var el = document.createElement('span');
+    el.textContent = n.name;
+    if (i === navStack.length - 1) {
+      el.className = 'bc-current';
+    } else {
+      el.className = 'bc-item';
+      el.addEventListener('click', function () { navTo(i); });
+    }
+    bc.appendChild(el);
+  });
+}
+
+function renderPagination(linkcode) {
+  var info = $('pgInfo');
+  [$('paginationTop'), $('paginationBot')].forEach(function (wrap) {
+    wrap.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    var mk = function (label, page, opts) {
+      var b = document.createElement('button');
+      b.className = 'pg-btn' + (opts && opts.active ? ' active' : '');
+      b.textContent = label;
+      if (opts && opts.disabled) b.disabled = true;
+      else b.addEventListener('click', function () {
+        loadFolder(linkcode, page);
+        window.scrollTo({top: 0, behavior: 'smooth'});
+      });
+      wrap.appendChild(b);
+    };
+
+    mk('← Trước', currentPage - 1, {disabled: currentPage <= 1});
+    buildPageList(currentPage, totalPages).forEach(function (p) {
+      if (p === '...') {
+        var e = document.createElement('span');
+        e.className = 'pg-ellipsis';
+        e.textContent = '…';
+        wrap.appendChild(e);
+      } else {
+        mk(String(p), p, {active: p === currentPage, disabled: p === currentPage});
+      }
+    });
+    mk('Tiếp →', currentPage + 1, {disabled: currentPage >= totalPages});
+  });
+  info.textContent = totalPages > 1 ? 'Trang ' + currentPage + ' / ' + totalPages : '';
+}
+
+function buildPageList(p, tot) {
+  var pages = [1];
+  if (p - 2 > 2) pages.push('...');
+  for (var i = Math.max(2, p - 2); i <= Math.min(tot - 1, p + 2); i++) pages.push(i);
+  if (p + 2 < tot - 1) pages.push('...');
+  if (tot > 1) pages.push(tot);
+  return pages;
+}
+
+// ── scanning ────────────────────────────────────────────────────────────────
+var scanState = null;
+
+function openScan(title) {
+  scanAbort = false;
+  scanState = {done: 0, total: 1, files: 0, errors: 0};
+  $('scanTitle').textContent = title;
+  $('scErr').textContent = '';
+  $('scNow').textContent = '';
+  paintScan();
+  $('scanOv').classList.add('on');
+}
+function paintScan() {
+  if (!scanState) return;
+  $('scDone').textContent  = scanState.done;
+  $('scTotal').textContent = scanState.total;
+  $('scFiles').textContent = scanState.files;
+  var pct = scanState.total ? Math.round(scanState.done / scanState.total * 100) : 0;
+  $('scBar').style.width = Math.min(pct, 100) + '%';
+  renderTreeProgress(false);  // keep the bar behind the overlay live too
+}
+function closeScan() { $('scanOv').classList.remove('on'); }
+
+/**
+ * Walk a folder. recursive=false stops at the first level.
+ * Returns the flat file list; folders are only traversed, never returned.
+ */
+function scanFolder(rootLc, recursive) {
+  var sort   = currentSort();
+  var seen   = {};
+  var queue  = [{lc: rootLc, depth: 0}];
+  var files  = [];
+  seen[rootLc] = true;
+
+  var step = function () {
+    if (scanAbort || !queue.length) return Promise.resolve();
+    var batch = queue.splice(0, CONCURRENCY);
+    return Promise.all(batch.map(function (node) {
+      return fetchAllPages(node.lc, sort).then(function (r) {
+        $('scNow').textContent = (r.meta.current && r.meta.current.name) || node.lc;
+        r.items.forEach(function (it) {
+          if (isFolder(it)) {
+            if (recursive && !seen[it.linkcode] &&
+                node.depth < MAX_DEPTH && Object.keys(seen).length < MAX_FOLDERS) {
+              seen[it.linkcode] = true;
+              queue.push({lc: it.linkcode, depth: node.depth + 1});
+              scanState.total++;
+            }
+          } else {
+            files.push(it);
+            scanState.files++;
+          }
+        });
+      }).catch(function (e) {
+        scanState.errors++;
+        $('scErr').textContent = 'Bỏ qua ' + scanState.errors + ' thư mục lỗi (' + e.message + ')';
+      }).then(function () {
+        scanState.done++;
+        paintScan();
+      });
+    })).then(step);
+  };
+
+  return step().then(function () { return files; });
+}
+
+function runScan(rootLc, recursive, srcTag, title) {
+  openScan(title);
+  return scanFolder(rootLc, recursive).then(function (files) {
+    var added = 0;
+    files.forEach(function (it) { if (addFile(it, srcTag)) added++; });
+    closeScan();
+    renderRowsState();
+    renderTray();
+    if (scanAbort) toast('Đã dừng — thêm được ' + added + ' tệp');
+    else toast('Đã thêm ' + added + ' tệp' + (added !== files.length ? ' (' + (files.length - added) + ' trùng)' : ''));
+    return added;
+  }).catch(function (e) {
+    closeScan();
+    toast('Lỗi quét: ' + e.message, true);
+  });
+}
+
+function onToggleFolder(lc, name, cb) {
+  if (!cb.checked) {
+    unselectFolder(lc);
+    renderRowsState();
+    renderTray();
+    return;
+  }
+  selFolders.add(lc);
+  cb.disabled = true;
+  runScan(lc, true, lc, 'Đang quét "' + name + '"…').then(function () {
+    cb.disabled = false;
+    // scan may have been cancelled — keep the box in sync with reality
+    var any = false;
+    sel.forEach(function (v) { if (v.src === lc) any = true; });
+    if (!any) selFolders.delete(lc);
+    renderRowsState();
+  });
+}
+
+// ── tree view ───────────────────────────────────────────────────────────────
+function getNode(lc, name) {
+  var n = nodes.get(lc);
+  if (!n) {
+    n = {lc: lc, name: name || lc, items: [], loaded: false, loading: false, expanded: false, error: null};
+    nodes.set(lc, n);
+  } else if (name && n.name === n.lc) {
+    n.name = name;
+  }
+  return n;
+}
+
+// Fetch every page of one folder once, then serve it from cache forever.
+function loadNode(lc, name) {
+  var n = getNode(lc, name);
+  if (n.loaded) return Promise.resolve(n);
+  if (n.loading) return n.loading;
+  n.error = null;
+  n.loading = fetchAllPages(lc, currentSort()).then(function (r) {
+    n.items  = r.items;
+    n.loaded = true;
+    n.loading = false;
+    n.name = (r.meta.current && r.meta.current.name) || n.name;
+    renderTree();
+    return n;
+  }).catch(function (e) {
+    n.loading = false;
+    n.error = e.message;
+    renderTree();
+    throw e;
+  });
+  renderTree();
+  return n.loading;
+}
+
+function toggleNode(lc, name) {
+  var n = getNode(lc, name);
+  if (n.expanded) { n.expanded = false; renderTree(); return; }
+  loadNode(lc, name).then(function (nn) { nn.expanded = true; renderTree(); })
+                    .catch(function () {});
+}
+
+// Flatten the currently expanded part of the tree into renderable rows.
+function visibleRows(lc, depth, out) {
+  var n = nodes.get(lc);
+  if (!n || !n.expanded || !n.loaded) return;
+  n.items.forEach(function (it) {
+    out.push({item: it, depth: depth});
+    if (isFolder(it)) visibleRows(it.linkcode, depth + 1, out);
+  });
+}
+
+// Gather files from cache. Returns false if any folder below is still unloaded.
+function collectSubtree(lc, out) {
+  var n = nodes.get(lc);
+  if (!n || !n.loaded) return false;
+  var complete = true;
+  n.items.forEach(function (it) {
+    if (isFolder(it)) { if (!collectSubtree(it.linkcode, out)) complete = false; }
+    else out.push(it);
+  });
+  return complete;
+}
+
+function treeRow(item, depth) {
+  var folder = isFolder(item);
+  var lc     = item.linkcode || item.code || '';
+  var n      = folder ? nodes.get(lc) : null;
+
+  var row = document.createElement('div');
+  row.className = 'trow';
+  row.setAttribute('data-lc', lc);
+  row.setAttribute('data-dir', folder ? '1' : '0');
+  row.style.paddingLeft = (14 + depth * 22) + 'px';
+
+  var chev = document.createElement('span');
+  chev.className = 'tchev' + (folder ? (n && n.expanded ? ' open' : '') : ' leaf');
+  chev.textContent = '▶';
+  if (folder) chev.addEventListener('click', function () { toggleNode(lc, item.name); });
+  row.appendChild(chev);
+
+  var cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = folder ? selFolders.has(lc) : sel.has(lc);
+  cb.title = folder ? 'Chọn mọi tệp bên trong' : 'Chọn tệp này';
+  cb.addEventListener('change', function () {
+    if (folder) onToggleFolderTree(lc, item.name, cb);
+    else {
+      if (cb.checked) addFile(item, null); else removeFile(lc);
+      renderRowsState();
+      renderTray();
+    }
+  });
+  row.appendChild(cb);
+
+  var icon = document.createElement('div');
+  icon.className = 'file-icon-wrap sm ' + (folder ? 'is-folder' : 'is-file');
+  icon.innerHTML = folder
+    ? '<svg class="file-icon" viewBox="0 0 24 24" fill="#f5a623"><path d="M10 4H2v16h20V6H12l-2-2z"/></svg>'
+    : '<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+  row.appendChild(icon);
+
+  var nameEl = document.createElement('div');
+  nameEl.className = 'tname' + (folder ? ' dir' : '');
+  if (folder) {
+    nameEl.textContent = item.name;
+    nameEl.addEventListener('click', function () { toggleNode(lc, item.name); });
+  } else {
+    var a = document.createElement('a');
+    a.href = fileUrl(lc);
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = item.name;
+    nameEl.appendChild(a);
+  }
+  row.appendChild(nameEl);
+
+  if (folder && n) {
+    if (n.loading) { var sp = document.createElement('span'); sp.className = 'tspin'; row.appendChild(sp); }
+    else if (n.error) { var er = document.createElement('span'); er.className = 'terr'; er.textContent = 'lỗi'; row.appendChild(er); }
+    else if (n.loaded) {
+      var c = document.createElement('span');
+      c.className = 'tcount';
+      var nf = n.items.filter(function (x) { return !isFolder(x); }).length;
+      c.textContent = (n.items.length - nf) + ' thư mục · ' + nf + ' tệp';
+      row.appendChild(c);
+    }
+  }
+
+  var meta = document.createElement('span');
+  meta.className = 'tmeta';
+  meta.textContent = folder ? '' : fmtSize(item.size || 0);
+  row.appendChild(meta);
+
+  var badge = document.createElement('span');
+  badge.className = 'badge ' + (folder ? 'badge-folder' : 'badge-copy');
+  badge.textContent = folder ? 'Vào' : 'Copy';
+  if (folder) {
+    badge.addEventListener('click', function () { drillInto(lc, item.name); });
+  } else {
+    badge.addEventListener('click', function () {
+      copyText(fileUrl(lc)).then(function () {
+        badge.textContent = 'OK';
+        badge.classList.add('badge-ok');
+        setTimeout(function () { badge.textContent = 'Copy'; badge.classList.remove('badge-ok'); }, 1400);
+      }).catch(function () { toast('Trình duyệt chặn clipboard', true); });
+    });
+  }
+  row.appendChild(badge);
+
+  return row;
+}
+
+/**
+ * Walk everything discovered below treeRoot and report how much is loaded.
+ * Folders are only ever discovered by reading a loaded parent, so pending === 0
+ * genuinely means the whole subtree is in memory — nothing is left to find.
+ */
+function treeProgress() {
+  var seen = {}, stack = [treeRoot];
+  var total = 0, loaded = 0, files = 0, bytes = 0;
+  seen[treeRoot] = true;
+  while (stack.length) {
+    var lc = stack.pop();
+    total++;
+    var n = nodes.get(lc);
+    if (!n || !n.loaded) continue;
+    loaded++;
+    for (var i = 0; i < n.items.length; i++) {
+      var it = n.items[i];
+      if (isFolder(it)) {
+        if (!seen[it.linkcode]) { seen[it.linkcode] = true; stack.push(it.linkcode); }
+      } else {
+        files++;
+        bytes += it.size || 0;
+      }
+    }
+  }
+  return {total: total, loaded: loaded, pending: total - loaded,
+          files: files, bytes: bytes, complete: total === loaded};
+}
+
+// Repainted far more often than the tree itself, so keep it cheap.
+var progTimer = null;
+function renderTreeProgress(force) {
+  if (viewMode !== 'tree' || !treeRoot) return;
+  if (!force && progTimer) return;
+  if (!force) { progTimer = setTimeout(function () { progTimer = null; }, 120); }
+
+  var p = treeProgress();
+  var pct = p.total ? Math.round(p.loaded / p.total * 100) : 0;
+  var wrap = $('treeProg');
+  wrap.classList.toggle('done', p.complete);
+  $('tpBar').style.width = pct + '%';
+  $('tpPct').textContent = pct + '%';
+  $('tpMore').style.display = p.complete ? 'none' : '';
+  $('tpLabel').innerHTML = p.complete
+    ? '✓ Đã nạp đầy đủ — <b>' + p.total + '</b> thư mục, <b>' + p.files + '</b> tệp' +
+      (p.bytes ? ', <b>' + fmtSize(p.bytes) + '</b>' : '')
+    : 'Đã nạp <b>' + p.loaded + '</b>/<b>' + p.total + '</b> thư mục · còn <b>' + p.pending +
+      '</b> chưa mở · <b>' + p.files + '</b> tệp đã thấy';
+}
+
+function renderTree() {
+  // Throttle the walk during a bulk expand, where this fires once per folder.
+  renderTreeProgress(!quietRender);
+  if (quietRender || viewMode !== 'tree' || !treeRoot) return;
+  var body = $('treeBody');
+  var root = nodes.get(treeRoot);
+
+  if (!root || (!root.loaded && root.loading)) {
+    body.innerHTML = '<div class="tree-empty"><span class="spinner"></span> Đang tải...</div>';
+    return;
+  }
+  if (root && root.error) {
+    body.innerHTML = '<div class="tree-empty" style="color:var(--red)">Lỗi: ' + esc(root.error) + '</div>';
+    return;
+  }
+
+  var rows = [];
+  visibleRows(treeRoot, 0, rows);
+  if (!rows.length) {
+    body.innerHTML = '<div class="tree-empty">Thư mục trống.</div>';
+    $('treeStat').textContent = '';
+    return;
+  }
+
+  var frag = document.createDocumentFragment();
+  rows.forEach(function (r) { frag.appendChild(treeRow(r.item, r.depth)); });
+  body.innerHTML = '';
+  body.appendChild(frag);
+
+  var loadedFolders = 0, knownFiles = 0;
+  nodes.forEach(function (n) { if (n.loaded) { loadedFolders++; knownFiles += n.items.filter(function (x) { return !isFolder(x); }).length; } });
+  $('treeStat').textContent = rows.length + ' dòng hiện · ' + loadedFolders + ' thư mục đã nạp · ' + knownFiles + ' tệp';
+}
+
+// Bulk-expand the whole tree, reusing the scan overlay for progress.
+function expandAllTree() {
+  if (!treeRoot) return;
+  openScan('Đang mở rộng toàn bộ cây…');
+  var seen = {}, queue = [treeRoot];
+  seen[treeRoot] = true;
+  scanState.total = 1;
+  quietRender = true;
+
+  var step = function () {
+    if (scanAbort || !queue.length) return Promise.resolve();
+    var batch = queue.splice(0, CONCURRENCY);
+    return Promise.all(batch.map(function (lc) {
+      return loadNode(lc, null).then(function (n) {
+        n.expanded = true;
+        $('scNow').textContent = n.name;
+        n.items.forEach(function (it) {
+          if (isFolder(it)) {
+            if (!seen[it.linkcode] && Object.keys(seen).length < MAX_FOLDERS) {
+              seen[it.linkcode] = true;
+              queue.push(it.linkcode);
+              scanState.total++;
+            }
+          } else scanState.files++;
+        });
+      }).catch(function (e) {
+        scanState.errors++;
+        $('scErr').textContent = 'Bỏ qua ' + scanState.errors + ' thư mục lỗi (' + e.message + ')';
+      }).then(function () {
+        scanState.done++;
+        paintScan();
+      });
+    })).then(step);
+  };
+
+  return step().then(function () {
+    quietRender = false;
+    closeScan();
+    renderTree();
+    renderTreeProgress(true);
+    toast(scanAbort ? 'Đã dừng — nạp được ' + scanState.done + ' thư mục'
+                    : 'Đã nạp ' + scanState.done + ' thư mục, ' + scanState.files + ' tệp');
+  }).catch(function (e) {
+    quietRender = false;
+    closeScan();
+    renderTreeProgress(true);
+    toast('Lỗi: ' + e.message, true);
+  });
+}
+
+function collapseAllTree() {
+  nodes.forEach(function (n) { if (n.lc !== treeRoot) n.expanded = false; });
+  renderTree();
+}
+
+// Prefer the cache: after "Mở rộng tất cả" this is instant and hits no network.
+function onToggleFolderTree(lc, name, cb) {
+  if (!cb.checked) {
+    unselectFolder(lc);
+    renderRowsState();
+    renderTray();
+    return;
+  }
+  selFolders.add(lc);
+  var cached = [];
+  if (collectSubtree(lc, cached)) {
+    var added = 0;
+    cached.forEach(function (it) { if (addFile(it, lc)) added++; });
+    renderRowsState();
+    renderTray();
+    toast('Đã thêm ' + added + ' tệp (từ bộ nhớ đệm)');
+    return;
+  }
+  runScan(lc, true, lc, 'Đang quét "' + (name || lc) + '"…').then(function () {
+    var any = false;
+    sel.forEach(function (v) { if (v.src === lc) any = true; });
+    if (!any) selFolders.delete(lc);
+    renderRowsState();
+  });
+}
+
+function setView(mode) {
+  viewMode = mode;
+  localStorage.setItem('fsbc-view', mode);
+  var segs = $('viewSeg').querySelectorAll('button');
+  for (var i = 0; i < segs.length; i++) segs[i].classList.toggle('on', segs[i].getAttribute('data-view') === mode);
+
+  var tree = mode === 'tree';
+  $('treeWrap').classList.toggle('on', tree);
+  document.querySelector('.table-wrap').style.display = tree ? 'none' : '';
+  $('paginationTop').style.display = tree ? 'none' : '';
+  $('paginationBot').style.display = tree ? 'none' : '';
+  $('pgInfo').style.display        = tree ? 'none' : '';
+  $('selPageBtn').style.display    = tree ? 'none' : '';
+  $('expandAllBtn').style.display  = tree ? '' : 'none';
+  $('collapseAllBtn').style.display= tree ? '' : 'none';
+
+  if (tree && currentLc()) openTree(currentLc());
+}
+
+function openTree(lc) {
+  treeRoot = lc;
+  var n = getNode(lc, navStack.length ? navStack[navStack.length - 1].name : lc);
+  n.expanded = true;
+  if (n.loaded) renderTree();
+  else loadNode(lc, n.name).then(renderTree).catch(function () {});
+}
+
+// ── export ──────────────────────────────────────────────────────────────────
+function buildText(fmt) {
+  var lines = [];
+  sel.forEach(function (v) {
+    var url = fileUrl(v.linkcode);
+    switch (fmt) {
+      case 'name-link': lines.push(v.name + ' — ' + url); break;
+      case 'link-name': lines.push(url + '  # ' + v.name); break;
+      case 'md':        lines.push('- [' + v.name + '](' + url + ')'); break;
+      case 'full':      lines.push(v.name + ' | ' + fmtSize(v.size) + ' | ' + url); break;
+      default:          lines.push(url);
+    }
+  });
+  return lines.join('\n');
+}
+function exportName() {
+  var base = navStack.length ? navStack[navStack.length - 1].name : 'fshare';
+  return String(base).replace(/[\\/:*?"<>|]+/g, '_').slice(0, 60) + '.txt';
+}
+
+// ── wiring ──────────────────────────────────────────────────────────────────
+$('themeBtn').addEventListener('click', function () {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('fsbc-theme', theme);
+  applyTheme();
+});
+
+function goFrom(inputId, errId) {
+  var lc = extractLinkcode($(inputId).value);
+  if (!lc) { if (errId) $(errId).textContent = 'URL hoặc link code không hợp lệ.'; return; }
+  if (errId) $(errId).textContent = '';
+  location.hash = lc;
+}
+$('heroBtn').addEventListener('click', function () { goFrom('heroInput', 'homeError'); });
+$('navBtn').addEventListener('click',  function () { goFrom('navInput', null); });
+$('heroInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') goFrom('heroInput', 'homeError'); });
+$('navInput').addEventListener('keydown',  function (e) { if (e.key === 'Enter') goFrom('navInput', null); });
+
+$('sortSelect').addEventListener('change', function () {
+  nodes.clear();  // cached pages were fetched under the old sort order
+  if (currentLc()) loadFolder(currentLc(), 1);
+});
+
+var segBtns = $('viewSeg').querySelectorAll('button');
+for (var si = 0; si < segBtns.length; si++) {
+  segBtns[si].addEventListener('click', function () { setView(this.getAttribute('data-view')); });
+}
+$('expandAllBtn').addEventListener('click', expandAllTree);
+$('collapseAllBtn').addEventListener('click', collapseAllTree);
+$('tpMore').addEventListener('click', expandAllTree);
+
+$('chkAll').addEventListener('change', function () {
+  var on = $('chkAll').checked;
+  pageItems.forEach(function (it) {
+    if (isFolder(it)) return;
+    if (on) addFile(it, null); else removeFile(it.linkcode);
+  });
+  renderRowsState();
+  renderTray();
+});
+
+$('selPageBtn').addEventListener('click', function () {
+  var n = 0;
+  pageItems.forEach(function (it) { if (!isFolder(it) && addFile(it, null)) n++; });
+  renderRowsState();
+  renderTray();
+  toast('Đã thêm ' + n + ' tệp trong trang');
+});
+
+$('selFolderBtn').addEventListener('click', function () {
+  if (!currentLc()) return;
+  runScan(currentLc(), false, null, 'Đang lấy mọi trang của thư mục…');
+});
+
+$('selDeepBtn').addEventListener('click', function () {
+  var lc = currentLc();
+  if (!lc) return;
+  // If the tree is already fully expanded, take the files from cache instead.
+  var cached = [];
+  if (collectSubtree(lc, cached)) {
+    var n = 0;
+    cached.forEach(function (it) { if (addFile(it, null)) n++; });
+    renderRowsState();
+    renderTray();
+    toast('Đã thêm ' + n + ' tệp (từ bộ nhớ đệm)');
+    return;
+  }
+  runScan(lc, true, null, 'Đang quét đệ quy cả cây thư mục…');
+});
+
+$('selNoneBtn').addEventListener('click', clearSelection);
+
+$('scanCancel').addEventListener('click', function () {
+  scanAbort = true;
+  $('scanTitle').textContent = 'Đang dừng…';
+});
+
+$('copyAllBtn').addEventListener('click', function () {
+  if (!sel.size) return;
+  var txt = buildText($('fmtSelect').value);
+  copyText(txt)
+    .then(function () { toast('Đã copy ' + sel.size + ' link'); })
+    .catch(function () {
+      toast('Clipboard bị chặn — mở danh sách để copy tay', true);
+      openList();
+    });
+});
+
+$('txtBtn').addEventListener('click', function () {
+  if (!sel.size) return;
+  downloadTxt(buildText($('fmtSelect').value), exportName());
+});
+
+function openList() {
+  $('listArea').value = buildText($('fmtSelect').value);
+  $('listTitle').textContent = 'Danh sách link (' + sel.size + ' tệp)';
+  $('listModal').classList.add('on');
+  setTimeout(function () { $('listArea').focus(); $('listArea').select(); }, 50);
+}
+$('viewBtn').addEventListener('click', function () { if (sel.size) openList(); });
+$('listClose').addEventListener('click', function () { $('listModal').classList.remove('on'); });
+$('listModal').addEventListener('click', function (e) {
+  if (e.target === $('listModal')) $('listModal').classList.remove('on');
+});
+$('listCopy').addEventListener('click', function () {
+  copyText($('listArea').value)
+    .then(function () { toast('Đã copy'); })
+    .catch(function () { toast('Hãy nhấn Ctrl+A rồi Ctrl+C', true); });
+});
+$('listTxt').addEventListener('click', function () {
+  downloadTxt($('listArea').value, exportName());
+});
+
+$('fmtSelect').addEventListener('change', function () {
+  if ($('listModal').classList.contains('on')) $('listArea').value = buildText($('fmtSelect').value);
+});
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') {
+    $('listModal').classList.remove('on');
+    if ($('scanOv').classList.contains('on')) scanAbort = true;
+  }
+});
+
+// ── boot ────────────────────────────────────────────────────────────────────
+function route() {
+  var lc = extractLinkcode(location.hash.replace(/^#/, ''));
+  if (lc) {
+    if (currentLc() !== lc) startFolder(lc);
+    else showFolder();
+  } else {
+    showHome();
+  }
+}
+window.addEventListener('hashchange', route);
+
+applyTheme();
+setView(viewMode);
+renderTray();
+route();
+</script>
+</body>
+</html>

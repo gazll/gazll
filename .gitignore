@@ -5,3 +5,10 @@
 # so it must never be committed. Copy config.example.js to create it locally.
 public/config.js
 secret/
+
+# Fshare tool: the page itself ships from public/fshare-tool/. What stays out
+# is the local dev server and the exported link lists, which are personal data
+# and would otherwise be published by Pages along with everything in public/.
+fshare-tool/*.txt
+fshare-tool/Doraemon-split/
+public/fshare-tool/*.txt
