@@ -89,14 +89,28 @@ export function createVList(viewport, renderRow) {
   }
 
   return {
-    setItems(next) {
+    /**
+     * Rebuilding wipes innerHTML, which zeroes scrollTop — so expanding a
+     * folder 600 rows down would throw you back to the top. Callers that are
+     * re-rendering the same list keep the offset; navigation resets it.
+     */
+    setItems(next, opts) {
+      const keep = !(opts && opts.resetScroll);
+      const prevTop = keep ? viewport.scrollTop : 0;
+
       items = next || [];
       rowH = rowHeight();          // re-read: density may have changed
       teardown();
       if (!items.length) return;
-      if (items.length < VIRTUAL_THRESHOLD) { renderPlain(); return; }
-      buildScaffold();
-      paint(true);
+
+      if (items.length < VIRTUAL_THRESHOLD) renderPlain();
+      else { buildScaffold(); paint(true); }
+
+      if (prevTop) {
+        const max = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+        viewport.scrollTop = Math.min(prevTop, max);
+        if (virtual) paint(true);
+      }
     },
 
     /** Repaint the visible slice in place, e.g. after a selection change. */
@@ -109,5 +123,83 @@ export function createVList(viewport, renderRow) {
     get virtual() { return virtual; },
     get count() { return items.length; },
     destroy: teardown
+  };
+}
+
+/**
+ * Same idea for a <table>. A tbody cannot hold arbitrary wrappers, so the
+ * offset is carried by two spacer rows instead of a transform.
+ *
+ * @param {HTMLElement} scroller  the scrollable ancestor (.table-wrap)
+ * @param {HTMLElement} tbody
+ * @param {(item:any, index:number) => HTMLTableRowElement} renderRow
+ */
+export function createVTable(scroller, tbody, renderRow) {
+  let items = [];
+  let virtual = false;
+  let rowH = ROW_HEIGHT;
+  let lastStart = -1, lastEnd = -1;
+  const top = document.createElement('tr');
+  const bot = document.createElement('tr');
+  top.className = bot.className = 'vt-spacer';
+  top.setAttribute('aria-hidden', 'true');
+  bot.setAttribute('aria-hidden', 'true');
+
+  function renderPlain() {
+    virtual = false;
+    scroller.removeEventListener('scroll', onScroll);
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < items.length; i++) frag.appendChild(renderRow(items[i], i));
+    tbody.innerHTML = '';
+    tbody.appendChild(frag);
+  }
+
+  function paint(force) {
+    const h = scroller.clientHeight || 600;
+    const first = Math.max(0, Math.floor(scroller.scrollTop / rowH) - OVERSCAN);
+    const count = Math.ceil(h / rowH) + OVERSCAN * 2;
+    const last = Math.min(items.length, first + count);
+    if (!force && first === lastStart && last === lastEnd) return;
+    lastStart = first;
+    lastEnd = last;
+
+    const frag = document.createDocumentFragment();
+    top.style.height = first * rowH + 'px';
+    frag.appendChild(top);
+    for (let i = first; i < last; i++) frag.appendChild(renderRow(items[i], i));
+    bot.style.height = Math.max(0, (items.length - last) * rowH) + 'px';
+    frag.appendChild(bot);
+
+    tbody.innerHTML = '';
+    tbody.appendChild(frag);
+  }
+
+  let ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { ticking = false; paint(false); });
+  }
+
+  return {
+    setItems(next) {
+      items = next || [];
+      rowH = rowHeight();
+      lastStart = lastEnd = -1;
+      scroller.removeEventListener('scroll', onScroll);
+      tbody.innerHTML = '';
+      if (!items.length) return;
+
+      if (items.length < VIRTUAL_THRESHOLD) { renderPlain(); return; }
+      virtual = true;
+      scroller.scrollTop = 0;
+      scroller.addEventListener('scroll', onScroll, { passive: true });
+      paint(true);
+    },
+    refresh() {
+      if (!items.length) return;
+      if (!virtual) renderPlain(); else paint(true);
+    },
+    get virtual() { return virtual; }
   };
 }

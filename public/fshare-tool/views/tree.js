@@ -124,11 +124,15 @@ function treeRow(item, depth, seq, idx) {
   row.className = 'trow';
   row.setAttribute('data-lc', lc);
   row.setAttribute('data-dir', folder ? '1' : '0');
+  row.setAttribute('role', 'treeitem');
+  row.setAttribute('aria-level', depth + 1);
+  if (folder) row.setAttribute('aria-expanded', n && n.expanded ? 'true' : 'false');
   row.style.paddingLeft = (14 + depth * 22) + 'px';
 
   const num = document.createElement('span');
   num.className = 'tnum';
   num.textContent = seq;
+  num.setAttribute('aria-hidden', 'true');
   row.appendChild(num);
 
   const chev = document.createElement('span');
@@ -141,6 +145,7 @@ function treeRow(item, depth, seq, idx) {
   cb.type = 'checkbox';
   cb.checked = folder ? selFolders.has(lc) : sel.has(lc);
   cb.title = folder ? 'Select every file inside' : 'Select this file — Shift+click for a range';
+  cb.setAttribute('aria-label', (folder ? 'Select folder ' : 'Select file ') + item.name);
   if (folder) cb.addEventListener('change', () => onToggleFolderTree(lc, item.name, cb));
   else bindPick(cb, idx, item);
   row.appendChild(cb);

@@ -5,12 +5,14 @@
 
 import { S, $, PAGE_SIZE } from '../lib/state.js';
 import { apiFolder, pagesOf, fetchAllPages } from '../lib/api.js';
+import { cacheGet, cachePageGet, cachePageSet, isBypassed } from '../lib/cache.js';
 import { esc, fmtSize, fmtDate, isFolder, fileUrl, copyText, toast } from '../lib/util.js';
 import { sel, selFolders, addFile } from '../lib/store.js';
 import { bindPick } from '../lib/pick.js';
 import { drillInto, renderBreadcrumb } from '../lib/nav.js';
 import { touchHistory } from '../lib/store.js';
 import { filterTerms, matchesFilter } from '../lib/filter.js';
+import { createVTable } from '../lib/vlist.js';
 import { onToggleFolder } from './tree.js';
 
 export function setLoading() {
@@ -23,7 +25,35 @@ export function setError(msg) {
     '<tr class="center-row"><td colspan="6" style="color:var(--red)">' + esc(msg) + '</td></tr>';
 }
 
-/** Fetch one client page. Sets S.totalPages as a side effect. */
+/** One upstream page, from cache when possible. */
+function upstreamPage(lc, sort, page) {
+  if (!isBypassed()) {
+    const hit = cachePageGet(lc, sort, page);
+    if (hit) {
+      return Promise.resolve({
+        items: hit.items,
+        meta: { current: { name: hit.name, path: hit.path } },
+        totalPages: hit.totalPages,
+        cached: true
+      });
+    }
+  }
+  return apiFolder(lc, page, sort).then((d) => {
+    const items = d.items || [];
+    const tp = pagesOf(d, page, items.length);
+    const cur = d.current || {};
+    cachePageSet(lc, sort, page, items, cur.name || '', cur.path || '', tp);
+    return { items, meta: d, totalPages: tp, cached: false };
+  });
+}
+
+/**
+ * Fetch one client page, which spans perPage/50 upstream pages. Sets
+ * S.totalPages as a side effect.
+ *
+ * A whole-folder cache entry wins outright: if the tree already crawled this
+ * folder, every table page is just a slice of memory.
+ */
 export function loadTablePage(lc, page) {
   const sort = S.sortValue;
 
@@ -35,24 +65,36 @@ export function loadTablePage(lc, page) {
   }
 
   const per = S.perPage / PAGE_SIZE;          // upstream pages per client page
+
+  if (!isBypassed()) {
+    const whole = cacheGet(lc, sort);
+    if (whole) {
+      S.totalPages = Math.max(1, Math.ceil(whole.items.length / S.perPage));
+      const from = (page - 1) * S.perPage;
+      return Promise.resolve({
+        items: whole.items.slice(from, from + S.perPage),
+        meta: { current: { name: whole.name, path: whole.path } }
+      });
+    }
+  }
+
   const first = (page - 1) * per + 1;
 
-  return apiFolder(lc, first, sort).then((d1) => {
-    const head = d1.items || [];
-    const totalUp = pagesOf(d1, first, head.length);
+  return upstreamPage(lc, sort, first).then((r1) => {
+    const totalUp = r1.totalPages;
     S.totalPages = Math.max(1, Math.ceil(totalUp / per));
 
     const rest = [];
     for (let p = first + 1; p <= Math.min(first + per - 1, totalUp); p++) rest.push(p);
-    if (!rest.length) return { items: head, meta: d1 };
+    if (!rest.length) return { items: r1.items, meta: r1.meta };
 
     return Promise.all(rest.map((p) =>
-      apiFolder(lc, p, sort).then((d) => ({ p, items: d.items || [] }))
+      upstreamPage(lc, sort, p).then((r) => ({ p, items: r.items }))
     )).then((parts) => {
       parts.sort((a, b) => a.p - b.p);        // parallel, so restore order
-      let items = head.slice();
+      let items = r1.items.slice();
       parts.forEach((x) => { items = items.concat(x.items); });
-      return { items, meta: d1 };
+      return { items, meta: r1.meta };
     });
   });
 }
@@ -104,12 +146,23 @@ export function renderFolder(items, meta, linkcode) {
   S.displayList = items;
   S.lastPickIdx = -1;
 
-  const frag = document.createDocumentFragment();
-  items.forEach((it, i) => frag.appendChild(makeRow(it, base + i + 1, i)));
-  tbody.appendChild(frag);
+  // Up to 1000 rows per page, so the same virtualisation the tree uses.
+  vtable().setItems(items.map((it, i) => ({ it, seq: base + i + 1, idx: i })));
 
   renderPagination(linkcode);
   paintRowState();
+}
+
+let vt = null;
+function vtable() {
+  if (!vt) {
+    vt = createVTable(
+      document.querySelector('.table-wrap'),
+      $('fileList'),
+      (row) => makeRow(row.it, row.seq, row.idx)
+    );
+  }
+  return vt;
 }
 
 function makeRow(item, seq, idx) {

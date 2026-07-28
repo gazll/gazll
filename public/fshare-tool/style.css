@@ -73,7 +73,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .stats-bar{font-size:.8rem;color:var(--muted);margin-bottom:10px}
 
 /* table */
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+/* Its own scroll box, so the virtual table can map scrollTop onto a row index
+   the same way the tree does. */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:calc(100vh - 300px);min-height:220px;overflow:auto}
+.table-wrap thead th{position:sticky;top:0;z-index:2}
+tbody tr{height:var(--row-h)}
+tr.vt-spacer{height:0;background:none!important}
+tr.vt-spacer:hover{background:none!important}
 table{width:100%;border-collapse:collapse}
 thead th{padding:11px 14px;text-align:left;font-size:.71rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;background:var(--surface2);border-bottom:1px solid var(--border2)}
 thead th.chk-col,td.chk-col{width:44px;text-align:center;padding-left:14px;padding-right:0}

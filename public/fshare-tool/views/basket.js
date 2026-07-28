@@ -3,6 +3,7 @@
 import { S, $ } from '../lib/state.js';
 import { fmtSize, fileUrl, folderOf, downloadTxt, toast } from '../lib/util.js';
 import { sel, removeFile, clearSelection, selTotals, changed } from '../lib/store.js';
+import { openDialog } from '../lib/a11y.js';
 
 let search = '', sortBy = 'add', dupOnly = false, textMode = false;
 
@@ -124,7 +125,7 @@ export function renderBasket() {
 export function openBasket() {
   renderBasket();
   $('listModal').classList.add('on');
-  setTimeout(() => $('bkSearch').focus(), 50);
+  openDialog($('listModal'), $('bkSearch'));
 }
 
 /* ---------- tray ---------- */

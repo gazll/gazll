@@ -15,7 +15,8 @@ import {
 } from './lib/nav.js';
 import { filterTerms } from './lib/filter.js';
 import { scan } from './lib/scan.js';
-import { cacheStats, cacheClear, setBypass } from './lib/cache.js';
+import { cacheStats, cacheClear, cacheDelete, setBypass } from './lib/cache.js';
+import { openDialog, closeDialog } from './lib/a11y.js';
 import { Sync, syncInit, syncPush, syncSignIn, syncSignOut, setConfigApplier } from './lib/sync.js';
 
 import {
@@ -248,12 +249,29 @@ $('cacheBadge').addEventListener('click', () => {
 $('refreshBtn').addEventListener('click', () => {
   const lc = currentLc();
   if (!lc) return;
+
+  /* Invalidate the whole subtree, not just this folder. Dropping only the
+     current node left every child serving its old cached listing, so Refresh
+     appeared to do nothing once you expanded again. */
+  const seen = new Set([lc]);
+  const stack = [lc];
+  while (stack.length) {
+    const cur = stack.pop();
+    const n = S.nodes.get(cur);
+    if (!n || !n.loaded) continue;
+    n.items.forEach((it) => {
+      if (isFolder(it) && !seen.has(it.linkcode)) { seen.add(it.linkcode); stack.push(it.linkcode); }
+    });
+  }
+  let dropped = 0;
+  seen.forEach((code) => { dropped += cacheDelete(code); S.nodes.delete(code); });
+
   setBypass(true);
-  S.nodes.delete(lc);
   loadFolder(lc, S.currentPage);
-  // One crawl only: anything queued after this should use the cache again.
+  // One load only; anything queued afterwards should use the cache again.
   setTimeout(() => setBypass(false), 50);
-  toast('Re-fetching from the server…');
+  renderCacheBadge();
+  toast('Re-fetching — dropped ' + dropped + ' cached entries');
 });
 
 let compact = localStorage.getItem('fsbc-compact') === '1';
@@ -332,9 +350,9 @@ $('fmtSelect').addEventListener('change', () => {
   if ($('listModal').classList.contains('on')) renderBasket();
 });
 
-$('listClose').addEventListener('click', () => $('listModal').classList.remove('on'));
+$('listClose').addEventListener('click', () => hideModal('listModal'));
 $('listModal').addEventListener('click', (e) => {
-  if (e.target === $('listModal')) $('listModal').classList.remove('on');
+  if (e.target === $('listModal')) hideModal('listModal');
 });
 $('listTxt').addEventListener('click', () => downloadTxt(buildText($('fmtSelect').value), exportName()));
 $('listCopy').addEventListener('click', () => {
@@ -368,10 +386,24 @@ setConfigApplier(() => {
 
 /* ---------- help + keyboard ---------- */
 
-$('helpBtn').addEventListener('click', () => $('helpModal').classList.add('on'));
-$('helpClose').addEventListener('click', () => $('helpModal').classList.remove('on'));
+/** Single place that shows/hides a dialog, so focus handling cannot drift. */
+function showModal(id, focusFirst) {
+  const m = $(id);
+  m.classList.add('on');
+  openDialog(m, focusFirst);
+}
+
+function hideModal(id) {
+  const m = $(id);
+  if (!m.classList.contains('on')) return;
+  m.classList.remove('on');
+  closeDialog(m);
+}
+
+$('helpBtn').addEventListener('click', () => showModal('helpModal'));
+$('helpClose').addEventListener('click', () => hideModal('helpModal'));
 $('helpModal').addEventListener('click', (e) => {
-  if (e.target === $('helpModal')) $('helpModal').classList.remove('on');
+  if (e.target === $('helpModal')) hideModal('helpModal');
 });
 
 const typingInField = (e) => {
@@ -384,8 +416,8 @@ const anyModalOpen = () =>
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (anyModalOpen()) {
-      $('listModal').classList.remove('on');
-      $('helpModal').classList.remove('on');
+      hideModal('listModal');
+      hideModal('helpModal');
       return;
     }
     if ($('scanOv').classList.contains('on')) { scan.abort = true; return; }
@@ -419,7 +451,7 @@ document.addEventListener('keydown', (e) => {
   if (typingInField(e) || anyModalOpen()) return;
 
   if (e.key === '/') { e.preventDefault(); $('filterInput').focus(); }
-  else if (e.key === '?') $('helpModal').classList.add('on');
+  else if (e.key === '?') showModal('helpModal');
   else if (e.key === 'b' || e.key === 'B') { if (sel.size) openBasket(); }
   else if (e.key === 't' || e.key === 'T') setView(S.viewMode === 'tree' ? 'table' : 'tree');
   else if ((e.key === 'e' || e.key === 'E') && S.viewMode === 'tree' && S.treeRoot) expandAllTree();

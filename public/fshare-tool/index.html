@@ -157,7 +157,7 @@
         </div>
         <div class="tp-bar"><i id="tpBar"></i></div>
       </div>
-      <div id="treeBody"></div>
+      <div id="treeBody" role="tree" aria-label="Folder tree"></div>
     </div>
 
     <div id="paginationBot" class="pagination"></div>
@@ -197,7 +197,7 @@
 <!-- scan progress -->
 <div class="ov" id="scanOv">
   <div class="ov-card">
-    <h3 id="scanTitle">Crawling folder…</h3>
+    <h3 id="scanTitle" aria-live="polite">Crawling folder…</h3>
     <div class="ov-line">Folders scanned: <b id="scDone">0</b> / <b id="scTotal">0</b></div>
     <div class="ov-line">Files found: <b id="scFiles">0</b></div>
     <div class="ov-line" id="scNow" style="color:var(--muted)"></div>
@@ -210,7 +210,7 @@
 </div>
 
 <!-- selection basket -->
-<div class="modal" id="listModal">
+<div class="modal" id="listModal" role="dialog" aria-modal="true" aria-labelledby="listTitle">
   <div class="modal-card">
     <h3 id="listTitle">Selection basket</h3>
 
@@ -241,9 +241,9 @@
   </div>
 </div>
 
-<div class="modal" id="helpModal">
+<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
   <div class="modal-card" style="max-width:520px">
-    <h3>Keyboard shortcuts</h3>
+    <h3 id="helpTitle">Keyboard shortcuts</h3>
     <div class="keys">
       <kbd>/</kbd><span>Jump to the filter box</span>
       <kbd>Esc</kbd><span>Clear filter, close dialog, stop a crawl</span>

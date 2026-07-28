@@ -86,8 +86,10 @@ export function applyRange(a, b, on) {
   for (let i = a; i <= b; i++) {
     const it = S.displayList[i];
     if (!it || isFolder(it)) continue;
+    // Count what actually changed on both branches, so "cleared 50" cannot be
+    // reported when only 3 of the range were selected.
     if (on) { if (addFile(it, null)) n++; }
-    else { removeFile(it.linkcode); n++; }
+    else if (removeFile(it.linkcode)) n++;
   }
   return n;
 }

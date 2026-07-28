@@ -84,6 +84,56 @@ function trim() {
   }
 }
 
+/* ---------- page-level entries ----------
+
+   The table view fetches individual upstream pages rather than whole folders,
+   so it cannot use the entries above. Without its own entries, paging back and
+   forth re-fetched every time while the tree served the same data instantly.
+
+   A folder entry always wins when present: it holds the same rows and avoids
+   storing them twice. */
+
+/* One constant, used by the key builder, the prefix scan and the stats
+   classifier alike — three hand-written copies of the same literal is exactly
+   how they drift apart. A linkcode is alphanumeric, so it can never collide. */
+const PAGE_PREFIX = 'page|';
+const pageKey = (lc, sort, page) => PAGE_PREFIX + lc + '|' + sort + '|' + page;
+const isPageKey = (k) => k.indexOf(PAGE_PREFIX) === 0;
+
+export function cachePageGet(lc, sort, page) {
+  const db = load();
+  const e = db[pageKey(lc, sort, page)];
+  if (!e) return null;
+  if (Date.now() - (e.at || 0) > TTL_MS) return null;
+  return { items: e.i.map(unpack), name: e.n, path: e.p, totalPages: e.tp };
+}
+
+export function cachePageSet(lc, sort, page, items, name, path, totalPages) {
+  const db = load();
+  db[pageKey(lc, sort, page)] = {
+    at: Date.now(),
+    n: name || '',
+    p: path || '',
+    tp: totalPages || 1,
+    i: items.map(pack)
+  };
+  trim();
+  persist();
+}
+
+/** Drop a folder and every page of it. Used by Refresh. */
+export function cacheDelete(lc) {
+  const db = load();
+  let n = 0;
+  if (db[lc]) { delete db[lc]; n++; }
+  const prefix = PAGE_PREFIX + lc + '|';
+  for (const k in db) {
+    if (k.indexOf(prefix) === 0) { delete db[k]; n++; }
+  }
+  if (n) persist();
+  return n;
+}
+
 export function cacheClear() {
   mem = {};
   try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
@@ -91,12 +141,14 @@ export function cacheClear() {
 
 export function cacheStats() {
   const db = load();
-  const folders = Object.keys(db).length;
-  let files = 0;
-  for (const k in db) files += db[k].i.length;
+  let folders = 0, pages = 0, files = 0;
+  for (const k in db) {
+    if (isPageKey(k)) pages++; else folders++;
+    files += db[k].i.length;
+  }
   let bytes = 0;
   try { bytes = (localStorage.getItem(KEY) || '').length; } catch (e) { bytes = 0; }
-  return { folders, files, bytes };
+  return { folders, pages, files, bytes };
 }
 
 /* Set from the UI to bypass the cache for one crawl, so a stale listing can
