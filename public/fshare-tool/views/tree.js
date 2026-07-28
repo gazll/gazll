@@ -3,12 +3,13 @@
 
 import { S, $, CONCURRENCY, MAX_FOLDERS, ROW_HEIGHT } from '../lib/state.js';
 import { fetchAllPages } from '../lib/api.js';
-import { esc, fmtSize, isFolder, fileUrl, folderOf, copyText, toast } from '../lib/util.js';
+import { esc, fmtSize, isFolder, fileUrl, folderOf, copyText, toast, skeletonRows } from '../lib/util.js';
 import { sel, selFolders, addFile, unselectFolder, touchHistory, changed } from '../lib/store.js';
 import { bindPick } from '../lib/pick.js';
 import { drillInto, renderBreadcrumb } from '../lib/nav.js';
 import { filterTerms, filteredFiles, extCounts } from '../lib/filter.js';
 import { createVList } from '../lib/vlist.js';
+import { runPool } from '../lib/pool.js';
 import { scan, openScan, closeScan, paintScan, scanFolder, setScanProgressHook } from '../lib/scan.js';
 
 let vlist = null;
@@ -279,7 +280,7 @@ export function renderTree() {
 
   if (!root || (!root.loaded && root.loading)) {
     if (vlist) vlist.setItems([]);
-    body.innerHTML = '<div class="tree-empty"><span class="spinner"></span> Loading…</div>';
+    body.innerHTML = skeletonRows(9);
     return;
   }
   if (root && root.error) {
@@ -481,11 +482,10 @@ export function expandAllTree() {
   scan.state.total = 1;
   S.quietRender = true;
 
-  const step = () => {
-    if (scan.abort || !queue.length) return Promise.resolve();
-    const batch = queue.splice(0, CONCURRENCY);
-
-    return Promise.all(batch.map((lc) =>
+  return runPool(
+    CONCURRENCY,
+    () => (queue.length ? queue.shift() : null),
+    (lc) =>
       loadNode(lc, null).then((n) => {
         n.expanded = true;
         $('scNow').textContent = n.name;
@@ -505,11 +505,9 @@ export function expandAllTree() {
       }).then(() => {
         scan.state.done++;
         paintScan();
-      })
-    )).then(step);
-  };
-
-  return step().then(() => {
+      }),
+    () => scan.abort
+  ).then(() => {
     S.quietRender = false;
     closeScan();
     renderTree();

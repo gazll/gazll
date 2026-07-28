@@ -14,6 +14,14 @@ import { ROW_HEIGHT, VIRTUAL_THRESHOLD } from './state.js';
 
 const OVERSCAN = 6;
 
+/* Read from CSS rather than assumed, so the compact-density toggle cannot get
+   out of step with the maths — a mismatch here misplaces every row. */
+function rowHeight() {
+  const v = getComputedStyle(document.documentElement).getPropertyValue('--row-h');
+  const n = parseInt(v, 10);
+  return n > 0 ? n : ROW_HEIGHT;
+}
+
 /**
  * @param {HTMLElement} viewport  scrollable element, must have a bounded height
  * @param {(item:any, index:number) => HTMLElement} renderRow
@@ -25,6 +33,7 @@ export function createVList(viewport, renderRow) {
   let lastStart = -1;
   let lastEnd = -1;
   let virtual = false;
+  let rowH = ROW_HEIGHT;
 
   function teardown() {
     viewport.removeEventListener('scroll', onScroll);
@@ -46,7 +55,7 @@ export function createVList(viewport, renderRow) {
     viewport.innerHTML = '';
     sizer = document.createElement('div');
     sizer.className = 'vl-sizer';
-    sizer.style.height = items.length * ROW_HEIGHT + 'px';
+    sizer.style.height = items.length * rowH + 'px';
     windowEl = document.createElement('div');
     windowEl.className = 'vl-window';
     sizer.appendChild(windowEl);
@@ -56,8 +65,8 @@ export function createVList(viewport, renderRow) {
 
   function paint(force) {
     const h = viewport.clientHeight || 600;
-    const first = Math.max(0, Math.floor(viewport.scrollTop / ROW_HEIGHT) - OVERSCAN);
-    const count = Math.ceil(h / ROW_HEIGHT) + OVERSCAN * 2;
+    const first = Math.max(0, Math.floor(viewport.scrollTop / rowH) - OVERSCAN);
+    const count = Math.ceil(h / rowH) + OVERSCAN * 2;
     const last = Math.min(items.length, first + count);
 
     // Scrolling within the already-rendered slice needs no DOM work at all.
@@ -67,7 +76,7 @@ export function createVList(viewport, renderRow) {
 
     const frag = document.createDocumentFragment();
     for (let i = first; i < last; i++) frag.appendChild(renderRow(items[i], i));
-    windowEl.style.transform = 'translateY(' + first * ROW_HEIGHT + 'px)';
+    windowEl.style.transform = 'translateY(' + first * rowH + 'px)';
     windowEl.innerHTML = '';
     windowEl.appendChild(frag);
   }
@@ -82,6 +91,7 @@ export function createVList(viewport, renderRow) {
   return {
     setItems(next) {
       items = next || [];
+      rowH = rowHeight();          // re-read: density may have changed
       teardown();
       if (!items.length) return;
       if (items.length < VIRTUAL_THRESHOLD) { renderPlain(); return; }

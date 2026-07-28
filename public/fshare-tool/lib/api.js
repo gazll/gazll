@@ -6,19 +6,35 @@
    ?limit is ignored, which is why one client page spans several upstream pages. */
 
 import { PAGE_SIZE, S } from './state.js';
+import { cacheGet, cacheSet, isBypassed } from './cache.js';
 
 export const API = 'https://fshare.annnekkk.com/api/folder';
 
 export const currentSort = () => S.sortValue;
 
+const RETRIES = 3;
+
+/* The upstream drops connections under load — an ECONNRESET showed up while
+   benchmarking. Without a retry the crawl just counts the folder as failed and
+   moves on, silently losing every file inside it, which is far worse than
+   waiting a moment. Backoff is 400ms, then 800ms. */
 export function apiFolder(linkcode, page, sort) {
   const url = API + '?linkcode=' + encodeURIComponent(linkcode) +
               '&sort=' + encodeURIComponent(sort || currentSort()) +
               '&page=' + (page || 1);
-  return fetch(url).then((res) => {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
-  });
+
+  const attempt = (n) =>
+    fetch(url, { cache: 'no-store' }).then((res) => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).catch((e) => {
+      // A 4xx is a real answer; retrying it only wastes time.
+      const permanent = /HTTP 4\d\d/.test(e.message);
+      if (permanent || n >= RETRIES) throw e;
+      return new Promise((r) => setTimeout(r, 400 * n)).then(() => attempt(n + 1));
+    });
+
+  return attempt(1);
 }
 
 /** Total page count is only exposed through the upstream _links.last URL. */
@@ -29,9 +45,32 @@ export function pagesOf(data, page, count) {
   return count < PAGE_SIZE ? page : page + 1;
 }
 
-/** Pull every page of one folder and return the flat item list plus page-1 meta. */
+/** Counts how much of the last crawl was served without touching the network. */
+export const fetchStats = { hits: 0, misses: 0 };
+export const resetFetchStats = () => { fetchStats.hits = 0; fetchStats.misses = 0; };
+
+/**
+ * Every page of one folder, plus page-1 meta. Served from the persistent cache
+ * when possible — the crawl is entirely network-bound, so this is what makes a
+ * second visit instant rather than another minute of waiting.
+ */
 export function fetchAllPages(linkcode, sort, shouldStop) {
-  return apiFolder(linkcode, 1, sort).then((d1) => {
+  const useSort = sort || currentSort();
+
+  if (!isBypassed()) {
+    const hit = cacheGet(linkcode, useSort);
+    if (hit) {
+      fetchStats.hits++;
+      return Promise.resolve({
+        items: hit.items,
+        meta: { current: { name: hit.name, path: hit.path } },
+        cached: true
+      });
+    }
+  }
+  fetchStats.misses++;
+
+  return apiFolder(linkcode, 1, useSort).then((d1) => {
     let items = (d1.items || []).slice();
     const tp = pagesOf(d1, 1, items.length);
 
@@ -40,12 +79,20 @@ export function fetchAllPages(linkcode, sort, shouldStop) {
       const page = p;
       chain = chain.then(() => {
         if (shouldStop && shouldStop()) return;
-        return apiFolder(linkcode, page, sort).then((dp) => {
+        return apiFolder(linkcode, page, useSort).then((dp) => {
           items = items.concat(dp.items || []);
         });
       });
     }
-    return chain.then(() => ({ items, meta: d1 }));
+
+    return chain.then(() => {
+      // Never cache a listing cut short by the user pressing Stop.
+      if (!(shouldStop && shouldStop())) {
+        const cur = d1.current || {};
+        cacheSet(linkcode, useSort, items, cur.name || '', cur.path || '');
+      }
+      return { items, meta: d1, cached: false };
+    });
   });
 }
 

@@ -111,7 +111,10 @@
       <button class="btn2" id="selDeepBtn">Crawl whole tree ↓</button>
       <button class="btn2" id="selInvertBtn">Invert selection</button>
       <button class="btn2" id="selNoneBtn">Clear selection</button>
-      <button class="btn2" id="helpBtn" title="Keyboard shortcuts" style="margin-left:auto">⌨ Shortcuts</button>
+      <span class="cache-badge" id="cacheBadge" title="Folder listings kept locally"></span>
+      <button class="btn2" id="refreshBtn" title="Re-fetch this folder, ignoring the cache">↻ Refresh</button>
+      <button class="btn2" id="densityBtn" title="Row height">▤ Compact</button>
+      <button class="btn2" id="helpBtn" title="Keyboard shortcuts">⌨ Shortcuts</button>
     </div>
 
     <div class="bulkbar">
@@ -200,6 +203,7 @@
     <div class="ov-line" id="scNow" style="color:var(--muted)"></div>
     <div class="bar"><i id="scBar"></i></div>
     <div class="ov-line" id="scEta" style="color:var(--blue)"></div>
+    <div class="ov-line" id="scCache" style="color:var(--green)"></div>
     <div class="ov-line" id="scErr" style="color:var(--red)"></div>
     <div class="ov-foot"><button class="btn2" id="scanCancel">Stop</button></div>
   </div>

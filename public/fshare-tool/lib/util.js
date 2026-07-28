@@ -104,6 +104,15 @@ export function toast(msg, bad) {
   toastTimer = setTimeout(() => el.classList.remove('on'), 2200);
 }
 
+/** Placeholder rows that match the real row height, so nothing jumps on load. */
+export function skeletonRows(n) {
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    html += '<div class="skel"><i class="s1"></i><i class="s2"></i><i class="s3"></i><i class="s4"></i></div>';
+  }
+  return html;
+}
+
 export function debounce(fn, ms) {
   let t = null;
   return function (...args) {

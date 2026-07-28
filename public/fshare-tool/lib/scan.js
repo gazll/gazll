@@ -1,8 +1,9 @@
 /* Recursive folder crawling and the progress overlay it drives. */
 
 import { S, $, CONCURRENCY, MAX_DEPTH, MAX_FOLDERS } from './state.js';
-import { fetchAllPages } from './api.js';
+import { fetchAllPages, fetchStats, resetFetchStats } from './api.js';
 import { isFolder } from './util.js';
+import { runPool } from './pool.js';
 
 export const scan = {
   abort: false,
@@ -18,16 +19,20 @@ export function initScan() {
 
 export function openScan(title) {
   initScan();
+  resetFetchStats();
+  rememberTitle();
   $('scanTitle').textContent = title;
   $('scErr').textContent = '';
   $('scNow').textContent = '';
   $('scEta').textContent = '';
+  $('scCache').textContent = '';
   paintScan();
   $('scanOv').classList.add('on');
 }
 
 export function closeScan() {
   $('scanOv').classList.remove('on');
+  releaseTitle();
 }
 
 /** Remaining time from the average so far; meaningless until a few are done. */
@@ -48,17 +53,41 @@ export function scanEta() {
 let onProgress = null;
 export function setScanProgressHook(fn) { onProgress = fn; }
 
+let baseTitle = document.title;
+
 export function paintScan() {
   const st = scan.state;
   if (!st) return;
   $('scDone').textContent = st.done;
   $('scTotal').textContent = st.total;
   $('scFiles').textContent = st.files;
+
   const pct = st.total ? Math.round(st.done / st.total * 100) : 0;
   $('scBar').style.width = Math.min(pct, 100) + '%';
+
   const eta = scanEta();
   $('scEta').textContent = eta ? 'About ' + eta + ' left' : '';
+
+  // A crawl runs for a minute or more, so surface progress in the tab title —
+  // that is the only place you can see it after switching away.
+  document.title = Math.min(pct, 100) + '% · ' + st.files + ' files · ' + baseTitle;
+
+  // Cache hits mean this crawl is costing nothing; worth saying so.
+  const cached = fetchStats.hits;
+  $('scCache').textContent = cached
+    ? cached + ' of ' + (cached + fetchStats.misses) + ' folders came from cache'
+    : '';
+
   if (onProgress) onProgress();
+}
+
+/** Restore the tab title once a crawl ends. */
+export function releaseTitle() {
+  document.title = baseTitle;
+}
+
+export function rememberTitle() {
+  if (!/^\d+% · /.test(document.title)) baseTitle = document.title;
 }
 
 /**
@@ -75,11 +104,12 @@ export function scanFolder(rootLc, recursive) {
 
   const stop = () => scan.abort;
 
-  const step = () => {
-    if (scan.abort || !queue.length) return Promise.resolve();
-    const batch = queue.splice(0, CONCURRENCY);
-
-    return Promise.all(batch.map((node) =>
+  /* A pool rather than fixed batches: with a p90 near 10s, Promise.all over a
+     batch left most slots idling until its slowest member returned. */
+  return runPool(
+    CONCURRENCY,
+    () => (queue.length ? queue.shift() : null),
+    (node) =>
       fetchAllPages(node.lc, sort, stop).then((r) => {
         const rname = (r.meta.current && r.meta.current.name) || null;
         if (node.depth === 0) scan.lastRootName = rname;
@@ -105,9 +135,7 @@ export function scanFolder(rootLc, recursive) {
       }).then(() => {
         scan.state.done++;
         paintScan();
-      })
-    )).then(step);
-  };
-
-  return step().then(() => files);
+      }),
+    stop
+  ).then(() => files);
 }

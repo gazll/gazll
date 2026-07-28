@@ -15,6 +15,7 @@ import {
 } from './lib/nav.js';
 import { filterTerms } from './lib/filter.js';
 import { scan } from './lib/scan.js';
+import { cacheStats, cacheClear, setBypass } from './lib/cache.js';
 import { Sync, syncInit, syncPush, syncSignIn, syncSignOut, setConfigApplier } from './lib/sync.js';
 
 import {
@@ -40,7 +41,7 @@ function paintRows() {
   else paintTableRows();
 }
 
-on(EV.SELECTION, () => { paintRows(); renderTray(); });
+on(EV.SELECTION, () => { paintRows(); renderTray(); renderCacheBadge(); });
 on(EV.HISTORY, () => { renderHistory(); syncPush(); });
 on(EV.CONFIG, () => syncPush());
 
@@ -224,6 +225,51 @@ $('selInvertBtn').addEventListener('click', () => {
 });
 
 $('selNoneBtn').addEventListener('click', clearSelection);
+
+/* ---------- cache + density ---------- */
+
+function renderCacheBadge() {
+  const s = cacheStats();
+  const b = $('cacheBadge');
+  b.classList.toggle('on', s.folders > 0);
+  b.innerHTML = s.folders
+    ? '⚡ <b>' + s.folders + '</b> folders cached · ' + Math.round(s.bytes / 1024) + ' KB'
+    : '';
+  b.title = 'Cached listings load instantly. Refresh re-fetches this folder; ' +
+            'click this badge to drop the whole cache.';
+}
+
+$('cacheBadge').addEventListener('click', () => {
+  cacheClear();
+  renderCacheBadge();
+  toast('Cache cleared');
+});
+
+$('refreshBtn').addEventListener('click', () => {
+  const lc = currentLc();
+  if (!lc) return;
+  setBypass(true);
+  S.nodes.delete(lc);
+  loadFolder(lc, S.currentPage);
+  // One crawl only: anything queued after this should use the cache again.
+  setTimeout(() => setBypass(false), 50);
+  toast('Re-fetching from the server…');
+});
+
+let compact = localStorage.getItem('fsbc-compact') === '1';
+
+function applyDensity() {
+  document.body.classList.toggle('compact', compact);
+  $('densityBtn').textContent = compact ? '▤ Normal' : '▤ Compact';
+}
+
+$('densityBtn').addEventListener('click', () => {
+  compact = !compact;
+  localStorage.setItem('fsbc-compact', compact ? '1' : '0');
+  applyDensity();
+  // The virtual scroller reads --row-h, so it has to rebuild at the new height.
+  if (S.viewMode === 'tree') renderTree();
+});
 $('expandAllBtn').addEventListener('click', expandAllTree);
 $('collapseAllBtn').addEventListener('click', collapseAllTree);
 $('tpMore').addEventListener('click', expandAllTree);
@@ -400,10 +446,12 @@ $('chunkInput').value = String(S.chunkSize);
 $('sortSelect').value = S.sortValue;
 
 applyTheme();
+applyDensity();
 setView(S.viewMode);          // booted is still false, so this only paints chrome
 booted = true;
 
 renderTray();
 renderHistory();
+renderCacheBadge();
 syncInit();
 route();
