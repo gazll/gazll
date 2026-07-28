@@ -192,6 +192,52 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
 .tp-more{background:none;border:none;color:var(--blue);font-size:.76rem;font-weight:700;cursor:pointer;padding:0;white-space:nowrap}
 .tp-more:hover{text-decoration:underline}
 
+/* filter bar */
+.filter-input{flex:1;min-width:180px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;color:var(--text);font-size:.82rem;outline:none}
+.filter-input:focus{border-color:var(--accent)}
+.filter-input::placeholder{color:var(--muted)}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.on{background:var(--accent);color:#000;border-color:var(--accent)}
+.chunk-input{width:62px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:7px 8px;font-size:.8rem;outline:none;text-align:center}
+
+/* row numbers */
+th.num-col,td.num-col{width:52px;text-align:right;padding-right:6px;color:var(--muted);font-size:.76rem;font-variant-numeric:tabular-nums}
+.tnum{width:40px;flex-shrink:0;text-align:right;color:var(--muted);font-size:.74rem;font-variant-numeric:tabular-nums}
+.tmeta.partial{color:var(--muted);font-style:italic}
+
+/* history on the home card */
+.hist-wrap{margin-top:26px;text-align:left;border-top:1px solid var(--border);padding-top:18px}
+.hist-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.hist-head span{font-size:.74rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.hist-row{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px}
+.hist-row:hover{background:var(--surface2)}
+.hist-name{flex:1;min-width:0;color:var(--blue);cursor:pointer;font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-name:hover{text-decoration:underline}
+.hist-meta{font-size:.73rem;color:var(--muted);white-space:nowrap;flex-shrink:0}
+
+/* batch crawl screen */
+#batchView{display:none}
+.batch-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:18px}
+.batch-card h2{font-size:1.1rem;color:var(--accent);margin-bottom:6px}
+.batch-card p{font-size:.83rem;color:var(--text2);margin-bottom:14px;line-height:1.6}
+.batch-card textarea{width:100%;min-height:150px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:12px;font-family:ui-monospace,Consolas,monospace;font-size:.8rem;line-height:1.6;outline:none;resize:vertical}
+.batch-card textarea:focus{border-color:var(--accent)}
+.batch-actions{display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap}
+.batch-hint{font-size:.78rem;color:var(--muted);margin-left:auto}
+.bres{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.bres-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:.84rem}
+.bres-row:last-child{border-bottom:none}
+.bres-num{width:34px;text-align:right;color:var(--muted);font-size:.74rem;flex-shrink:0;font-variant-numeric:tabular-nums}
+.bres-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bres-name a{color:var(--text);text-decoration:none}
+.bres-name a:hover{color:var(--blue)}
+.bres-stat{font-size:.78rem;white-space:nowrap;flex-shrink:0;font-variant-numeric:tabular-nums}
+.bres-stat.ok{color:var(--green)}
+.bres-stat.bad{color:var(--red)}
+.bres-stat.wait{color:var(--muted)}
+
 .toast{position:fixed;left:50%;bottom:110px;transform:translate(-50%,20px);background:var(--green);color:#fff;font-weight:700;font-size:.85rem;padding:10px 20px;border-radius:20px;z-index:120;opacity:0;pointer-events:none;transition:all .22s}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .toast.bad{background:var(--red)}
@@ -218,6 +264,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
     <button class="btn" id="navBtn">Duyệt</button>
   </div>
   <div class="nav-actions">
+    <button class="icon-btn" id="syncBtn" style="display:none"></button>
     <button class="icon-btn" id="themeBtn" title="Đổi giao diện"></button>
   </div>
 </nav>
@@ -234,7 +281,38 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
       </div>
       <div class="hint">Lựa chọn được giữ lại khi bạn đổi trang và đi sâu vào thư mục con.</div>
       <div class="err" id="homeError"></div>
+
+      <div class="batch-actions" style="justify-content:center;margin-top:6px">
+        <button class="btn2" id="goBatchBtn">📋 Cào hàng loạt nhiều folder →</button>
+      </div>
+
+      <div class="hist-wrap" id="histWrap" style="display:none">
+        <div class="hist-head">
+          <span>Đã xem gần đây</span>
+          <button class="tp-more" id="histClear">Xoá lịch sử</button>
+        </div>
+        <div id="histList"></div>
+      </div>
     </div>
+  </div>
+</div>
+
+<div id="batchView">
+  <div class="page">
+    <div class="batch-card">
+      <h2>Cào hàng loạt nhiều thư mục</h2>
+      <p>Dán bao nhiêu link thư mục Fshare cũng được — mỗi dòng một link, hoặc dán cả đoạn văn bản lẫn lộn, tool tự nhặt ra link code. Mỗi thư mục sẽ được quét đệ quy và gom hết tệp bên trong vào cùng một danh sách chọn.</p>
+      <textarea id="batchInput" spellcheck="false" placeholder="https://www.fshare.vn/folder/AAAAAAAAAAA&#10;https://www.fshare.vn/folder/BBBBBBBBBBB&#10;CCCCCCCCCCC"></textarea>
+      <div class="batch-actions">
+        <button class="btn" id="batchRun">Bắt đầu cào</button>
+        <button class="btn2" id="batchBack">← Về trang chủ</button>
+        <label style="font-size:.8rem;color:var(--text2);display:flex;align-items:center;gap:6px">
+          <input type="checkbox" id="batchDeep" checked/> Quét cả thư mục con
+        </label>
+        <span class="batch-hint" id="batchHint"></span>
+      </div>
+    </div>
+    <div class="bres" id="batchResults" style="display:none"></div>
   </div>
 </div>
 
@@ -249,6 +327,15 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
           <button data-view="table" class="on">Bảng</button>
           <button data-view="tree">Cây</button>
         </span>
+        <span id="perPageLabel">Hiện:</span>
+        <select id="perPageSelect" title="Số dòng mỗi trang (chỉ áp dụng cho chế độ Bảng)">
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+          <option value="0">Tất cả</option>
+        </select>
         <span>Sắp xếp:</span>
         <select id="sortSelect">
           <option value="type,name">Loại + Tên</option>
@@ -270,12 +357,22 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
       <button class="btn2" id="selNoneBtn">Bỏ chọn hết</button>
     </div>
 
+    <div class="bulkbar">
+      <span class="lbl">Lọc</span>
+      <input type="text" id="filterInput" class="filter-input"
+             placeholder="Gõ tên, hoặc .mkv .mp4 để lọc theo đuôi — cách nhau bởi dấu cách"/>
+      <button class="btn2" id="filterClear" style="display:none">Xoá lọc</button>
+      <button class="btn2" id="selMatchBtn" style="display:none">Chọn hết kết quả</button>
+      <span id="extChips" class="chips"></span>
+    </div>
+
     <div class="stats-bar" id="statsBar"></div>
     <div id="paginationTop" class="pagination"></div>
 
     <div class="table-wrap">
       <table>
         <thead><tr>
+          <th class="num-col">#</th>
           <th class="chk-col"><input type="checkbox" id="chkAll" title="Chọn/bỏ mọi tệp trong trang"/></th>
           <th>Tên mục</th>
           <th>Kích thước</th>
@@ -321,7 +418,12 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
         <option value="link-name">Link — tên</option>
         <option value="md">Markdown list</option>
         <option value="full">Tên | Cỡ | Link</option>
+        <option value="folder-link">[Thư mục] link</option>
+        <option value="folder-name-link">[Thư mục] Tên — link</option>
       </select>
+      <input type="number" id="chunkInput" class="chunk-input" min="1" max="10000"
+             title="Số link mỗi file khi tải theo lô"/>
+      <button class="btn2" id="chunkBtn" title="Cắt thành nhiều file .txt">Tải theo lô</button>
       <button class="btn2" id="viewBtn">Xem danh sách</button>
       <button class="btn2" id="txtBtn">Tải .txt</button>
       <button class="btn" id="copyAllBtn">Copy tất cả link</button>
@@ -379,12 +481,95 @@ var theme       = localStorage.getItem('fsbc-theme') || 'dark';
 
 // Tree view. nodes caches every folder we have already fetched, so collapsing
 // and re-expanding costs nothing and a later "select all" can read from memory.
-var viewMode    = localStorage.getItem('fsbc-view') || 'table';
+var viewMode    = localStorage.getItem('fsbc-view') || 'tree';
 var nodes       = new Map();   // linkcode -> {lc,name,items,loaded,loading,expanded,error}
 var treeRoot    = null;
 var quietRender = false;       // suppress repaints during a bulk expand
 
+// Upstream serves a fixed 50 per page, so every option here is a multiple of
+// it: one client page maps onto a whole number of upstream pages. 0 = all.
+var PER_PAGE_OPTS = [50, 100, 200, 500, 1000, 0];
+var perPage = Number(localStorage.getItem('fsbc-perpage'));
+if (PER_PAGE_OPTS.indexOf(perPage) === -1) perPage = 100;
+
+var HIST_MAX = 60;
+var history_ = [];
+try { history_ = JSON.parse(localStorage.getItem('fsbc-history') || '[]') || []; } catch (e) { history_ = []; }
+
+var filterText = '';           // live filter over loaded items
+var chunkSize  = Number(localStorage.getItem('fsbc-chunk')) || 49;
+
 var $ = function (id) { return document.getElementById(id); };
+
+// ── history ─────────────────────────────────────────────────────────────────
+// Kept newest-first and de-duplicated by linkcode, so revisiting a folder
+// moves it up instead of filling the list with the same entry.
+function saveHistory() {
+  try { localStorage.setItem('fsbc-history', JSON.stringify(history_.slice(0, HIST_MAX))); } catch (e) {}
+  if (typeof syncPush === 'function') syncPush();   // debounced no-op when signed out
+}
+function addHistory(lc, name) {
+  if (!lc) return;
+  var i = -1, k;
+  for (k = 0; k < history_.length; k++) if (history_[k].lc === lc) { i = k; break; }
+  var rec = i >= 0 ? history_.splice(i, 1)[0] : {lc: lc, name: '', hits: 0};
+  rec.at = Date.now();
+  rec.hits = (rec.hits || 0) + 1;
+  if (name) rec.name = name;
+  history_.unshift(rec);
+  history_ = history_.slice(0, HIST_MAX);
+  saveHistory();
+  renderHistory();
+}
+// Called once the folder's real name is known, without bumping the counter.
+function touchHistory(lc, name) {
+  if (!lc || !name) return;
+  for (var k = 0; k < history_.length; k++) {
+    if (history_[k].lc === lc && history_[k].name !== name) {
+      history_[k].name = name;
+      saveHistory();
+      renderHistory();
+      return;
+    }
+  }
+}
+function clearHistory() {
+  history_ = [];
+  saveHistory();
+  renderHistory();
+  toast('Đã xoá lịch sử');
+}
+function fmtAgo(ts) {
+  var s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60)    return 'vừa xong';
+  if (s < 3600)  return Math.floor(s / 60) + ' phút trước';
+  if (s < 86400) return Math.floor(s / 3600) + ' giờ trước';
+  if (s < 2592000) return Math.floor(s / 86400) + ' ngày trước';
+  return fmtDate(Math.floor(ts / 1000));
+}
+function renderHistory() {
+  var wrap = $('histList');
+  if (!wrap) return;
+  $('histWrap').style.display = history_.length ? '' : 'none';
+  wrap.innerHTML = '';
+  history_.slice(0, 12).forEach(function (h) {
+    var row = document.createElement('div');
+    row.className = 'hist-row';
+    var a = document.createElement('span');
+    a.className = 'hist-name';
+    a.textContent = h.name || h.lc;
+    a.title = h.lc;
+    a.addEventListener('click', function () {
+      if (location.hash === '#' + h.lc) startFolder(h.lc); else location.hash = h.lc;
+    });
+    var meta = document.createElement('span');
+    meta.className = 'hist-meta';
+    meta.textContent = fmtAgo(h.at) + (h.hits > 1 ? ' · ' + h.hits + ' lần' : '');
+    row.appendChild(a);
+    row.appendChild(meta);
+    wrap.appendChild(row);
+  });
+}
 
 // ── theme ───────────────────────────────────────────────────────────────────
 function applyTheme() {
@@ -532,6 +717,30 @@ function clearSelection() {
   renderTray();
 }
 
+// ── selection persistence ───────────────────────────────────────────────────
+// Written through renderTray(), which every mutation already funnels into.
+function saveSelection() {
+  try {
+    localStorage.setItem('fsbc-sel', JSON.stringify({
+      files: Array.from(sel.values()),
+      folders: Array.from(selFolders)
+    }));
+  } catch (e) {
+    // Quota exceeded on a very large basket: drop the saved copy rather than
+    // leaving a half-written one that would restore a wrong selection.
+    try { localStorage.removeItem('fsbc-sel'); } catch (e2) {}
+  }
+}
+function loadSelection() {
+  var raw;
+  try { raw = JSON.parse(localStorage.getItem('fsbc-sel') || 'null'); } catch (e) { return; }
+  if (!raw || !Array.isArray(raw.files)) return;
+  raw.files.forEach(function (v) {
+    if (v && v.linkcode) sel.set(v.linkcode, v);
+  });
+  (raw.folders || []).forEach(function (lc) { selFolders.add(lc); });
+}
+
 // Drop everything that a given folder's recursive scan contributed.
 function unselectFolder(lc) {
   selFolders.delete(lc);
@@ -547,6 +756,7 @@ function selTotals() {
 }
 
 function renderTray() {
+  saveSelection();
   var t = selTotals();
   var tray = $('tray');
   tray.classList.toggle('on', t.count > 0);
@@ -582,41 +792,94 @@ function syncHeaderCheckbox() {
 function showHome() {
   $('homeView').style.display = 'block';
   $('folderView').style.display = 'none';
+  $('batchView').style.display = 'none';
+  renderHistory();
   document.title = 'Fshare Bulk Copy';
 }
 function showFolder() {
   $('homeView').style.display = 'none';
+  $('batchView').style.display = 'none';
   $('folderView').style.display = 'block';
+}
+function showBatch() {
+  $('homeView').style.display = 'none';
+  $('folderView').style.display = 'none';
+  $('batchView').style.display = 'block';
+  document.title = 'Cào hàng loạt — Fshare Bulk Copy';
 }
 
 function setLoading() {
   $('fileList').innerHTML =
-    '<tr class="center-row"><td colspan="5"><span class="spinner"></span> Đang tải...</td></tr>';
+    '<tr class="center-row"><td colspan="6"><span class="spinner"></span> Đang tải...</td></tr>';
 }
 function setError(msg) {
   $('fileList').innerHTML =
-    '<tr class="center-row"><td colspan="5" style="color:var(--red)">' + esc(msg) + '</td></tr>';
+    '<tr class="center-row"><td colspan="6" style="color:var(--red)">' + esc(msg) + '</td></tr>';
+}
+
+// Keep the address bar on the folder actually being shown. replaceState does
+// not fire hashchange, so this never re-enters route() and never loops.
+function syncHash(lc) {
+  if (lc && location.hash !== '#' + lc) history.replaceState(null, '', '#' + lc);
 }
 
 function loadFolder(linkcode, page) {
   currentPage = page || 1;
+  syncHash(linkcode);
   renderBreadcrumb();
   if (viewMode === 'tree') { openTree(linkcode); return; }
   setLoading();
-  apiFolder(linkcode, currentPage)
-    .then(function (data) { renderFolder(data, linkcode); })
-    .catch(function (e)   { setError('Lỗi tải thư mục: ' + e.message); });
+  loadTablePage(linkcode, currentPage)
+    .then(function (r) { renderFolder(r.items, r.meta, linkcode); })
+    .catch(function (e) { setError('Lỗi tải thư mục: ' + e.message); });
 }
 
-function renderFolder(data, linkcode) {
-  var current = data.current || {};
-  var items   = Array.isArray(data.items) ? data.items : [];
-  pageItems   = items;
-  totalPages  = pagesOf(data, currentPage, items.length);
+/**
+ * Fetch one client page, which spans perPage/50 upstream pages (or all of them
+ * when perPage is 0). Sets totalPages as a side effect.
+ */
+function loadTablePage(lc, page) {
+  var sort = currentSort();
+
+  if (perPage === 0) {
+    return fetchAllPages(lc, sort).then(function (r) {
+      totalPages = 1;
+      return {items: r.items, meta: r.meta};
+    });
+  }
+
+  var per   = perPage / PAGE_SIZE;          // upstream pages per client page
+  var first = (page - 1) * per + 1;
+
+  return apiFolder(lc, first, sort).then(function (d1) {
+    var head    = d1.items || [];
+    var totalUp = pagesOf(d1, first, head.length);
+    totalPages  = Math.max(1, Math.ceil(totalUp / per));
+
+    var rest = [];
+    for (var p = first + 1; p <= Math.min(first + per - 1, totalUp); p++) rest.push(p);
+    if (!rest.length) return {items: head, meta: d1};
+
+    return Promise.all(rest.map(function (p) {
+      return apiFolder(lc, p, sort).then(function (d) { return {p: p, items: d.items || []}; });
+    })).then(function (parts) {
+      parts.sort(function (a, b) { return a.p - b.p; });   // parallel, so re-order
+      var items = head.slice();
+      parts.forEach(function (x) { items = items.concat(x.items); });
+      return {items: items, meta: d1};
+    });
+  });
+}
+
+function renderFolder(items, meta, linkcode) {
+  var current = (meta && meta.current) || {};
+  items       = Array.isArray(items) ? items : [];
+  pageItems   = items;   // totalPages was set by loadTablePage
 
   var entry = navStack[navStack.length - 1];
-  var fname = current.name || data.name || entry.name;
+  var fname = current.name || (meta && meta.name) || entry.name;
   entry.name = fname;
+  if (navStack.length === 1) touchHistory(linkcode, fname);
 
   if (navStack.length === 1) {
     var fpath = current.path || '';
@@ -637,16 +900,18 @@ function renderFolder(data, linkcode) {
   var tbody = $('fileList');
   tbody.innerHTML = '';
   if (!items.length) {
-    tbody.innerHTML = '<tr class="center-row"><td colspan="5">Thư mục trống.</td></tr>';
+    tbody.innerHTML = '<tr class="center-row"><td colspan="6">Thư mục trống.</td></tr>';
     renderPagination(linkcode);
     return;
   }
-  items.forEach(function (it) { tbody.appendChild(makeRow(it)); });
+  // Numbering continues across pages rather than restarting at 1.
+  var base = perPage === 0 ? 0 : (currentPage - 1) * perPage;
+  items.forEach(function (it, i) { tbody.appendChild(makeRow(it, base + i + 1)); });
   renderPagination(linkcode);
   renderRowsState();
 }
 
-function makeRow(item) {
+function makeRow(item, seq) {
   var folder = isFolder(item);
   var lc     = item.linkcode || item.code || '';
   var name   = item.name || item.filename || '(no name)';
@@ -654,6 +919,11 @@ function makeRow(item) {
   var tr = document.createElement('tr');
   tr.setAttribute('data-lc', lc);
   tr.setAttribute('data-dir', folder ? '1' : '0');
+
+  var numTd = document.createElement('td');
+  numTd.className = 'num-col';
+  numTd.textContent = seq;
+  tr.appendChild(numTd);
 
   // checkbox
   var chkTd = document.createElement('td');
@@ -733,6 +1003,7 @@ function makeRow(item) {
 // ── navigation ──────────────────────────────────────────────────────────────
 function startFolder(lc) {
   navStack = [{linkcode: lc, name: lc}];
+  addHistory(lc);            // single place every entry path funnels through
   showFolder();
   loadFolder(lc, 1);
 }
@@ -818,10 +1089,15 @@ function buildPageList(p, tot) {
 
 // ── scanning ────────────────────────────────────────────────────────────────
 var scanState = null;
+var lastScanRootName = null;
 
-function openScan(title) {
+// Split out so the batch screen can drive scanFolder() without the overlay.
+function initScan() {
   scanAbort = false;
   scanState = {done: 0, total: 1, files: 0, errors: 0};
+}
+function openScan(title) {
+  initScan();
   $('scanTitle').textContent = title;
   $('scErr').textContent = '';
   $('scNow').textContent = '';
@@ -855,7 +1131,9 @@ function scanFolder(rootLc, recursive) {
     var batch = queue.splice(0, CONCURRENCY);
     return Promise.all(batch.map(function (node) {
       return fetchAllPages(node.lc, sort).then(function (r) {
-        $('scNow').textContent = (r.meta.current && r.meta.current.name) || node.lc;
+        var rname = (r.meta.current && r.meta.current.name) || null;
+        if (node.depth === 0) lastScanRootName = rname;   // batch screen reads this
+        $('scNow').textContent = rname || node.lc;
         r.items.forEach(function (it) {
           if (isFolder(it)) {
             if (recursive && !seen[it.linkcode] &&
@@ -982,7 +1260,92 @@ function collectSubtree(lc, out) {
   return complete;
 }
 
-function treeRow(item, depth) {
+// ── filtering ───────────────────────────────────────────────────────────────
+/** Folder name a file lives in, taken from the last segment of its API path. */
+function folderOf(path) {
+  if (!path) return '';
+  var parts = String(path).split('/').filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : '';
+}
+function extOf(name) {
+  var m = String(name || '').match(/\.([A-Za-z0-9]{1,5})$/);
+  return m ? m[1].toLowerCase() : '';
+}
+
+/** Every file in the cache, flattened, newest folders first. */
+function allLoadedFiles() {
+  var out = [], seen = {};
+  nodes.forEach(function (n) {
+    if (!n.loaded) return;
+    n.items.forEach(function (it) {
+      if (isFolder(it) || seen[it.linkcode]) return;
+      seen[it.linkcode] = true;
+      out.push(it);
+    });
+  });
+  return out;
+}
+
+/** Space-separated terms all have to appear; ".mkv" matches the extension. */
+function matchesFilter(item, terms) {
+  var name = String(item.name || '').toLowerCase();
+  var ext  = extOf(item.name);
+  for (var i = 0; i < terms.length; i++) {
+    var t = terms[i];
+    if (t.charAt(0) === '.') { if (ext !== t.slice(1)) return false; }
+    else if (name.indexOf(t) === -1) return false;
+  }
+  return true;
+}
+function filterTerms() {
+  return filterText.toLowerCase().split(/\s+/).filter(Boolean);
+}
+function filteredFiles() {
+  var terms = filterTerms();
+  if (!terms.length) return [];
+  return allLoadedFiles().filter(function (it) { return matchesFilter(it, terms); });
+}
+
+/** Extension histogram of everything loaded, for the quick-pick chips. */
+function extCounts() {
+  var map = {};
+  allLoadedFiles().forEach(function (it) {
+    var e = extOf(it.name);
+    if (e) map[e] = (map[e] || 0) + 1;
+  });
+  return Object.keys(map).sort(function (a, b) { return map[b] - map[a]; })
+               .slice(0, 8).map(function (e) { return {ext: e, n: map[e]}; });
+}
+
+/**
+ * Cumulative size/file count of everything cached below a folder.
+ * `complete` is false when any descendant is still unloaded, so the number is
+ * shown as a lower bound (~) rather than pretending to be the real total.
+ * The placeholder written before recursing also breaks folder cycles.
+ */
+function calcSize(lc, memo) {
+  if (memo[lc]) return memo[lc];
+  var n = nodes.get(lc);
+  if (!n || !n.loaded) return (memo[lc] = {bytes: 0, files: 0, complete: false});
+
+  memo[lc] = {bytes: 0, files: 0, complete: false};   // cycle guard
+  var bytes = 0, files = 0, complete = true;
+  for (var i = 0; i < n.items.length; i++) {
+    var it = n.items[i];
+    if (isFolder(it)) {
+      var s = calcSize(it.linkcode, memo);
+      bytes += s.bytes; files += s.files;
+      if (!s.complete) complete = false;
+    } else {
+      bytes += it.size || 0; files++;
+    }
+  }
+  return (memo[lc] = {bytes: bytes, files: files, complete: complete});
+}
+
+var sizeMemo = {};   // rebuilt once per renderTree
+
+function treeRow(item, depth, seq) {
   var folder = isFolder(item);
   var lc     = item.linkcode || item.code || '';
   var n      = folder ? nodes.get(lc) : null;
@@ -992,6 +1355,11 @@ function treeRow(item, depth) {
   row.setAttribute('data-lc', lc);
   row.setAttribute('data-dir', folder ? '1' : '0');
   row.style.paddingLeft = (14 + depth * 22) + 'px';
+
+  var num = document.createElement('span');
+  num.className = 'tnum';
+  num.textContent = seq;
+  row.appendChild(num);
 
   var chev = document.createElement('span');
   chev.className = 'tchev' + (folder ? (n && n.expanded ? ' open' : '') : ' leaf');
@@ -1049,7 +1417,21 @@ function treeRow(item, depth) {
 
   var meta = document.createElement('span');
   meta.className = 'tmeta';
-  meta.textContent = folder ? '' : fmtSize(item.size || 0);
+  if (!folder) {
+    meta.textContent = fmtSize(item.size || 0);
+  } else {
+    var s = calcSize(lc, sizeMemo);
+    if (!n || !n.loaded) {
+      meta.textContent = '';
+    } else if (s.complete) {
+      meta.textContent = fmtSize(s.bytes);
+    } else {
+      // "~" = at least this much; deeper folders are not loaded yet.
+      meta.textContent = '~' + fmtSize(s.bytes);
+      meta.className = 'tmeta partial';
+      meta.title = 'Chưa nạp hết thư mục con — đây là mức tối thiểu';
+    }
+  }
   row.appendChild(meta);
 
   var badge = document.createElement('span');
@@ -1137,6 +1519,10 @@ function renderTree() {
     return;
   }
 
+  // With a filter on, the tree shape gets in the way of picking, so show a
+  // flat list of every matching file across all loaded folders instead.
+  if (filterTerms().length) { renderFilterList(); return; }
+
   var rows = [];
   visibleRows(treeRoot, 0, rows);
   if (!rows.length) {
@@ -1145,14 +1531,134 @@ function renderTree() {
     return;
   }
 
+  sizeMemo = {};   // sizes change as folders load, so recompute each paint
   var frag = document.createDocumentFragment();
-  rows.forEach(function (r) { frag.appendChild(treeRow(r.item, r.depth)); });
+  rows.forEach(function (r, i) { frag.appendChild(treeRow(r.item, r.depth, i + 1)); });
   body.innerHTML = '';
   body.appendChild(frag);
 
   var loadedFolders = 0, knownFiles = 0;
   nodes.forEach(function (n) { if (n.loaded) { loadedFolders++; knownFiles += n.items.filter(function (x) { return !isFolder(x); }).length; } });
   $('treeStat').textContent = rows.length + ' dòng hiện · ' + loadedFolders + ' thư mục đã nạp · ' + knownFiles + ' tệp';
+}
+
+/** Flat result list shown while a filter is active. */
+function renderFilterList() {
+  var body = $('treeBody');
+  var hits = filteredFiles();
+  body.innerHTML = '';
+
+  if (!hits.length) {
+    body.innerHTML = '<div class="tree-empty">Không khớp tệp nào trong phần đã nạp.' +
+      '<br><span style="font-size:.8rem">Mở rộng thêm thư mục rồi lọc lại.</span></div>';
+    $('treeStat').textContent = '0 kết quả';
+    return;
+  }
+
+  var bytes = 0;
+  hits.forEach(function (it) { bytes += it.size || 0; });
+  $('treeStat').textContent = hits.length + ' kết quả · ' + fmtSize(bytes);
+
+  var frag = document.createDocumentFragment();
+  hits.forEach(function (it, i) {
+    var row = document.createElement('div');
+    row.className = 'trow';
+    row.setAttribute('data-lc', it.linkcode);
+    row.setAttribute('data-dir', '0');
+
+    var num = document.createElement('span');
+    num.className = 'tnum';
+    num.textContent = i + 1;
+    row.appendChild(num);
+
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = sel.has(it.linkcode);
+    cb.addEventListener('change', function () {
+      if (cb.checked) addFile(it, null); else removeFile(it.linkcode);
+      renderRowsState();
+      renderTray();
+    });
+    row.appendChild(cb);
+
+    var icon = document.createElement('div');
+    icon.className = 'file-icon-wrap sm is-file';
+    icon.innerHTML = '<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="#4a9eff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+    row.appendChild(icon);
+
+    var nm = document.createElement('div');
+    nm.className = 'tname';
+    var a = document.createElement('a');
+    a.href = fileUrl(it.linkcode);
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = it.name;
+    nm.appendChild(a);
+    var fo = folderOf(it.path);
+    if (fo) {
+      var badge = document.createElement('span');
+      badge.className = 'tcount';
+      badge.style.marginLeft = '8px';
+      badge.textContent = fo;
+      nm.appendChild(badge);
+    }
+    row.appendChild(nm);
+
+    var meta = document.createElement('span');
+    meta.className = 'tmeta';
+    meta.textContent = fmtSize(it.size || 0);
+    row.appendChild(meta);
+
+    frag.appendChild(row);
+  });
+  body.appendChild(frag);
+}
+
+function renderExtChips() {
+  var wrap = $('extChips');
+  if (!wrap) return;
+  var list = extCounts();
+  wrap.innerHTML = '';
+  list.forEach(function (e) {
+    var b = document.createElement('button');
+    b.className = 'chip' + (filterText.toLowerCase().indexOf('.' + e.ext) !== -1 ? ' on' : '');
+    b.textContent = '.' + e.ext + ' (' + e.n + ')';
+    b.addEventListener('click', function () {
+      var tok = '.' + e.ext;
+      var cur = filterText.split(/\s+/).filter(Boolean);
+      var at = cur.indexOf(tok);
+      if (at >= 0) cur.splice(at, 1); else cur.push(tok);
+      filterText = cur.join(' ');
+      $('filterInput').value = filterText;
+      applyFilter();
+    });
+    wrap.appendChild(b);
+  });
+}
+
+function applyFilter() {
+  renderExtChips();
+  var on = filterTerms().length > 0;
+  $('filterClear').style.display = on ? '' : 'none';
+  $('selMatchBtn').style.display = on ? '' : 'none';
+  if (viewMode === 'tree') { renderTree(); return; }
+
+  // Table view: hide non-matching rows in place. Folders always stay visible
+  // so the drill-down path does not disappear from under you.
+  var terms = filterTerms();
+  var rows = $('fileList').querySelectorAll('tr[data-lc]');
+  var shown = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var tr = rows[i];
+    if (tr.getAttribute('data-dir') === '1') { tr.style.display = ''; continue; }
+    var lc = tr.getAttribute('data-lc');
+    var item = null;
+    for (var k = 0; k < pageItems.length; k++) if (pageItems[k].linkcode === lc) { item = pageItems[k]; break; }
+    var hit = !on || (item && matchesFilter(item, terms));
+    tr.style.display = hit ? '' : 'none';
+    if (hit) shown++;
+  }
+  if (on) $('statsBar').textContent = shown + ' dòng khớp bộ lọc';
 }
 
 // Bulk-expand the whole tree, reusing the scan overlay for progress.
@@ -1241,6 +1747,7 @@ function setView(mode) {
   localStorage.setItem('fsbc-view', mode);
   var segs = $('viewSeg').querySelectorAll('button');
   for (var i = 0; i < segs.length; i++) segs[i].classList.toggle('on', segs[i].getAttribute('data-view') === mode);
+  if (typeof syncPush === 'function') syncPush();
 
   var tree = mode === 'tree';
   $('treeWrap').classList.toggle('on', tree);
@@ -1251,6 +1758,9 @@ function setView(mode) {
   $('selPageBtn').style.display    = tree ? 'none' : '';
   $('expandAllBtn').style.display  = tree ? '' : 'none';
   $('collapseAllBtn').style.display= tree ? '' : 'none';
+  // Tree loads a whole folder at once, so per-page has nothing to act on.
+  $('perPageLabel').style.display  = tree ? 'none' : '';
+  $('perPageSelect').style.display = tree ? 'none' : '';
 
   if (tree && currentLc()) openTree(currentLc());
 }
@@ -1259,24 +1769,372 @@ function openTree(lc) {
   treeRoot = lc;
   var n = getNode(lc, navStack.length ? navStack[navStack.length - 1].name : lc);
   n.expanded = true;
-  if (n.loaded) renderTree();
-  else loadNode(lc, n.name).then(renderTree).catch(function () {});
+  if (n.loaded) { touchHistory(lc, n.name); renderTree(); }
+  else loadNode(lc, n.name).then(function (nn) {
+    if (navStack.length === 1) touchHistory(lc, nn.name);
+    if (navStack.length) navStack[navStack.length - 1].name = nn.name;
+    renderBreadcrumb();
+    renderTree();
+  }).catch(function () {});
+}
+
+// ── optional Google sync ────────────────────────────────────────────────────
+/*
+ * Entirely optional: without signing in the tool works exactly as before and
+ * everything lives in localStorage. Signing in mirrors history + settings into
+ * the project's existing Sheet through the same Apps Script backend.
+ *
+ * The ID token is a credential. It stays in this closure only — never written
+ * to localStorage/sessionStorage, never put in a URL, never logged.
+ */
+var Sync = {
+  ready: false, enabled: false, on: false,
+  clientId: '', scriptUrl: '', email: '',
+  token: null,          // MEMORY ONLY
+  busy: false
+};
+var GIS_SRC = 'https://accounts.google.com/gsi/client?hl=vi';
+
+function syncInit() {
+  // config.js is generated at deploy time and gitignored locally, so a missing
+  // file simply means "sync unavailable" rather than an error.
+  import('../config.js').then(function (cfg) {
+    Sync.clientId  = cfg.GOOGLE_CLIENT_ID || '';
+    Sync.scriptUrl = cfg.SCRIPT_URL || '';
+    Sync.enabled   = Boolean(Sync.clientId && Sync.scriptUrl);
+    Sync.ready = true;
+    renderSyncBtn();
+  }).catch(function () {
+    Sync.ready = true;
+    Sync.enabled = false;
+    renderSyncBtn();
+  });
+}
+
+function loadGis() {
+  return new Promise(function (resolve, reject) {
+    if (window.google && google.accounts && google.accounts.id) return resolve();
+    var s = document.createElement('script');
+    s.src = GIS_SRC;
+    s.async = true;
+    s.onload = resolve;
+    s.onerror = function () { reject(new Error('Không tải được Google sign-in')); };
+    document.head.appendChild(s);
+  });
+}
+
+/** Reads the display claims only; the backend re-verifies the token itself. */
+function peekClaims(tok) {
+  try {
+    var p = tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(decodeURIComponent(escape(atob(p))));
+  } catch (e) { return null; }
+}
+
+function syncSignIn() {
+  if (!Sync.enabled) { toast('Sync chưa cấu hình trên bản deploy này', true); return; }
+  loadGis().then(function () {
+    google.accounts.id.initialize({
+      client_id: Sync.clientId,
+      callback: onSyncCredential,
+      auto_select: true,
+      cancel_on_tap_outside: false,
+      use_fedcm_for_prompt: true
+    });
+    google.accounts.id.prompt();
+  }).catch(function (e) { toast(e.message, true); });
+}
+
+function syncSignOut() {
+  Sync.token = null;
+  Sync.on = false;
+  Sync.email = '';
+  try { google.accounts.id.disableAutoSelect(); } catch (e) {}
+  renderSyncBtn();
+  toast('Đã đăng xuất — vẫn lưu cục bộ');
+}
+
+function onSyncCredential(resp) {
+  var tok = resp && resp.credential;
+  if (!tok) return;
+  var claims = peekClaims(tok);
+  Sync.token = tok;
+  Sync.on = true;
+  Sync.email = (claims && claims.email) || '';
+  renderSyncBtn();
+  syncPull();
+}
+
+function syncCall(action, payload) {
+  if (!Sync.token) return Promise.reject(new Error('Chưa đăng nhập'));
+  // text/plain keeps the request CORS-simple; Apps Script cannot answer a
+  // preflight OPTIONS. That is also why the token travels in the body.
+  return fetch(Sync.scriptUrl, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify({action: action, payload: payload || {}, idToken: Sync.token}),
+    cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'follow'
+  }).then(function (res) { return res.text(); }).then(function (txt) {
+    var body;
+    try { body = JSON.parse(txt); }
+    catch (e) { throw new Error('Backend trả về không phải JSON'); }
+    if (!body.ok) throw new Error(body.error || 'Backend báo lỗi');
+    return body.data;
+  });
+}
+
+/** Union by linkcode, keeping the larger hit count and the newer timestamp. */
+function mergeHistory(remote) {
+  var byLc = {};
+  history_.forEach(function (h) { byLc[h.lc] = {lc: h.lc, name: h.name || '', hits: h.hits || 1, at: h.at || 0}; });
+  (remote || []).forEach(function (r) {
+    var at = r.at ? Date.parse(r.at) || 0 : 0;
+    var cur = byLc[r.lc];
+    if (!cur) byLc[r.lc] = {lc: r.lc, name: r.name || '', hits: r.hits || 1, at: at};
+    else {
+      cur.hits = Math.max(cur.hits, r.hits || 1);
+      cur.at   = Math.max(cur.at, at);
+      if (!cur.name && r.name) cur.name = r.name;
+    }
+  });
+  history_ = Object.keys(byLc).map(function (k) { return byLc[k]; })
+                   .sort(function (a, b) { return b.at - a.at; })
+                   .slice(0, HIST_MAX);
+  saveHistory();
+  renderHistory();
+}
+
+function applyRemoteConfig(cfg) {
+  if (!cfg) return;
+  if (cfg.perPage !== undefined) {
+    var v = Number(cfg.perPage);
+    if (PER_PAGE_OPTS.indexOf(v) !== -1) {
+      perPage = v;
+      localStorage.setItem('fsbc-perpage', String(v));
+      $('perPageSelect').value = String(v);
+    }
+  }
+  if (cfg.chunk !== undefined) {
+    var c = Number(cfg.chunk);
+    if (c >= 1 && c <= 10000) {
+      chunkSize = c;
+      localStorage.setItem('fsbc-chunk', String(c));
+      $('chunkInput').value = String(c);
+    }
+  }
+  if (cfg.view === 'tree' || cfg.view === 'table') setView(cfg.view);
+  if (cfg.sort) {
+    var opt = $('sortSelect').querySelector('option[value="' + cfg.sort + '"]');
+    if (opt) $('sortSelect').value = cfg.sort;
+  }
+}
+
+function currentConfig() {
+  return {
+    perPage: String(perPage),
+    chunk: String(chunkSize),
+    view: viewMode,
+    sort: currentSort()
+  };
+}
+
+function syncPull() {
+  if (!Sync.on || Sync.busy) return Promise.resolve();
+  Sync.busy = true;
+  renderSyncBtn();
+  return syncCall('fshare.pull', {app: 'fshare'}).then(function (d) {
+    mergeHistory(d && d.history);
+    applyRemoteConfig(d && d.config);
+    Sync.busy = false;
+    renderSyncBtn();
+    return syncPush(true);            // write the merged result straight back
+  }).catch(function (e) {
+    Sync.busy = false;
+    renderSyncBtn();
+    toast('Sync lỗi: ' + e.message, true);
+  });
+}
+
+var pushTimer = null;
+function syncPush(now) {
+  if (!Sync.on) return Promise.resolve();
+  clearTimeout(pushTimer);
+  if (!now) {
+    pushTimer = setTimeout(function () { syncPush(true); }, 2500);
+    return Promise.resolve();
+  }
+  return syncCall('fshare.push', {
+    app: 'fshare',
+    history: history_.map(function (h) {
+      return {lc: h.lc, name: h.name || '', hits: h.hits || 1, at: new Date(h.at || Date.now()).toISOString()};
+    }),
+    config: currentConfig()
+  }).then(function () {
+    renderSyncBtn();
+  }).catch(function (e) { toast('Sync lỗi: ' + e.message, true); });
+}
+
+function renderSyncBtn() {
+  var b = $('syncBtn');
+  if (!b) return;
+  if (!Sync.ready)        { b.textContent = '…'; b.title = ''; return; }
+  if (!Sync.enabled)      { b.style.display = 'none'; return; }
+  b.style.display = '';
+  if (Sync.busy)          { b.textContent = '⏳ Đang sync'; return; }
+  b.textContent = Sync.on ? '✅ ' + (Sync.email || 'Đã sync') : '☁️ Đăng nhập để sync';
+  b.title = Sync.on ? 'Bấm để đăng xuất — dữ liệu vẫn lưu cục bộ'
+                    : 'Tuỳ chọn: đồng bộ lịch sử và cài đặt vào Google Sheet';
+}
+
+// ── batch crawl ─────────────────────────────────────────────────────────────
+/** Pull every distinct folder code out of arbitrary pasted text. */
+function extractAllLinkcodes(text) {
+  var out = [], seen = {};
+  var push = function (c) { if (c && !seen[c]) { seen[c] = true; out.push(c); } };
+  var re = /fshare\.vn(?:%2F|\/)+folder(?:%2F|\/)+([A-Za-z0-9]{4,})/gi, m;
+  while ((m = re.exec(text))) push(m[1]);
+  // Bare codes on their own line, for lists that hold no full URLs.
+  text.split(/[\s,;]+/).forEach(function (tok) {
+    tok = tok.trim();
+    if (/^[A-Za-z0-9]{8,}$/.test(tok)) push(tok);
+  });
+  return out;
+}
+
+var batchAbort = false;
+
+function renderBatchRow(i, lc) {
+  var row = document.createElement('div');
+  row.className = 'bres-row';
+  row.id = 'bres-' + lc;
+  row.innerHTML =
+    '<span class="bres-num">' + i + '</span>' +
+    '<span class="bres-name"><a href="' + esc(folderUrl(lc)) + '" target="_blank" rel="noopener noreferrer">' + esc(lc) + '</a></span>' +
+    '<span class="bres-stat wait">đang chờ…</span>';
+  return row;
+}
+function setBatchRow(lc, name, statusText, cls) {
+  var row = $('bres-' + lc);
+  if (!row) return;
+  if (name) {
+    row.querySelector('.bres-name').innerHTML =
+      '<a href="' + esc(folderUrl(lc)) + '" target="_blank" rel="noopener noreferrer">' + esc(name) + '</a>';
+  }
+  var st = row.querySelector('.bres-stat');
+  st.textContent = statusText;
+  st.className = 'bres-stat ' + cls;
+}
+
+function runBatch() {
+  var codes = extractAllLinkcodes($('batchInput').value);
+  if (!codes.length) { toast('Không tìm thấy link thư mục nào', true); return; }
+
+  var deep = $('batchDeep').checked;
+  var box = $('batchResults');
+  box.style.display = '';
+  box.innerHTML = '';
+  codes.forEach(function (lc, i) { box.appendChild(renderBatchRow(i + 1, lc)); });
+
+  batchAbort = false;
+  scanAbort = false;
+  $('batchRun').disabled = true;
+  $('batchHint').textContent = 'Đang cào ' + codes.length + ' thư mục…';
+
+  var totalFiles = 0, totalBytes = 0, done = 0, failed = 0;
+  var sort = currentSort();
+
+  // One folder tree at a time: each scanFolder already runs CONCURRENCY
+  // requests internally, so stacking them would multiply the load upstream.
+  var chain = Promise.resolve();
+  codes.forEach(function (lc) {
+    chain = chain.then(function () {
+      if (batchAbort) return;
+      setBatchRow(lc, null, 'đang quét…', 'wait');
+      addHistory(lc);
+
+      var name = null;
+      initScan();                       // scanFolder writes into scanState
+      lastScanRootName = null;
+      var walk = deep
+        ? scanFolder(lc, true).then(function (fs) { name = lastScanRootName; return fs; })
+        : fetchAllPages(lc, sort).then(function (r) {
+            name = (r.meta.current && r.meta.current.name) || null;
+            return r.items.filter(function (it) { return !isFolder(it); });
+          });
+
+      return walk.then(function (files) {
+        var added = 0, bytes = 0;
+        files.forEach(function (it) { bytes += it.size || 0; if (addFile(it, lc)) added++; });
+        totalFiles += added; totalBytes += bytes; done++;
+        if (added) selFolders.add(lc);
+        if (name) touchHistory(lc, name);
+        setBatchRow(lc, name, files.length + ' tệp · ' + fmtSize(bytes) +
+                    (added !== files.length ? ' (' + (files.length - added) + ' trùng)' : ''), 'ok');
+        renderTray();
+        $('batchHint').textContent = done + '/' + codes.length + ' xong · ' +
+                                     totalFiles + ' tệp · ' + fmtSize(totalBytes);
+      }).catch(function (e) {
+        failed++;
+        setBatchRow(lc, null, 'lỗi: ' + e.message, 'bad');
+      });
+    });
+  });
+
+  chain.then(function () {
+    $('batchRun').disabled = false;
+    $('batchHint').textContent = 'Xong — ' + done + '/' + codes.length + ' thư mục' +
+      (failed ? ', ' + failed + ' lỗi' : '') + ' · ' + totalFiles + ' tệp · ' + fmtSize(totalBytes);
+    renderRowsState();
+    renderTray();
+    toast(batchAbort ? 'Đã dừng' : 'Cào xong ' + totalFiles + ' tệp từ ' + done + ' thư mục');
+  });
 }
 
 // ── export ──────────────────────────────────────────────────────────────────
-function buildText(fmt) {
+function buildLines(fmt) {
   var lines = [];
   sel.forEach(function (v) {
     var url = fileUrl(v.linkcode);
+    var fo  = folderOf(v.path);
+    var tag = fo ? '[' + fo + '] ' : '';
     switch (fmt) {
-      case 'name-link': lines.push(v.name + ' — ' + url); break;
-      case 'link-name': lines.push(url + '  # ' + v.name); break;
-      case 'md':        lines.push('- [' + v.name + '](' + url + ')'); break;
-      case 'full':      lines.push(v.name + ' | ' + fmtSize(v.size) + ' | ' + url); break;
-      default:          lines.push(url);
+      case 'name-link':       lines.push(v.name + ' — ' + url); break;
+      case 'link-name':       lines.push(url + '  # ' + v.name); break;
+      case 'md':              lines.push('- [' + v.name + '](' + url + ')'); break;
+      case 'full':            lines.push(v.name + ' | ' + fmtSize(v.size) + ' | ' + url); break;
+      case 'folder-link':     lines.push(tag + url); break;
+      case 'folder-name-link':lines.push(tag + v.name + ' — ' + url); break;
+      default:                lines.push(url);
     }
   });
-  return lines.join('\n');
+  return lines;
+}
+function buildText(fmt) { return buildLines(fmt).join('\n'); }
+
+/** Split the basket into several .txt files of `size` links each. */
+function exportChunks(size) {
+  var lines = buildLines($('fmtSelect').value);
+  if (!lines.length) return;
+  size = Math.max(1, Math.min(10000, size || 49));
+
+  var parts = Math.ceil(lines.length / size);
+  var width = String(parts).length;
+  var base  = exportName().replace(/\.txt$/, '');
+
+  // Sequential with a gap: browsers throttle or block a burst of downloads.
+  var i = 0;
+  var next = function () {
+    if (i >= parts) {
+      toast('Đã tải ' + parts + ' file × ' + size + ' link');
+      return;
+    }
+    var slice = lines.slice(i * size, (i + 1) * size);
+    var name  = base + '-part-' + String(i + 1).padStart(width, '0') + '.txt';
+    downloadTxt(slice.join('\r\n') + '\r\n', name);
+    i++;
+    setTimeout(next, 350);
+  };
+  next();
 }
 function exportName() {
   var base = navStack.length ? navStack[navStack.length - 1].name : 'fshare';
@@ -1294,7 +2152,11 @@ function goFrom(inputId, errId) {
   var lc = extractLinkcode($(inputId).value);
   if (!lc) { if (errId) $(errId).textContent = 'URL hoặc link code không hợp lệ.'; return; }
   if (errId) $(errId).textContent = '';
-  location.hash = lc;
+  // Assigning an unchanged hash fires no hashchange, so route() would never
+  // run. That happens whenever the target is the folder already in the bar.
+  // startFolder() is what records history, so both paths log exactly once.
+  if (location.hash === '#' + lc) startFolder(lc);
+  else location.hash = lc;
 }
 $('heroBtn').addEventListener('click', function () { goFrom('heroInput', 'homeError'); });
 $('navBtn').addEventListener('click',  function () { goFrom('navInput', null); });
@@ -1303,6 +2165,7 @@ $('navInput').addEventListener('keydown',  function (e) { if (e.key === 'Enter')
 
 $('sortSelect').addEventListener('change', function () {
   nodes.clear();  // cached pages were fetched under the old sort order
+  syncPush();
   if (currentLc()) loadFolder(currentLc(), 1);
 });
 
@@ -1313,6 +2176,59 @@ for (var si = 0; si < segBtns.length; si++) {
 $('expandAllBtn').addEventListener('click', expandAllTree);
 $('collapseAllBtn').addEventListener('click', collapseAllTree);
 $('tpMore').addEventListener('click', expandAllTree);
+
+$('perPageSelect').addEventListener('change', function () {
+  perPage = Number($('perPageSelect').value);
+  localStorage.setItem('fsbc-perpage', String(perPage));
+  syncPush();
+  if (viewMode !== 'tree' && currentLc()) loadFolder(currentLc(), 1);
+});
+
+$('filterInput').addEventListener('input', debounceFilter);
+$('filterClear').addEventListener('click', function () {
+  filterText = '';
+  $('filterInput').value = '';
+  applyFilter();
+});
+$('selMatchBtn').addEventListener('click', function () {
+  var hits = viewMode === 'tree'
+    ? filteredFiles()
+    : pageItems.filter(function (it) { return !isFolder(it) && matchesFilter(it, filterTerms()); });
+  var n = 0;
+  hits.forEach(function (it) { if (addFile(it, null)) n++; });
+  renderRowsState();
+  renderTray();
+  toast('Đã thêm ' + n + ' tệp khớp bộ lọc');
+});
+
+var filterTimer = null;
+function debounceFilter() {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(function () {
+    filterText = $('filterInput').value.trim();
+    applyFilter();
+  }, 180);
+}
+
+$('chunkInput').addEventListener('change', function () {
+  chunkSize = Math.max(1, Math.min(10000, Number($('chunkInput').value) || 49));
+  $('chunkInput').value = chunkSize;
+  localStorage.setItem('fsbc-chunk', String(chunkSize));
+  syncPush();
+});
+$('chunkBtn').addEventListener('click', function () {
+  if (!sel.size) return;
+  exportChunks(chunkSize);
+});
+
+$('syncBtn').addEventListener('click', function () {
+  if (Sync.on) syncSignOut(); else syncSignIn();
+});
+
+$('histClear').addEventListener('click', clearHistory);
+$('goBatchBtn').addEventListener('click', showBatch);
+$('batchBack').addEventListener('click', function () { batchAbort = true; scanAbort = true; showHome(); });
+$('batchRun').addEventListener('click', runBatch);
 
 $('chkAll').addEventListener('change', function () {
   var on = $('chkAll').checked;
@@ -1420,8 +2336,13 @@ function route() {
 window.addEventListener('hashchange', route);
 
 applyTheme();
+$('perPageSelect').value = String(perPage);
+$('chunkInput').value = String(chunkSize);
+loadSelection();          // before renderTray, which is what persists it
+syncInit();               // optional; silently disabled when config.js is absent
 setView(viewMode);
 renderTray();
+renderHistory();
 route();
 </script>
 </body>

@@ -38,13 +38,20 @@ var SHEETS = {
   notes:               ['user_id', 'item_id', 'body', 'updated_at'],
   study_log:           ['user_id', 'item_id', 'opened_at'],
   interviews:          ['id', 'user_id', 'name', 'role', 'happened_on', 'result', 'stack', 'sort_order', 'created_at', 'updated_at'],
-  interview_questions: ['id', 'interview_id', 'user_id', 'round', 'q', 'a', 'note', 'sort_order']
+  interview_questions: ['id', 'interview_id', 'user_id', 'round', 'q', 'a', 'note', 'sort_order'],
+
+  /** Fshare tool: folders the user has opened. One row per (user, linkcode). */
+  fshare_history:      ['user_id', 'linkcode', 'name', 'hits', 'last_at'],
+
+  /** Generic per-user settings, namespaced by `app` so other tools can share. */
+  app_config:          ['user_id', 'app', 'key', 'value', 'updated_at']
 };
 
-/** Run once by hand (Run -> setup) to create the six sheets. */
+/** Run once by hand (Run -> setup) to create every sheet declared above. */
 function setup() {
-  for (var name in SHEETS) table(name);
-  SpreadsheetApp.getActiveSpreadsheet().toast('Đã tạo/kiểm tra đủ 6 sheet.', 'gazl', 5);
+  var n = 0;
+  for (var name in SHEETS) { table(name); n++; }
+  SpreadsheetApp.getActiveSpreadsheet().toast('Đã tạo/kiểm tra đủ ' + n + ' sheet.', 'gazl', 5);
 }
 
 /* ------------------------------------------------------------------ */
@@ -245,6 +252,66 @@ var ACTIONS = {
         table('study_log').appendAll(log.map(function (r) {
           return { user_id: user.sub, item_id: String(r.item_id), opened_at: iso(r.opened_at) || nowIso() };
         }));
+      }
+      return counts;
+    });
+  },
+
+  /* ---- Fshare tool ------------------------------------------------- */
+
+  /** History plus settings for one app, merged client-side with localStorage. */
+  'fshare.pull': function (user, p) {
+    var app = String((p && p.app) || 'fshare');
+    return {
+      history: mine(table('fshare_history').read(), user).map(function (r) {
+        return { lc: r.linkcode, name: r.name, hits: Number(r.hits) || 1, at: iso(r.last_at) };
+      }),
+      config: mine(table('app_config').read(), user)
+        .filter(function (r) { return String(r.app) === app; })
+        .reduce(function (acc, r) { acc[r.key] = r.value; return acc; }, {})
+    };
+  },
+
+  /**
+   * Upsert both lists. Keyed on (user, linkcode) and (user, app, key), so a
+   * retry updates in place instead of duplicating — same contract as 'push'.
+   */
+  'fshare.push': function (user, p) {
+    var history = asArray(p && p.history);
+    var config  = (p && p.config) || {};
+    var app     = String((p && p.app) || 'fshare');
+
+    var configRows = Object.keys(config).map(function (k) {
+      return { app: app, key: String(k), value: String(config[k]) };
+    });
+    if (history.length + configRows.length > MAX_ROWS_PER_PUSH) {
+      throw publicError('Request quá lớn (giới hạn ' + MAX_ROWS_PER_PUSH + ' dòng).');
+    }
+
+    return withLock(function () {
+      var counts = { history: 0, config: 0 };
+
+      if (history.length) {
+        counts.history = upsertByKey(table('fshare_history'), user, history, ['linkcode'], function (r) {
+          return {
+            user_id: user.sub,
+            linkcode: String(r.lc || ''),
+            name: String(r.name || ''),
+            hits: Number(r.hits) || 1,
+            last_at: iso(r.at) || nowIso()
+          };
+        });
+      }
+      if (configRows.length) {
+        counts.config = upsertByKey(table('app_config'), user, configRows, ['app', 'key'], function (r) {
+          return {
+            user_id: user.sub,
+            app: r.app,
+            key: r.key,
+            value: r.value,
+            updated_at: nowIso()
+          };
+        });
       }
       return counts;
     });
