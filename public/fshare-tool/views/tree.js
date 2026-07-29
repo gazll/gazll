@@ -3,6 +3,7 @@
 
 import { S, $, CONCURRENCY, MAX_FOLDERS } from '../lib/state.js';
 import { fetchAllPages } from '../lib/api.js';
+import { startLoad, stepLoad, endLoad, loadStopped } from '../lib/loadbar.js';
 import { esc, fmtSize, isFolder, fileUrl, folderOf, copyText, toast, skeletonRows } from '../lib/util.js';
 import { sel, selFolders, addFile, unselectFolder, touchHistory, changed } from '../lib/store.js';
 import { bindPick } from '../lib/pick.js';
@@ -40,16 +41,29 @@ export function loadNode(lc, name) {
   if (n.loading) return n.loading;
 
   n.error = null;
-  n.loading = fetchAllPages(lc, S.sortValue).then((r) => {
+
+  /* Only the folder the user is looking at drives the bar. Children expanded
+     deeper down, and anything the recursive crawl fetches, must not fight it
+     for the same strip of screen — the crawl has its own overlay. */
+  const foreground = lc === S.treeRoot;
+  if (foreground) startLoad('Loading "' + (name || lc) + '"…');
+
+  n.loading = fetchAllPages(
+    lc, S.sortValue,
+    foreground ? loadStopped : null,
+    foreground ? stepLoad : null
+  ).then((r) => {
     n.items = r.items;
     n.loaded = true;
     n.loading = false;
     n.name = (r.meta.current && r.meta.current.name) || n.name;
+    if (foreground) endLoad(loadStopped() ? 'Stopped — showing what had loaded' : '');
     renderTree();
     return n;
   }).catch((e) => {
     n.loading = false;
     n.error = e.message;
+    if (foreground) endLoad('Could not load this folder: ' + e.message);
     renderTree();
     throw e;
   });
@@ -285,6 +299,9 @@ export function renderTree() {
 
   if (!root || (!root.loaded && root.loading)) {
     if (vlist) vlist.setItems([]);
+    // Clear the counts too: leaving the previous folder's totals over a
+    // skeleton is what made a slow load look like a broken render.
+    $('treeStat').textContent = '';
     body.innerHTML = skeletonRows(9);
     return;
   }

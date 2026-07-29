@@ -54,7 +54,7 @@ export const resetFetchStats = () => { fetchStats.hits = 0; fetchStats.misses = 
  * when possible — the crawl is entirely network-bound, so this is what makes a
  * second visit instant rather than another minute of waiting.
  */
-export function fetchAllPages(linkcode, sort, shouldStop) {
+export function fetchAllPages(linkcode, sort, shouldStop, onPage) {
   const useSort = sort || currentSort();
 
   if (!isBypassed()) {
@@ -70,9 +70,17 @@ export function fetchAllPages(linkcode, sort, shouldStop) {
   }
   fetchStats.misses++;
 
+  /* Page count is only known after page 1 comes back, and a big folder can run
+     to 130 of them. Reporting each one is the difference between "working" and
+     "frozen" — this is the only place that knows how far along the fetch is. */
+  const report = (page, total, count) => {
+    if (onPage) onPage(page, total, count);
+  };
+
   return apiFolder(linkcode, 1, useSort).then((d1) => {
     let items = (d1.items || []).slice();
     const tp = pagesOf(d1, 1, items.length);
+    report(1, tp, items.length);
 
     let chain = Promise.resolve();
     for (let p = 2; p <= tp; p++) {
@@ -81,6 +89,7 @@ export function fetchAllPages(linkcode, sort, shouldStop) {
         if (shouldStop && shouldStop()) return;
         return apiFolder(linkcode, page, useSort).then((dp) => {
           items = items.concat(dp.items || []);
+          report(page, tp, items.length);
         });
       });
     }

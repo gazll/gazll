@@ -17,6 +17,7 @@ import { filterTerms } from './lib/filter.js';
 import { scan } from './lib/scan.js';
 import { cacheStats, cacheClear, cacheDelete, setBypass } from './lib/cache.js';
 import { openDialog, closeDialog } from './lib/a11y.js';
+import { wireLoadBar } from './lib/loadbar.js';
 import { Sync, syncInit, syncPush, syncSignIn, syncSignOut, setConfigApplier } from './lib/sync.js';
 
 import {
@@ -348,6 +349,7 @@ $('listCopy').addEventListener('click', () => {
 });
 
 wireBasket();
+wireLoadBar();
 
 /* ---------- batch + scan ---------- */
 

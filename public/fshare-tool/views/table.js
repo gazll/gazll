@@ -13,6 +13,7 @@ import { drillInto, renderBreadcrumb } from '../lib/nav.js';
 import { touchHistory } from '../lib/store.js';
 import { filterTerms, matchesFilter } from '../lib/filter.js';
 import { createVTable } from '../lib/vlist.js';
+import { startLoad, stepLoad, endLoad, loadStopped } from '../lib/loadbar.js';
 import { onToggleFolder } from './tree.js';
 
 export function setLoading() {
@@ -57,10 +58,17 @@ function upstreamPage(lc, sort, page) {
 export function loadTablePage(lc, page) {
   const sort = S.sortValue;
 
+  // "All" is the one table mode that walks every upstream page, so it is the
+  // one that needs the progress bar.
   if (S.perPage === 0) {
-    return fetchAllPages(lc, sort).then((r) => {
+    startLoad('Loading every page…');
+    return fetchAllPages(lc, sort, loadStopped, stepLoad).then((r) => {
       S.totalPages = 1;
+      endLoad(loadStopped() ? 'Stopped — showing what had loaded' : '');
       return { items: r.items, meta: r.meta };
+    }).catch((e) => {
+      endLoad('Could not load this folder: ' + e.message);
+      throw e;
     });
   }
 

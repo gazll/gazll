@@ -72,6 +72,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .bulkbar .lbl{font-size:.78rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
 .stats-bar{font-size:.8rem;color:var(--muted);margin-bottom:10px}
 
+/* foreground load bar — a big folder is 130 sequential requests */
+.loadbar{margin-bottom:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.lb-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.lb-text{flex:1;min-width:0;font-size:.82rem;color:var(--text2);font-variant-numeric:tabular-nums}
+.lb-track{height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.lb-track i{display:block;height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .2s}
+@media (prefers-reduced-motion:reduce){.lb-track i{transition:none}}
+
 /* table */
 /* The page is the scroll container — no inner scroll box. */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}

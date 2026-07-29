@@ -23,8 +23,8 @@ export const PER_PAGE_OPTS = [50, 100, 200, 500, 1000, 0];
 /** Rows past this count switch the list to virtual scrolling. */
 export const VIRTUAL_THRESHOLD = 120;
 
-/** Fixed row height the virtual scroller measures against, in px. */
-export const ROW_HEIGHT = 44;
+/** Fallback row height, in px. The scroller prefers --row-h, then a real row. */
+export const ROW_HEIGHT = 46;
 
 export const HIST_MAX = 60;
 
