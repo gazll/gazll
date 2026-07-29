@@ -58,9 +58,24 @@ function setup() {
 /* HTTP entry points                                                   */
 /* ------------------------------------------------------------------ */
 
-/** Liveness check only — returns no data. */
+/**
+ * Liveness check — returns no user data, so it needs no token.
+ *
+ * It also reports which actions this build understands. Apps Script serves the
+ * last *deployed* version, not the saved file, so editing this file changes
+ * nothing until Deploy → Manage deployments → New version. The only symptom
+ * was a bare "Action không hợp lệ." from a POST, which points at the client
+ * rather than at the stale deployment. Listing the actions lets the client say
+ * so plainly — and reveals nothing, since every action name is already in the
+ * public page source and each one still passes requireUser().
+ */
 function doGet() {
-  return json({ ok: true, service: 'gazl', time: new Date().toISOString() });
+  return json({
+    ok: true,
+    service: 'gazl',
+    actions: Object.keys(ACTIONS),
+    time: new Date().toISOString()
+  });
 }
 
 /**

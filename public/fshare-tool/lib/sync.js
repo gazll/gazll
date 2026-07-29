@@ -94,7 +94,53 @@ function onCredential(resp) {
   Sync.on = true;
   Sync.email = (claims && claims.email) || '';
   renderSyncBtn();
-  syncPull();
+
+  /* Check the deployment before the first real call. Otherwise the user's only
+     clue is "Action không hợp lệ.", which reads as a bug in this page rather
+     than as a backend that was never redeployed. */
+  checkBackend().then((msg) => {
+    if (msg) { toast(msg, true); return; }
+    syncPull();
+  });
+}
+
+/* Actions this build of the tool needs the backend to understand. */
+const NEEDED = ['fshare.pull', 'fshare.push'];
+
+/**
+ * Is the deployed Apps Script new enough? doGet needs no token, so this runs
+ * before sign-in and turns a stale deployment into a sentence the user can act
+ * on. A network failure is not a deployment problem, so it reports nothing.
+ *
+ * @returns {Promise<string|null>} a message to show, or null when fine
+ */
+export function checkBackend() {
+  if (!Sync.enabled) return Promise.resolve(null);
+  return fetch(Sync.scriptUrl, { cache: 'no-store', credentials: 'omit' })
+    .then((r) => r.json())
+    .then((d) => {
+      const have = (d && d.actions) || null;
+      // A build old enough to have no action list at all is old enough to lack
+      // the fshare actions, which arrived later.
+      if (!have) return STALE;
+      return NEEDED.some((a) => have.indexOf(a) === -1) ? STALE : null;
+    })
+    .catch(() => null);
+}
+
+const STALE = 'The Apps Script deployment is out of date and does not know the ' +
+  'fshare actions yet. In the Apps Script editor: Deploy → Manage deployments ' +
+  '→ edit the Web App → New version.';
+
+/** Server messages are Vietnamese (shared with the study site) and terse. */
+function explain(msg) {
+  if (/Action không hợp lệ/i.test(msg)) return STALE;
+  if (/Token không hợp lệ|hết hạn/i.test(msg)) {
+    return 'Sign-in expired, or the Client ID on this page does not match the ' +
+           'one the backend checks. Sign out and sign in again.';
+  }
+  if (/Lỗi máy chủ/i.test(msg)) return 'The backend hit an error. Check its execution log.';
+  return msg;
 }
 
 function syncCall(action, payload) {
@@ -150,7 +196,7 @@ export function syncPull() {
   }).catch((e) => {
     Sync.busy = false;
     renderSyncBtn();
-    toast('Sync failed: ' + e.message, true);
+    toast('Sync failed: ' + explain(e.message), true);
   });
 }
 
@@ -170,7 +216,7 @@ export function syncPush(now) {
       at: new Date(h.at || Date.now()).toISOString()
     })),
     config: currentConfig()
-  }).then(renderSyncBtn).catch((e) => toast('Sync failed: ' + e.message, true));
+  }).then(renderSyncBtn).catch((e) => toast('Sync failed: ' + explain(e.message), true));
 }
 
 export function renderSyncBtn() {
