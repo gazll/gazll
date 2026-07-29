@@ -157,7 +157,12 @@
     <div class="tree-wrap" id="treeWrap">
       <div class="tree-stick">
         <div class="tree-head">
-          <span>Folder tree — click ▸ to load a level</span>
+          <span class="th-left">
+            <input type="checkbox" id="treeChkAll" class="th-chk"
+                   title="Select every file currently shown in the tree"
+                   aria-label="Select every file currently shown in the tree"/>
+            <span>Folder tree — click ▸ to load a level</span>
+          </span>
           <span id="treeStat"></span>
         </div>
         <div class="tree-prog" id="treeProg">

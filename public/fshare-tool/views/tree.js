@@ -340,6 +340,7 @@ export function renderTree() {
   });
   $('treeStat').textContent = rows.length + ' rows · ' + loadedFolders +
     ' folders loaded · ' + knownFiles + ' files';
+  syncTreeHeaderCheckbox();
 }
 
 export function renderFilterList() {
@@ -351,6 +352,8 @@ export function renderFilterList() {
     body.innerHTML = '<div class="tree-empty">Nothing matches inside what is loaded.' +
       '<br><span style="font-size:.8rem">Expand more folders, then filter again.</span></div>';
     $('treeStat').textContent = '0 results';
+    S.displayList = [];
+    syncTreeHeaderCheckbox();
     return;
   }
 
@@ -361,6 +364,7 @@ export function renderFilterList() {
   S.displayList = hits;
   S.lastPickIdx = -1;
   viewport().setItems(hits.map((it) => ({ build: (i) => filterRow(it, i + 1, i) })));
+  syncTreeHeaderCheckbox();
 }
 
 /** Repaint checkboxes in the rendered slice without rebuilding the list. */
@@ -374,6 +378,27 @@ export function paintRowState() {
     if (cb) cb.checked = on;
     row.classList.toggle('picked', on);
   }
+  syncTreeHeaderCheckbox();
+}
+
+/**
+ * The header checkbox reflects only the files on screen — folders are picked
+ * through their own row, which crawls, so counting them here would leave the
+ * box permanently indeterminate.
+ */
+export function syncTreeHeaderCheckbox() {
+  const cb = $('treeChkAll');
+  if (!cb) return;
+  let files = 0, picked = 0;
+  for (let i = 0; i < S.displayList.length; i++) {
+    const it = S.displayList[i];
+    if (!it || isFolder(it)) continue;
+    files++;
+    if (sel.has(it.linkcode)) picked++;
+  }
+  cb.disabled = files === 0;
+  cb.checked = files > 0 && picked === files;
+  cb.indeterminate = picked > 0 && picked < files;
 }
 
 /* ---------- load progress ---------- */

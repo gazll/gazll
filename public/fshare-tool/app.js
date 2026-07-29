@@ -233,6 +233,22 @@ $('selDeepBtn').addEventListener('click', () => {
   runScan(lc, true, null, 'Crawling the whole tree…');
 });
 
+/* The tree's header checkbox. Acts on the files on screen — same scope as the
+   table's header box, and as Ctrl+A. Folders are left alone: ticking one starts
+   a recursive crawl, which is not what "select all shown" should trigger. */
+$('treeChkAll').addEventListener('change', () => {
+  const want = $('treeChkAll').checked;
+  let n = 0;
+  S.displayList.forEach((it) => {
+    if (!it || isFolder(it)) return;
+    // Count only real changes, so the toast cannot claim more than it did.
+    if (want) { if (addFile(it, null)) n++; }
+    else if (removeFile(it.linkcode)) n++;
+  });
+  changed();
+  toast((want ? 'Selected ' : 'Cleared ') + n + ' files');
+});
+
 $('selNoneBtn').addEventListener('click', clearSelection);
 
 /* ---------- cache + density ---------- */
