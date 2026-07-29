@@ -89,7 +89,10 @@ tr.vt-spacer td{padding:0!important;border:0!important}
    content, so one long file name can no longer squeeze Name down to a word per
    line. Name is the only column without a width, so it takes all the slack. */
 table{width:100%;border-collapse:collapse;table-layout:fixed}
-thead th{padding:11px 14px;text-align:left;font-size:.71rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;background:var(--surface2);border-bottom:1px solid var(--border2)}
+/* Pinned under the controls, same offset as the tree header. */
+thead th{position:sticky;top:var(--stick-top,132px);z-index:40;padding:11px 14px;text-align:left;font-size:.71rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;background:var(--surface2);border-bottom:1px solid var(--border2)}
+thead th:first-child{border-top-left-radius:var(--radius)}
+thead th.act-col{border-top-right-radius:var(--radius)}
 thead th.chk-col,td.chk-col{width:44px;text-align:center;padding-left:14px;padding-right:0}
 /* Widths keyed by class, never by :nth-child — a positional selector silently
    points at the wrong column the moment one is added. */
@@ -173,9 +176,15 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
 
 /* tree view */
 .file-icon-wrap.sm{width:26px;height:26px}
-.tree-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:none}
+/* No overflow:hidden here — it would make this a scroll container and kill the
+   sticky header inside it. The corners are rounded on the children instead. */
+.tree-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:none}
 .tree-wrap.on{display:block}
-.tree-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface2);border-bottom:1px solid var(--border2);font-size:.71rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+/* Header + progress ride together, pinned under the controls. --stick-top is
+   measured in app.js: the controls wrap onto more lines on a narrow window, so
+   a hard-coded offset would leave a gap or overlap. */
+.tree-stick{position:sticky;top:var(--stick-top,132px);z-index:40}
+.tree-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface2);border-bottom:1px solid var(--border2);font-size:.71rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-radius:var(--radius) var(--radius) 0 0}
 /* Height is fixed, not min-height: the virtual scroller maps scrollTop onto a
    row index, so a row that grew taller would misplace every row after it. */
 .trow{display:flex;align-items:center;gap:9px;padding:0 14px;border-bottom:1px solid var(--border);height:var(--row-h);box-sizing:border-box}
@@ -201,7 +210,9 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
 .tree-empty{padding:44px;text-align:center;color:var(--muted)}
 
 /* virtual scroller — the window is the viewport, .vl-sizer holds the full
-   height so the page scrollbar is honest, .vl-window carries the live slice */
+   height so the page scrollbar is honest, .vl-window carries the live slice.
+   Clipping here is safe: nothing sticky lives inside it. */
+#treeBody{overflow:hidden;border-radius:0 0 var(--radius) var(--radius)}
 .vl-sizer{position:relative;width:100%}
 .vl-window{position:absolute;top:0;left:0;right:0;will-change:transform}
 

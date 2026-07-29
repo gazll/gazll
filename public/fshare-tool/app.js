@@ -62,6 +62,38 @@ $('themeBtn').addEventListener('click', () => {
   applyTheme();
 });
 
+/* ---------- sticky offsets ---------- */
+
+/* The tree header and the table's column headers pin directly under the
+   controls block. That block wraps onto extra lines on a narrow window and
+   grows when the filter chips appear, so its height is measured rather than
+   assumed — a hard-coded offset shows a strip of rows above the header on one
+   size and leaves a gap on another. */
+function measureStickTop() {
+  const nav = document.querySelector('.topnav');
+  const ctl = document.querySelector('.sticky-controls');
+  if (!nav || !ctl) return;
+  /* On the home screen #folderView is hidden and the controls measure 0.
+     Writing 56px then would pin the headers under the nav, where the controls
+     block covers them the moment a folder opens. Wait for a real height — the
+     observer fires again as soon as the view is shown. */
+  if (ctl.offsetHeight <= 0) return;
+  document.documentElement.style.setProperty(
+    '--stick-top', (nav.offsetHeight + ctl.offsetHeight) + 'px');
+}
+
+const stickTargets = ['.sticky-controls', '.topnav']
+  .map((s) => document.querySelector(s))
+  .filter(Boolean);
+
+if (typeof ResizeObserver === 'function' && stickTargets.length) {
+  const ro = new ResizeObserver(measureStickTop);
+  stickTargets.forEach((el) => ro.observe(el));
+}
+// Kept regardless: ResizeObserver does not fire for a zoom change alone.
+window.addEventListener('resize', measureStickTop);
+measureStickTop();
+
 /* ---------- view switching ---------- */
 
 let booted = false;
