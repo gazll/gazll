@@ -5,69 +5,104 @@
    pays for it again. This renders only the slice inside the viewport plus a
    small overscan, so cost is bound by screen height rather than item count.
 
-   It needs a fixed row height to map scrollTop onto an index, which is why the
-   stylesheet pins rows to ROW_HEIGHT and ellipsises long names instead of
+   The *page* is the scroll container. An inner scroll box nested in a page that
+   also scrolls is disorienting — two scrollbars, and the list never shows how
+   long it really is. So the viewport is the window, and how far the list has
+   passed the top of the screen decides which slice is live.
+
+   It needs a fixed row height to map that offset onto an index, which is why
+   the stylesheet pins rows to --row-h and ellipsises long names instead of
    letting them wrap. Below VIRTUAL_THRESHOLD items everything is rendered
    directly, so short folders keep the simpler behaviour. */
 
 import { ROW_HEIGHT, VIRTUAL_THRESHOLD } from './state.js';
 
-const OVERSCAN = 6;
+const OVERSCAN = 8;
 
-/* Read from CSS rather than assumed, so the compact-density toggle cannot get
-   out of step with the maths — a mismatch here misplaces every row. */
-function rowHeight() {
+/* Read from CSS rather than assumed, so the density toggle cannot get out of
+   step with the maths — a mismatch here misplaces every row. */
+function cssRowHeight() {
   const v = getComputedStyle(document.documentElement).getPropertyValue('--row-h');
   const n = parseInt(v, 10);
   return n > 0 ? n : ROW_HEIGHT;
 }
 
 /**
- * @param {HTMLElement} viewport  scrollable element, must have a bounded height
+ * Which rows to render, given how far `el` has scrolled past the top of the
+ * window. `el` is the element whose first child is row 0.
+ */
+function sliceFor(el, total, rowH) {
+  const passed = Math.max(0, -el.getBoundingClientRect().top);
+  const first = Math.max(0, Math.floor(passed / rowH) - OVERSCAN);
+  const count = Math.ceil(window.innerHeight / rowH) + OVERSCAN * 2;
+  return [first, Math.min(total, first + count)];
+}
+
+/**
+ * Trust the DOM over the stylesheet. If a row really renders taller than
+ * --row-h claims, every row past the first screen is misplaced and the list
+ * jitters as you scroll. Measuring one real row costs a single layout read and
+ * removes the whole class of bug.
+ *
+ * @returns {number} the corrected height, or 0 when the CSS was right
+ */
+function calibrate(sample, rowH) {
+  if (!sample) return 0;
+  const h = sample.offsetHeight;
+  return h > 0 && Math.abs(h - rowH) > 1 ? h : 0;
+}
+
+/**
+ * @param {HTMLElement} container  holds the rows; grows with the page
  * @param {(item:any, index:number) => HTMLElement} renderRow
  */
-export function createVList(viewport, renderRow) {
+export function createVList(container, renderRow) {
   let items = [];
   let sizer = null;
   let windowEl = null;
   let lastStart = -1;
   let lastEnd = -1;
   let virtual = false;
+  let bound = false;
   let rowH = ROW_HEIGHT;
 
+  function bind(on) {
+    if (on === bound) return;
+    bound = on;
+    const fn = on ? 'addEventListener' : 'removeEventListener';
+    window[fn]('scroll', onScroll, { passive: true });
+    window[fn]('resize', onScroll);
+  }
+
   function teardown() {
-    viewport.removeEventListener('scroll', onScroll);
-    viewport.innerHTML = '';
+    bind(false);
+    container.innerHTML = '';
     sizer = windowEl = null;
     lastStart = lastEnd = -1;
   }
 
   function renderPlain() {
     virtual = false;
+    bind(false);
     const frag = document.createDocumentFragment();
     for (let i = 0; i < items.length; i++) frag.appendChild(renderRow(items[i], i));
-    viewport.innerHTML = '';
-    viewport.appendChild(frag);
+    container.replaceChildren(frag);
   }
 
   function buildScaffold() {
     virtual = true;
-    viewport.innerHTML = '';
     sizer = document.createElement('div');
     sizer.className = 'vl-sizer';
-    sizer.style.height = items.length * rowH + 'px';
     windowEl = document.createElement('div');
     windowEl.className = 'vl-window';
     sizer.appendChild(windowEl);
-    viewport.appendChild(sizer);
-    viewport.addEventListener('scroll', onScroll, { passive: true });
+    container.replaceChildren(sizer);
+    sizer.style.height = items.length * rowH + 'px';
+    bind(true);
   }
 
   function paint(force) {
-    const h = viewport.clientHeight || 600;
-    const first = Math.max(0, Math.floor(viewport.scrollTop / rowH) - OVERSCAN);
-    const count = Math.ceil(h / rowH) + OVERSCAN * 2;
-    const last = Math.min(items.length, first + count);
+    const [first, last] = sliceFor(container, items.length, rowH);
 
     // Scrolling within the already-rendered slice needs no DOM work at all.
     if (!force && first === lastStart && last === lastEnd) return;
@@ -77,8 +112,15 @@ export function createVList(viewport, renderRow) {
     const frag = document.createDocumentFragment();
     for (let i = first; i < last; i++) frag.appendChild(renderRow(items[i], i));
     windowEl.style.transform = 'translateY(' + first * rowH + 'px)';
-    windowEl.innerHTML = '';
-    windowEl.appendChild(frag);
+    windowEl.replaceChildren(frag);
+
+    const fixed = calibrate(windowEl.firstElementChild, rowH);
+    if (fixed) {
+      rowH = fixed;
+      sizer.style.height = items.length * rowH + 'px';
+      lastStart = lastEnd = -1;
+      paint(true);
+    }
   }
 
   let ticking = false;
@@ -89,28 +131,15 @@ export function createVList(viewport, renderRow) {
   }
 
   return {
-    /**
-     * Rebuilding wipes innerHTML, which zeroes scrollTop — so expanding a
-     * folder 600 rows down would throw you back to the top. Callers that are
-     * re-rendering the same list keep the offset; navigation resets it.
-     */
-    setItems(next, opts) {
-      const keep = !(opts && opts.resetScroll);
-      const prevTop = keep ? viewport.scrollTop : 0;
-
+    /** Page scroll survives a rebuild on its own, so there is no offset to restore. */
+    setItems(next) {
       items = next || [];
-      rowH = rowHeight();          // re-read: density may have changed
-      teardown();
-      if (!items.length) return;
+      rowH = cssRowHeight();       // re-read: density may have changed
+      lastStart = lastEnd = -1;
+      if (!items.length) { teardown(); return; }
 
       if (items.length < VIRTUAL_THRESHOLD) renderPlain();
       else { buildScaffold(); paint(true); }
-
-      if (prevTop) {
-        const max = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
-        viewport.scrollTop = Math.min(prevTop, max);
-        if (virtual) paint(true);
-      }
     },
 
     /** Repaint the visible slice in place, e.g. after a selection change. */
@@ -130,48 +159,72 @@ export function createVList(viewport, renderRow) {
  * Same idea for a <table>. A tbody cannot hold arbitrary wrappers, so the
  * offset is carried by two spacer rows instead of a transform.
  *
- * @param {HTMLElement} scroller  the scrollable ancestor (.table-wrap)
- * @param {HTMLElement} tbody
+ * @param {HTMLElement} tbody  measured directly; its first child is row 0
  * @param {(item:any, index:number) => HTMLTableRowElement} renderRow
  */
-export function createVTable(scroller, tbody, renderRow) {
+export function createVTable(tbody, renderRow) {
   let items = [];
   let virtual = false;
+  let bound = false;
   let rowH = ROW_HEIGHT;
   let lastStart = -1, lastEnd = -1;
-  const top = document.createElement('tr');
-  const bot = document.createElement('tr');
-  top.className = bot.className = 'vt-spacer';
-  top.setAttribute('aria-hidden', 'true');
-  bot.setAttribute('aria-hidden', 'true');
+  /* A <tr> with no cells collapses to nothing in some engines no matter what
+     height it is given, so each spacer carries one full-width cell. */
+  const mkSpacer = () => {
+    const tr = document.createElement('tr');
+    tr.className = 'vt-spacer';
+    tr.setAttribute('aria-hidden', 'true');
+    const td = document.createElement('td');
+    td.colSpan = 6;
+    tr.appendChild(td);
+    return tr;
+  };
+  const top = mkSpacer();
+  const bot = mkSpacer();
+  const setSpacer = (tr, px) => {
+    tr.style.height = px + 'px';
+    tr.firstChild.style.height = px + 'px';
+  };
+
+  function bind(on) {
+    if (on === bound) return;
+    bound = on;
+    const fn = on ? 'addEventListener' : 'removeEventListener';
+    window[fn]('scroll', onScroll, { passive: true });
+    window[fn]('resize', onScroll);
+  }
 
   function renderPlain() {
     virtual = false;
-    scroller.removeEventListener('scroll', onScroll);
+    bind(false);
     const frag = document.createDocumentFragment();
     for (let i = 0; i < items.length; i++) frag.appendChild(renderRow(items[i], i));
-    tbody.innerHTML = '';
-    tbody.appendChild(frag);
+    tbody.replaceChildren(frag);
   }
 
   function paint(force) {
-    const h = scroller.clientHeight || 600;
-    const first = Math.max(0, Math.floor(scroller.scrollTop / rowH) - OVERSCAN);
-    const count = Math.ceil(h / rowH) + OVERSCAN * 2;
-    const last = Math.min(items.length, first + count);
+    const [first, last] = sliceFor(tbody, items.length, rowH);
     if (!force && first === lastStart && last === lastEnd) return;
     lastStart = first;
     lastEnd = last;
 
     const frag = document.createDocumentFragment();
-    top.style.height = first * rowH + 'px';
+    setSpacer(top, first * rowH);
     frag.appendChild(top);
     for (let i = first; i < last; i++) frag.appendChild(renderRow(items[i], i));
-    bot.style.height = Math.max(0, (items.length - last) * rowH) + 'px';
+    setSpacer(bot, Math.max(0, (items.length - last) * rowH));
     frag.appendChild(bot);
 
-    tbody.innerHTML = '';
-    tbody.appendChild(frag);
+    // Swapped in one go: an empty tbody would let the browser clamp the page
+    // scroll to a page that is momentarily short.
+    tbody.replaceChildren(frag);
+
+    const fixed = calibrate(top.nextElementSibling, rowH);
+    if (fixed) {
+      rowH = fixed;
+      lastStart = lastEnd = -1;
+      paint(true);
+    }
   }
 
   let ticking = false;
@@ -184,16 +237,13 @@ export function createVTable(scroller, tbody, renderRow) {
   return {
     setItems(next) {
       items = next || [];
-      rowH = rowHeight();
+      rowH = cssRowHeight();
       lastStart = lastEnd = -1;
-      scroller.removeEventListener('scroll', onScroll);
-      tbody.innerHTML = '';
-      if (!items.length) return;
+      if (!items.length) { bind(false); tbody.replaceChildren(); return; }
 
       if (items.length < VIRTUAL_THRESHOLD) { renderPlain(); return; }
       virtual = true;
-      scroller.scrollTop = 0;
-      scroller.addEventListener('scroll', onScroll, { passive: true });
+      bind(true);
       paint(true);
     },
     refresh() {

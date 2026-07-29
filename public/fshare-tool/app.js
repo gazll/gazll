@@ -20,7 +20,7 @@ import { openDialog, closeDialog } from './lib/a11y.js';
 import { Sync, syncInit, syncPush, syncSignIn, syncSignOut, setConfigApplier } from './lib/sync.js';
 
 import {
-  showTable, paintRowState as paintTableRows, applyTableFilter, selectPageFiles
+  showTable, paintRowState as paintTableRows, applyTableFilter, rerenderTable
 } from './views/table.js';
 import {
   openTree, renderTree, paintRowState as paintTreeRows,
@@ -80,7 +80,6 @@ function setView(mode) {
   $('paginationTop').style.display = tree ? 'none' : '';
   $('paginationBot').style.display = tree ? 'none' : '';
   $('pgInfo').style.display = tree ? 'none' : '';
-  $('selPageBtn').style.display = tree ? 'none' : '';
   $('expandAllBtn').style.display = tree ? '' : 'none';
   $('collapseAllBtn').style.display = tree ? '' : 'none';
   // Tree loads a whole folder at once, so per-page has nothing to act on.
@@ -186,17 +185,6 @@ $('chkAll').addEventListener('change', () => {
   changed();
 });
 
-$('selPageBtn').addEventListener('click', () => {
-  const n = selectPageFiles();
-  changed();
-  toast('Added ' + n + ' files from this page');
-});
-
-$('selFolderBtn').addEventListener('click', () => {
-  if (!currentLc()) return;
-  runScan(currentLc(), false, null, 'Fetching every page of this folder…');
-});
-
 $('selDeepBtn').addEventListener('click', () => {
   const lc = currentLc();
   if (!lc) return;
@@ -210,19 +198,6 @@ $('selDeepBtn').addEventListener('click', () => {
     return;
   }
   runScan(lc, true, null, 'Crawling the whole tree…');
-});
-
-$('selInvertBtn').addEventListener('click', () => {
-  // Acts on what is on screen, so it stays predictable under a filter.
-  const files = S.displayList.filter((it) => it && !isFolder(it));
-  if (!files.length) { toast('Nothing is shown', true); return; }
-  let added = 0, removed = 0;
-  files.forEach((it) => {
-    if (sel.has(it.linkcode)) { removeFile(it.linkcode); removed++; }
-    else { addFile(it, null); added++; }
-  });
-  changed();
-  toast('Inverted: +' + added + ' / −' + removed);
 });
 
 $('selNoneBtn').addEventListener('click', clearSelection);
@@ -274,20 +249,31 @@ $('refreshBtn').addEventListener('click', () => {
   toast('Re-fetching — dropped ' + dropped + ' cached entries');
 });
 
+/* Row height. A single toggling button read as a state label as often as an
+   action ("▤ Compact" — am I compact, or does clicking make me compact?), so
+   it is a segmented control now: the highlighted half is the current height. */
 let compact = localStorage.getItem('fsbc-compact') === '1';
 
 function applyDensity() {
   document.body.classList.toggle('compact', compact);
-  $('densityBtn').textContent = compact ? '▤ Normal' : '▤ Compact';
+  const btns = $('densitySeg').querySelectorAll('button');
+  for (let i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('on', (btns[i].getAttribute('data-d') === '1') === compact);
+  }
 }
 
-$('densityBtn').addEventListener('click', () => {
-  compact = !compact;
-  localStorage.setItem('fsbc-compact', compact ? '1' : '0');
-  applyDensity();
-  // The virtual scroller reads --row-h, so it has to rebuild at the new height.
-  if (S.viewMode === 'tree') renderTree();
-});
+const densBtns = $('densitySeg').querySelectorAll('button');
+for (let i = 0; i < densBtns.length; i++) {
+  densBtns[i].addEventListener('click', function () {
+    const want = this.getAttribute('data-d') === '1';
+    if (want === compact) return;
+    compact = want;
+    localStorage.setItem('fsbc-compact', compact ? '1' : '0');
+    applyDensity();
+    // The virtual scroller reads --row-h, so it has to rebuild at the new height.
+    if (S.viewMode === 'tree') renderTree(); else if (currentLc()) rerenderTable();
+  });
+}
 $('expandAllBtn').addEventListener('click', expandAllTree);
 $('collapseAllBtn').addEventListener('click', collapseAllTree);
 $('tpMore').addEventListener('click', expandAllTree);

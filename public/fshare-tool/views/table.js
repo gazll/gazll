@@ -7,7 +7,7 @@ import { S, $, PAGE_SIZE } from '../lib/state.js';
 import { apiFolder, pagesOf, fetchAllPages } from '../lib/api.js';
 import { cacheGet, cachePageGet, cachePageSet, isBypassed } from '../lib/cache.js';
 import { esc, fmtSize, fmtDate, isFolder, fileUrl, copyText, toast } from '../lib/util.js';
-import { sel, selFolders, addFile } from '../lib/store.js';
+import { sel, selFolders } from '../lib/store.js';
 import { bindPick } from '../lib/pick.js';
 import { drillInto, renderBreadcrumb } from '../lib/nav.js';
 import { touchHistory } from '../lib/store.js';
@@ -141,26 +141,37 @@ export function renderFolder(items, meta, linkcode) {
     return;
   }
 
-  // Numbering continues across pages rather than restarting at 1.
-  const base = S.perPage === 0 ? 0 : (S.currentPage - 1) * S.perPage;
   S.displayList = items;
   S.lastPickIdx = -1;
-
-  // Up to 1000 rows per page, so the same virtualisation the tree uses.
-  vtable().setItems(items.map((it, i) => ({ it, seq: base + i + 1, idx: i })));
-
+  // A filter typed before this folder finished loading still applies to it.
+  if (filterTerms().length) applyTableFilter();
+  else { paintRows(); paintRowState(); }
   renderPagination(linkcode);
+}
+
+/**
+ * Build the rows for whatever is already in S.pageItems. Up to 1000 rows per
+ * page, so the same virtualisation the tree uses.
+ */
+function paintRows() {
+  // Numbering continues across pages rather than restarting at 1.
+  const base = S.perPage === 0 ? 0 : (S.currentPage - 1) * S.perPage;
+  vtable().setItems(S.pageItems.map((it, i) => ({ it, seq: base + i + 1, idx: i })));
+}
+
+/** Rebuild the full, unfiltered page — density change, or a cleared filter. */
+export function rerenderTable() {
+  if (!S.pageItems.length) return;
+  S.displayList = S.pageItems;
+  S.lastPickIdx = -1;
+  paintRows();
   paintRowState();
 }
 
 let vt = null;
 function vtable() {
   if (!vt) {
-    vt = createVTable(
-      document.querySelector('.table-wrap'),
-      $('fileList'),
-      (row) => makeRow(row.it, row.seq, row.idx)
-    );
+    vt = createVTable($('fileList'), (row) => makeRow(row.it, row.seq, row.idx));
   }
   return vt;
 }
@@ -191,6 +202,7 @@ function makeRow(item, seq, idx) {
   tr.appendChild(chkTd);
 
   const nameTd = document.createElement('td');
+  nameTd.className = 'name-col';
   const cell = document.createElement('div');
   cell.className = 'name-cell';
 
@@ -226,6 +238,7 @@ function makeRow(item, seq, idx) {
   tr.appendChild(dateTd);
 
   const actTd = document.createElement('td');
+  actTd.className = 'act-col';
   const badge = document.createElement('span');
   badge.className = 'badge ' + (folder ? 'badge-folder' : 'badge-copy');
   badge.textContent = folder ? 'Open' : 'Copy link';
@@ -267,29 +280,37 @@ export function syncHeaderCheckbox() {
   cb.indeterminate = picked > 0 && picked < files.length;
 }
 
-/** Hide non-matching rows in place; folders stay so the drill path survives. */
+/**
+ * Drop non-matching rows; folders stay so the drill path survives.
+ *
+ * Rebuilt rather than hidden in place: the virtual scroller sizes its spacers
+ * from the item count, so `display:none` rows would leave it measuring a
+ * height the table no longer has.
+ */
 export function applyTableFilter() {
   const terms = filterTerms();
   const on = terms.length > 0;
-  const rows = $('fileList').querySelectorAll('tr[data-lc]');
-  let shown = 0;
+  if (!on) { rerenderTable(); return; }
 
-  for (let i = 0; i < rows.length; i++) {
-    const tr = rows[i];
-    if (tr.getAttribute('data-dir') === '1') { tr.style.display = ''; continue; }
-    const lc = tr.getAttribute('data-lc');
-    const item = S.pageItems.find((x) => x.linkcode === lc);
-    const hit = !on || (item && matchesFilter(item, terms));
-    tr.style.display = hit ? '' : 'none';
-    if (hit) shown++;
-  }
-  if (on) $('statsBar').textContent = shown + ' rows match the filter';
-}
+  // The row number keeps referring to the unfiltered page; `idx` has to be the
+  // position within what is on screen, because Shift+click ranges index it.
+  const base = S.perPage === 0 ? 0 : (S.currentPage - 1) * S.perPage;
+  const rows = [];
+  const shownItems = [];
+  let files = 0;
 
-export function selectPageFiles() {
-  let n = 0;
-  S.pageItems.forEach((it) => { if (!isFolder(it) && addFile(it, null)) n++; });
-  return n;
+  S.pageItems.forEach((it, i) => {
+    if (!isFolder(it) && !matchesFilter(it, terms)) return;
+    if (!isFolder(it)) files++;
+    rows.push({ it, seq: base + i + 1, idx: rows.length });
+    shownItems.push(it);
+  });
+
+  S.displayList = shownItems;
+  S.lastPickIdx = -1;
+  vtable().setItems(rows);
+  paintRowState();
+  $('statsBar').textContent = files + ' files match the filter';
 }
 
 /* ---------- pagination ---------- */

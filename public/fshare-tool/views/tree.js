@@ -1,7 +1,7 @@
 /* Tree view: lazy folder expansion, the load-progress bar, and the flat
    result list shown while a filter is active. */
 
-import { S, $, CONCURRENCY, MAX_FOLDERS, ROW_HEIGHT } from '../lib/state.js';
+import { S, $, CONCURRENCY, MAX_FOLDERS } from '../lib/state.js';
 import { fetchAllPages } from '../lib/api.js';
 import { esc, fmtSize, isFolder, fileUrl, folderOf, copyText, toast, skeletonRows } from '../lib/util.js';
 import { sel, selFolders, addFile, unselectFolder, touchHistory, changed } from '../lib/store.js';

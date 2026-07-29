@@ -73,31 +73,38 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .stats-bar{font-size:.8rem;color:var(--muted);margin-bottom:10px}
 
 /* table */
-/* Its own scroll box, so the virtual table can map scrollTop onto a row index
-   the same way the tree does. */
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:calc(100vh - 300px);min-height:220px;overflow:auto}
-.table-wrap thead th{position:sticky;top:0;z-index:2}
-tbody tr{height:var(--row-h)}
-tr.vt-spacer{height:0;background:none!important}
-tr.vt-spacer:hover{background:none!important}
-table{width:100%;border-collapse:collapse}
+/* The page is the scroll container — no inner scroll box. */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+tr.vt-spacer,tr.vt-spacer:hover{background:none!important;border:0!important}
+tr.vt-spacer td{padding:0!important;border:0!important}
+/* Fixed layout: column widths come from the rules below instead of from the
+   content, so one long file name can no longer squeeze Name down to a word per
+   line. Name is the only column without a width, so it takes all the slack. */
+table{width:100%;border-collapse:collapse;table-layout:fixed}
 thead th{padding:11px 14px;text-align:left;font-size:.71rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;background:var(--surface2);border-bottom:1px solid var(--border2)}
 thead th.chk-col,td.chk-col{width:44px;text-align:center;padding-left:14px;padding-right:0}
-thead th:last-child{text-align:right}
-tbody tr{border-bottom:1px solid var(--border)}
+/* Widths keyed by class, never by :nth-child — a positional selector silently
+   points at the wrong column the moment one is added. */
+th.size-col,td.size-cell{width:112px}
+th.date-col,td.date-cell{width:150px}
+th.act-col,td.act-col{width:124px;text-align:right}
+td.name-col{overflow:hidden}
+tbody tr{border-bottom:1px solid var(--border);height:var(--row-h)}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--surface2)}
 tbody tr.picked{background:var(--accent-dim)}
-td{padding:10px 14px;vertical-align:middle}
-td:last-child{text-align:right}
-td:nth-child(3),td:nth-child(4){width:120px}
+/* No vertical padding: `height` on a row is a minimum, so padding would push
+   rows past --row-h and the virtual scroller would misplace every one. */
+td{padding:0 14px;vertical-align:middle}
 input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
-.name-cell{display:flex;align-items:center;gap:10px;min-width:0}
+.name-cell{display:flex;align-items:center;gap:10px;min-width:0;overflow:hidden}
 .file-icon-wrap{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .file-icon-wrap.is-folder{background:var(--accent-dim)}
 .file-icon-wrap.is-file{background:var(--blue-dim)}
 .file-icon{width:16px;height:16px}
-.item-name{font-weight:500;font-size:.89rem;color:var(--text);word-break:break-word}
+/* Ellipsis, not wrapping: a wrapped name makes the row taller than --row-h and
+   the virtual scroller loses track. The full name is on the title attribute. */
+.item-name{font-weight:500;font-size:.89rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .item-folder{color:var(--accent);cursor:pointer}
 .item-folder:hover{text-decoration:underline}
 .item-file-link{color:var(--text);text-decoration:none}
@@ -185,9 +192,8 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
 .terr{font-size:.74rem;color:var(--red);flex-shrink:0}
 .tree-empty{padding:44px;text-align:center;color:var(--muted)}
 
-/* virtual scroller — #treeBody is the scroll viewport, .vl-sizer holds the
-   full scroll height, .vl-window carries only the rendered slice */
-#treeBody{max-height:calc(100vh - 300px);min-height:220px;overflow-y:auto;overflow-x:hidden}
+/* virtual scroller — the window is the viewport, .vl-sizer holds the full
+   height so the page scrollbar is honest, .vl-window carries the live slice */
 .vl-sizer{position:relative;width:100%}
 .vl-window{position:absolute;top:0;left:0;right:0;will-change:transform}
 
@@ -233,11 +239,12 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ac
 .cache-badge.on{display:inline-flex}
 .cache-badge b{color:var(--green);font-weight:700}
 
-/* compact density: the virtual scroller reads --row-h, so both stay in step */
-:root{--row-h:44px}
+/* Row height. Compact fits roughly a third more rows on screen; the virtual
+   scroller reads --row-h (and re-measures a real row), so both stay in step. */
+:root{--row-h:46px}
 body.compact{--row-h:32px}
 body.compact .trow{font-size:.83rem}
-body.compact td{padding-top:5px;padding-bottom:5px}
+body.compact .item-name{font-size:.83rem}
 body.compact .file-icon-wrap{width:22px;height:22px}
 body.compact .file-icon-wrap.sm{width:20px;height:20px}
 body.compact .badge{padding:2px 9px;font-size:.68rem}

@@ -104,16 +104,17 @@
 
     <div class="bulkbar">
       <span class="lbl">Quick select</span>
-      <button class="btn2" id="selPageBtn">Files on this page</button>
       <button class="btn2" id="expandAllBtn">Expand all ↓</button>
       <button class="btn2" id="collapseAllBtn">Collapse</button>
-      <button class="btn2" id="selFolderBtn">Every file in this folder</button>
       <button class="btn2" id="selDeepBtn">Crawl whole tree ↓</button>
-      <button class="btn2" id="selInvertBtn">Invert selection</button>
       <button class="btn2" id="selNoneBtn">Clear selection</button>
+      <span class="lbl" style="margin-left:4px">Rows</span>
+      <span class="seg" id="densitySeg" role="group" aria-label="Row height">
+        <button type="button" data-d="0" title="Taller rows, easier to read">Normal</button>
+        <button type="button" data-d="1" title="Shorter rows, more of them on screen">Compact</button>
+      </span>
       <span class="cache-badge" id="cacheBadge" title="Folder listings kept locally"></span>
       <button class="btn2" id="refreshBtn" title="Re-fetch this folder, ignoring the cache">↻ Refresh</button>
-      <button class="btn2" id="densityBtn" title="Row height">▤ Compact</button>
       <button class="btn2" id="helpBtn" title="Keyboard shortcuts">⌨ Shortcuts</button>
     </div>
 
@@ -135,10 +136,10 @@
         <thead><tr>
           <th class="num-col">#</th>
           <th class="chk-col"><input type="checkbox" id="chkAll" title="Select/clear every file on this page"/></th>
-          <th>Name</th>
-          <th>Size</th>
+          <th class="name-col">Name</th>
+          <th class="size-col">Size</th>
           <th class="date-col">Last modified</th>
-          <th>Action</th>
+          <th class="act-col">Action</th>
         </tr></thead>
         <tbody id="fileList"></tbody>
       </table>

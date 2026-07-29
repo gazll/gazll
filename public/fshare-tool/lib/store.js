@@ -167,6 +167,15 @@ export function mergeHistory(remote) {
 /* ---------- settings ---------- */
 
 export function loadSettings() {
+  /* Tree is the default view. A saved 'table' from before that decision would
+     otherwise keep winning forever, so drop the stored value once. */
+  if (!localStorage.getItem('fsbc-view-default-tree')) {
+    try {
+      localStorage.removeItem('fsbc-view');
+      localStorage.setItem('fsbc-view-default-tree', '1');
+    } catch (e) { /* ignore */ }
+  }
+
   const view = localStorage.getItem('fsbc-view');
   if (view === 'tree' || view === 'table') S.viewMode = view;
 
