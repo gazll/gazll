@@ -28,7 +28,7 @@ public/
     interviews.js    interview journal CRUD (<dialog>)
     stats.js         streak + heatmap + per-topic progress
     admin.js         all-user overview (admin role only)
-  content.json       234 track items + 42 microservices items
+  content.json       266 track items + 42 microservices items
   interviews.json    seed entries, merged under everyone's own Sheet rows
 apps-script/Code.gs  the entire backend (Google Sheet as database)
 secret/              GITIGNORED. Personal setup notes and credentials
@@ -41,7 +41,7 @@ secret/              GITIGNORED. Personal setup notes and credentials
   and if it degrades to an empty string the regex wraps **every number** in
   `<code>`. Do not "tidy" that line into a literal.
 
-- **`item_id` is one flat key space.** Track items are `1.1`–`19.8`,
+- **`item_id` is one flat key space.** Track items are `1.1`–`23.8`,
   microservices items are `M1.1`–`M10.6`. They do not collide, which is why
   `progress` and `notes` can share a single id column.
 
@@ -64,6 +64,13 @@ secret/              GITIGNORED. Personal setup notes and credentials
   `renderMarkdown` collects lines starting with `<` until a blank one, so a
   blank line inside a `<pre>` or `<table>` truncates it and dumps the rest as
   literal text. Use a comment-only line as a separator instead.
+
+- **`renderMarkdown` never escapes, so `<` must be written `&lt;` everywhere
+  in `content.json`** — including inside inline code spans. `` `jcmd <pid>` ``
+  emits a real `<pid>` element that the browser swallows, and the reader sees
+  `jcmd  Thread.print`. Only `<` followed by a space survives as text. (The
+  interview journal is the opposite: `renderUser` escapes first, so write a
+  plain `<` there and never an entity.)
 
 - **The interview journal merges two sources; `own` separates them.** Sheet
   rows carry `own: true`, `interviews.json` entries `own: false` and an id of
