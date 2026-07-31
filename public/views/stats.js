@@ -8,10 +8,10 @@ import { escapeHtml as esc } from '../lib/markdown.js';
 import { localDay } from '../lib/ui.js';
 
 const WEEKS = 26;                  // half a year: wide enough, still fits mobile
-const MONTHS = ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export function renderStats() {
-  return '<div id="stRoot"><div class="page"><p class="intro">Đang tải…</p></div></div>';
+  return '<div id="stRoot"><div class="page"><p class="intro">Loading…</p></div></div>';
 }
 
 export function mountStats(host) {
@@ -41,20 +41,20 @@ function paint(root, log) {
   const total = Content.totalDayItems;
 
   let html = '<section class="hero"><div class="hero-head"><div>'
-    + '<h2>Thống kê học tập</h2>'
-    + '<p class="intro">Mỗi lần mở một mục lần đầu trong ngày được ghi lại một dòng — đó là nguồn của biểu đồ dưới.</p>'
+    + '<h2>Study statistics</h2>'
+    + '<p class="intro">Opening an item for the first time on a given day writes one row — that is what every chart below is built from.</p>'
     + '</div></div></section>';
 
   if (!Auth.session) {
-    html += '<div class="warn"><b>Chưa đăng nhập:</b> chỉ thấy hoạt động của hôm nay trên máy này. '
-      + 'Đăng nhập Google để lưu và xem lại toàn bộ lịch sử.</div>';
+    html += '<div class="warn"><b>Not signed in:</b> you are only seeing today, from this device. '
+      + 'Sign in with Google to keep the full history and read it back.</div>';
   }
 
   html += '<div class="stat-row">'
-    + tile('Đã ôn', trackDone + ' / ' + total, total ? Math.round(trackDone / total * 100) + '% lộ trình' : '')
-    + tile('Ngày có học', byDay.size, byDay.size ? 'tổng cộng' : 'chưa có')
-    + tile('Streak hiện tại', streak.current, streak.current ? 'ngày liên tiếp' : 'bắt đầu hôm nay đi')
-    + tile('Streak dài nhất', streak.longest, 'ngày liên tiếp')
+    + tile('Reviewed', trackDone + ' / ' + total, total ? Math.round(trackDone / total * 100) + '% of the track' : '')
+    + tile('Active days', byDay.size, byDay.size ? 'all time' : 'none yet')
+    + tile('Current streak', streak.current, streak.current ? 'days in a row' : 'start one today')
+    + tile('Longest streak', streak.longest, 'days in a row')
     + '</div>';
 
   html += heatmap(byDay);
@@ -126,7 +126,7 @@ function heatmap(byDay) {
       const n = byDay.get(key) || 0;
       const future = cursor > today;
       const lvl = future ? 'f' : level(n, max);
-      const title = future ? '' : key + ' · ' + n + ' mục';
+      const title = future ? '' : key + ' · ' + n + (n === 1 ? ' item' : ' items');
       cells += '<span class="hm-cell lvl-' + lvl + '"'
         + (title ? ' title="' + title + '"' : '') + '></span>';
       if (cursor.getDate() <= 7 && d === 0) labelForWeek = MONTHS[cursor.getMonth()];
@@ -136,12 +136,12 @@ function heatmap(byDay) {
     monthLabels.push('<span class="hm-mlabel">' + labelForWeek + '</span>');
   }
 
-  return '<div class="toolbar"><span class="sectioncount">Hoạt động ' + WEEKS + ' tuần gần nhất</span>'
+  return '<div class="toolbar"><span class="sectioncount">Activity, last ' + WEEKS + ' weeks</span>'
     // Own class: .legend is hidden below 760px and its span rules would
     // repaint the colour swatches.
-    + '<div class="hm-legend"><span>ít</span>'
+    + '<div class="hm-legend"><span>less</span>'
     + [0, 1, 2, 3, 4].map(l => '<span class="hm-cell lvl-' + l + '"></span>').join('')
-    + '<span>nhiều</span></div></div>'
+    + '<span>more</span></div></div>'
     + '<div class="heatmap-wrap"><div class="heatmap">'
     + '<div class="hm-months">' + monthLabels.join('') + '</div>'
     + '<div class="hm-grid">' + cols.join('') + '</div>'
@@ -170,6 +170,6 @@ function perDay(reviewed) {
       + '<span class="pd-num">' + done + '/' + d.ids.length + '</span></a>';
   }).join('');
 
-  return '<div class="toolbar"><span class="sectioncount">Tiến độ theo chủ đề</span></div>'
+  return '<div class="toolbar"><span class="sectioncount">Progress by topic</span></div>'
     + '<div class="perday">' + rows + '</div>';
 }

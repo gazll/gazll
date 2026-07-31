@@ -11,7 +11,7 @@ import { Content } from '../lib/content.js';
 import { escapeHtml as esc } from '../lib/markdown.js';
 
 export function renderAdmin() {
-  return '<div id="adRoot"><div class="page"><p class="intro">Đang tải…</p></div></div>';
+  return '<div id="adRoot"><div class="page"><p class="intro">Loading…</p></div></div>';
 }
 
 export function mountAdmin(host) {
@@ -20,8 +20,8 @@ export function mountAdmin(host) {
 
   const load = async () => {
     if (!Auth.token) return paintMsg(root, Auth.session
-      ? 'Phiên đã hết hạn — đăng nhập lại để xem trang này.'
-      : 'Cần đăng nhập bằng tài khoản admin.');
+      ? 'Your session ended — sign in again to view this page.'
+      : 'This page needs an admin account.');
     try {
       const data = await call('admin.overview', {}, Auth.token);
       if (root.isConnected) paint(root, data.users || []);
@@ -44,20 +44,20 @@ function paint(root, users) {
   const sum = (f) => users.reduce((s, u) => s + (Number(u[f]) || 0), 0);
 
   let html = '<section class="hero"><div class="hero-head"><div>'
-    + '<h2>Admin — tổng hợp người dùng</h2>'
-    + '<p class="intro">Dữ liệu đọc từ Google Sheet. Đổi quyền bằng cách sửa cột '
-    + '<code>role</code> trong sheet <code>profiles</code>.</p>'
+    + '<h2>Admin — all-user overview</h2>'
+    + '<p class="intro">Read straight from the Google Sheet. To change access for a user, edit the '
+    + '<code>role</code> column in the <code>profiles</code> sheet.</p>'
     + '</div></div></section>';
 
   html += '<div class="stat-row">'
-    + tile('Người dùng', users.length)
+    + tile('Users', users.length)
     + tile('Admin', users.filter(u => u.role === 'admin').length)
-    + tile('Tổng mục đã ôn', sum('reviewed_count'))
-    + tile('Tổng ghi chú', sum('note_count'))
+    + tile('Items reviewed', sum('reviewed_count'))
+    + tile('Notes written', sum('note_count'))
     + '</div>';
 
   if (!users.length) {
-    root.innerHTML = html + '<div class="page"><p>Chưa có user nào đăng nhập.</p></div>';
+    root.innerHTML = html + '<div class="page"><p>Nobody has signed in yet.</p></div>';
     return;
   }
 
@@ -81,8 +81,8 @@ function paint(root, users) {
   }).join('');
 
   html += '<div class="tablewrap"><table class="adtable">'
-    + '<thead><tr><th>Người dùng</th><th>Tiến độ lộ trình</th><th class="num">Ghi chú</th>'
-    + '<th class="num">Phỏng vấn</th><th class="num">Ngày học</th><th>Hoạt động cuối</th></tr></thead>'
+    + '<thead><tr><th>User</th><th>Track progress</th><th class="num">Notes</th>'
+    + '<th class="num">Interviews</th><th class="num">Active days</th><th>Last activity</th></tr></thead>'
     + '<tbody>' + rows + '</tbody></table></div>';
 
   root.innerHTML = html;
@@ -98,10 +98,10 @@ function fmtWhen(iso) {
   const d = new Date(iso);
   if (isNaN(d)) return '—';
   const mins = Math.round((Date.now() - d.getTime()) / 60000);
-  if (mins < 1) return 'vừa xong';
-  if (mins < 60) return mins + ' phút trước';
-  if (mins < 1440) return Math.round(mins / 60) + ' giờ trước';
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + (mins === 1 ? ' minute ago' : ' minutes ago');
+  if (mins < 1440) { const h = Math.round(mins / 60); return h + (h === 1 ? ' hour ago' : ' hours ago'); }
   const days = Math.round(mins / 1440);
-  if (days < 30) return days + ' ngày trước';
-  return d.toLocaleDateString('vi-VN');
+  if (days < 30) return days + (days === 1 ? ' day ago' : ' days ago');
+  return d.toLocaleDateString('en-GB');
 }

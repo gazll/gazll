@@ -13,19 +13,34 @@
    ignores it entirely (user_id always comes from the verified token's `sub`).
    It exists so a returning reader sees their own avatar on first paint instead
    of a signed-out header, while `auto_select` fetches a real token in the
-   background. Never put `token` in here. */
+   background. Never put `token` in here.
+
+   Silent sign-in is best-effort and frequently impossible: FedCM can suppress
+   the prompt, third-party cookies may be blocked, or the reader may simply not
+   be signed into Google in this profile. So every silent attempt is BOUNDED —
+   `SILENT_MS` and the prompt notification both end it. Without that bound the
+   header sat in the "connecting" state spinning forever, which reads as "it is
+   working on it" when nothing is happening at all. When an attempt ends without
+   a token the state becomes `stale`: a still badge and a real sign-in button,
+   not an animation. */
 import { GOOGLE_CLIENT_ID, SCRIPT_URL } from '../config.js';
 
 const GIS_SRC = 'https://accounts.google.com/gsi/client?hl=en';
 const LEGACY_SESSION_KEY = 'gazl.session';
 const HINT_KEY = 'gazl.profile';
-const SKEW_MS = 90_000;   // expire early so an in-flight request cannot die mid-way
+const SKEW_MS = 90_000;      // expire early so an in-flight request cannot die mid-way
+const SILENT_MS = 8_000;     // hard ceiling on one silent attempt
+const RETRY_COOLDOWN = 60_000; // do not re-prompt on every tab focus
 
 const listeners = new Set();
 function emit() { for (const fn of listeners) { try { fn(Auth); } catch (e) {} } }
 
 let gisReady = null;
 let renewTimer = null;
+let silentTimer = null;
+let silentPending = false;
+let lastSilentAt = 0;
+let wiredWake = false;
 
 export const Auth = {
   /** { sub, email, name, picture, role, token, exp } or null. */
@@ -42,12 +57,12 @@ export const Auth = {
 
   /** Whoever we can show in the header: a live session, else the stored hint. */
   get identity() { return this.session || this.hint; },
-  get displayName() { return this.identity?.name || this.identity?.email || 'Bạn'; },
+  get displayName() { return this.identity?.name || this.identity?.email || 'You'; },
   get avatar() { return this.identity?.picture || ''; },
   get email() { return this.identity?.email || ''; },
 
-  /** Known face, no usable token yet — auto_select is still in flight. */
-  get connecting() { return Boolean(this.hint) && !this.token; },
+  /** Known face, no usable token, and a silent attempt is genuinely running. */
+  get connecting() { return Boolean(this.hint) && !this.token && silentPending; },
 
   /** A usable token, or null. Checked before every request. */
   get token() {
@@ -59,6 +74,21 @@ export const Auth = {
   /** Signed in but the token lapsed — needs a fresh one. */
   get expired() { return Boolean(this.session) && !this.token; },
 
+  /**
+   * The one state the UI switches on. `stale` is the honest resting place for
+   * "we know who you are but silent sign-in did not work" — it asks for a
+   * click instead of pretending to still be trying.
+   */
+  get state() {
+    if (!this.enabled) return 'offline';
+    if (!this.ready) return 'loading';
+    if (this.session && this.token) return 'signed';
+    if (this.error) return 'error';
+    if (this.connecting) return 'connecting';
+    if (this.identity) return 'stale';
+    return 'anon';
+  },
+
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
 
   async init() {
@@ -68,9 +98,12 @@ export const Auth = {
     this.session = null;
     if (!this.enabled) { this.ready = true; emit(); return; }
 
-    // Paint the returning reader's own avatar before GIS has even loaded.
+    // Paint the returning reader's own avatar before GIS has even loaded, and
+    // mark the silent attempt as started so the header shows "connecting"
+    // rather than flashing "signed out" first.
     this.hint = readHint();
     this.ready = true;
+    if (this.hint) beginSilent();
     emit();
 
     try {
@@ -82,24 +115,37 @@ export const Auth = {
         cancel_on_tap_outside: false,
         use_fedcm_for_prompt: true
       });
-      if (!this.token) google.accounts.id.prompt();
+      if (!this.token) promptSilently();
       scheduleRenew();
+      wakeOnFocus();
     } catch (e) {
       this.error = 'Could not load Google sign-in.';
+      endSilent();
       emit();
     }
   },
 
+  /** Explicit, user-initiated. Unlike the silent path this may show UI. */
   signIn() {
     if (!this.enabled) return;
-    try { google.accounts.id.prompt(); }
-    catch (e) { this.error = 'Could not open Google sign-in.'; emit(); }
+    this.error = null;
+    try {
+      beginSilent();
+      google.accounts.id.prompt(handlePromptMoment);
+      emit();
+    } catch (e) {
+      endSilent();
+      this.error = 'Could not open Google sign-in.';
+      emit();
+    }
   },
 
   signOut() {
     clearTimeout(renewTimer);
+    endSilent();
     this.session = null;
     this.hint = null;
+    this.error = null;
     clearLegacySession();
     clearHint();
     // Without this, auto_select signs straight back in.
@@ -117,6 +163,44 @@ export const Auth = {
     emit();
   }
 };
+
+/* ---------- silent sign-in, always bounded ---------- */
+
+function beginSilent() {
+  silentPending = true;
+  lastSilentAt = Date.now();
+  clearTimeout(silentTimer);
+  // Nothing came back in time: stop animating and ask for a click.
+  silentTimer = setTimeout(() => { if (silentPending) { endSilent(); emit(); } }, SILENT_MS);
+}
+
+function endSilent() {
+  silentPending = false;
+  clearTimeout(silentTimer);
+}
+
+function promptSilently() {
+  beginSilent();
+  try { google.accounts.id.prompt(handlePromptMoment); }
+  catch (e) { endSilent(); emit(); }
+}
+
+/**
+ * GIS tells us the prompt is not going to produce anything. Under FedCM most
+ * of these predicates are deprecated and some throw, so each one is probed
+ * defensively — a missing predicate just leaves SILENT_MS to end the attempt.
+ */
+function handlePromptMoment(notification) {
+  if (!notification || !silentPending) return;
+  const says = name => {
+    try { return typeof notification[name] === 'function' && notification[name](); }
+    catch (e) { return false; }
+  };
+  if (says('isNotDisplayed') || says('isSkippedMoment') || says('isDismissedMoment')) {
+    endSilent();
+    emit();
+  }
+}
 
 /* ---------- token lifecycle ---------- */
 
@@ -138,6 +222,7 @@ function onCredential(response) {
   };
   Auth.hint = writeHint(Auth.session);
   Auth.error = null;
+  endSilent();
   scheduleRenew();
   emit();
 }
@@ -147,9 +232,28 @@ function scheduleRenew() {
   if (!Auth.session) return;
   const wait = Auth.session.exp - SKEW_MS - Date.now();
   renewTimer = setTimeout(() => {
-    try { google.accounts.id.prompt(); } catch (e) {}
+    promptSilently();
     emit();   // token just lapsed; UI switches to the re-auth state
   }, Math.max(5_000, wait));
+}
+
+/**
+ * A silent attempt that failed while the tab was in the background is worth
+ * one more try when the reader comes back — that is the moment Google is most
+ * likely to have a usable session again. Rate-limited so returning to the tab
+ * repeatedly cannot turn into a prompt loop.
+ */
+function wakeOnFocus() {
+  if (wiredWake) return;
+  if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return;
+  wiredWake = true;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    if (Auth.token || silentPending || !Auth.identity) return;
+    if (Date.now() - lastSilentAt < RETRY_COOLDOWN) return;
+    promptSilently();
+    emit();
+  });
 }
 
 function clearLegacySession() {
@@ -212,10 +316,11 @@ function loadGis() {
 
 /* ---------- header avatar + account menu ----------
 
-   There is no separate sign-in button: the avatar IS the affordance. Clicking
-   it opens a popover, and when signed out that popover hosts Google's own
-   rendered button — One Tap alone is not reliable enough to be the only way
-   in, because FedCM can suppress it silently. */
+   The avatar IS the affordance, but when nobody is signed in an avatar alone
+   is too quiet — so the signed-out and stale states carry a visible label
+   next to it. Clicking opens a popover that hosts Google's own rendered
+   button: One Tap by itself is not a reliable way in, because FedCM can
+   suppress it without telling the user anything. */
 
 export function mountAuthUI(el) {
   if (!el) return;
@@ -256,52 +361,73 @@ function avatarFace() {
     + '<circle cx="12" cy="8.5" r="3.6"/><path d="M4.5 20c1.4-3.9 4.1-5.8 7.5-5.8s6.1 1.9 7.5 5.8"/></svg></span>';
 }
 
-/** One button, four states — the state lives in `data-state` for CSS. */
+const STATE_LABEL = {
+  offline: 'Offline mode — backend not configured',
+  loading: 'Loading…',
+  error: 'Sign-in failed — click to retry',
+  signed: () => 'Account: ' + Auth.displayName,
+  connecting: 'Reconnecting…',
+  stale: 'Session ended — click to sign in',
+  anon: 'Sign in with Google'
+};
+
+/** Short text shown beside the avatar, only where an avatar alone is unclear. */
+const STATE_CHIP = { anon: 'Sign in', stale: 'Sign in', error: 'Retry' };
+
+/** One button, one state — the state lives in `data-state` for CSS. */
 function avatarHtml() {
-  let state = 'anon', label = 'Đăng nhập Google';
-  if (!Auth.enabled) { state = 'offline'; label = 'Chế độ ngoại tuyến — chưa cấu hình backend'; }
-  else if (!Auth.ready) { state = 'loading'; label = 'Đang tải…'; }
-  else if (Auth.error) { state = 'error'; label = 'Lỗi đăng nhập — bấm để thử lại'; }
-  else if (Auth.session && Auth.token) { state = 'signed'; label = 'Tài khoản: ' + Auth.displayName; }
-  else if (Auth.identity) { state = 'connecting'; label = 'Đang kết nối lại — bấm để đăng nhập'; }
+  const state = Auth.state;
+  const raw = STATE_LABEL[state] || STATE_LABEL.anon;
+  const label = typeof raw === 'function' ? raw() : raw;
+  const chip = STATE_CHIP[state];
 
   return '<button class="authbtn" id="authBtn" data-state="' + state + '"'
     + ' aria-haspopup="dialog" title="' + esc(label) + '" aria-label="' + esc(label) + '">'
     + avatarFace()
+    + (chip ? '<span class="auth-chip">' + chip + '</span>' : '')
     + (Auth.isAdmin && state === 'signed' ? '<span class="av-admin" title="Admin">★</span>' : '')
     + '</button>';
 }
 
 function menuHtml() {
+  const state = Auth.state;
   let body;
 
-  if (!Auth.enabled) {
-    body = '<p class="am-note">Chưa cấu hình backend nên tiến độ chỉ lưu trên máy này. '
-      + 'Xem README để bật đồng bộ Google Sheet.</p>';
-  } else if (Auth.session && Auth.token) {
+  if (state === 'offline') {
+    body = '<p class="am-note">No backend is configured, so progress is kept on this device only. '
+      + 'See the README to turn on Google Sheet sync.</p>';
+  } else if (state === 'signed') {
     body = '<div class="am-id">'
       + '<div class="am-name">' + esc(Auth.displayName) + (Auth.isAdmin ? '<span class="rolebadge">ADMIN</span>' : '') + '</div>'
       + (Auth.email ? '<div class="am-mail">' + esc(Auth.email) + '</div>' : '')
       + '</div>'
-      + '<p class="am-note ok">Tiến độ, ghi chú và nhật ký phỏng vấn đang đồng bộ lên Google Sheet.</p>'
-      + '<button class="am-action danger" id="btnSignOut">Đăng xuất</button>';
-  } else if (Auth.identity) {
-    // Known face, no token: either auto_select is still running or it declined.
+      + '<p class="am-note ok">Progress, notes and the interview journal are syncing to your Google Sheet.</p>'
+      + '<button class="am-action danger" id="btnSignOut">Sign out</button>';
+  } else if (state === 'connecting') {
     body = '<div class="am-id">'
       + '<div class="am-name">' + esc(Auth.displayName) + '</div>'
       + (Auth.email ? '<div class="am-mail">' + esc(Auth.email) + '</div>' : '')
       + '</div>'
-      + '<p class="am-note">Phiên đã hết hạn hoặc chưa kết nối lại được. Đăng nhập lại để tiếp tục đồng bộ — '
-      + 'dữ liệu đang chờ vẫn nằm an toàn trên máy.</p>'
+      + '<p class="am-note">Trying to sign you back in without asking. This takes a moment — '
+      + 'if nothing happens, a sign-in button will appear here.</p>';
+  } else if (Auth.identity) {
+    // Known face, no token: the silent attempt is over and it did not work.
+    body = '<div class="am-id">'
+      + '<div class="am-name">' + esc(Auth.displayName) + '</div>'
+      + (Auth.email ? '<div class="am-mail">' + esc(Auth.email) + '</div>' : '')
+      + '</div>'
+      + '<p class="am-note">Your session ended and Google could not renew it silently — that is normal '
+      + 'when third-party cookies are blocked. Sign in again to resume syncing; anything waiting is '
+      + 'still safe on this device.</p>'
       + '<div class="gis-holder" id="gisBtn"></div>'
-      + '<button class="am-action danger" id="btnSignOut">Quên tài khoản này</button>';
+      + '<button class="am-action danger" id="btnSignOut">Forget this account</button>';
   } else {
-    body = '<p class="am-note">Đăng nhập Google để lưu tiến độ, ghi chú và nhật ký phỏng vấn '
-      + 'lên Google Sheet riêng của bạn. Không đăng nhập thì mọi thứ vẫn chạy, chỉ lưu trên máy này.</p>'
+    body = '<p class="am-note">Sign in with Google to keep your progress, notes and interview journal '
+      + 'in your own Google Sheet. Everything works signed out too — it just stays on this device.</p>'
       + '<div class="gis-holder" id="gisBtn"></div>';
   }
 
-  return '<div class="authmenu" role="dialog" aria-label="Tài khoản">'
+  return '<div class="authmenu" role="dialog" aria-label="Account">'
     + (Auth.error ? '<p class="am-note err">' + esc(Auth.error) + '</p>' : '')
     + body + '</div>';
 }
@@ -313,14 +439,14 @@ function renderSignInButton(holder) {
       google.accounts.id.renderButton(holder, {
         type: 'standard', theme: 'outline', size: 'large',
         shape: 'pill', text: 'signin_with', logo_alignment: 'center',
-        locale: 'vi', width: 240
+        locale: 'en', width: 240
       });
     } catch (e) {
-      holder.innerHTML = '<button class="am-action" id="btnRetry">Đăng nhập Google</button>';
+      holder.innerHTML = '<button class="am-action" id="btnRetry">Sign in with Google</button>';
       holder.querySelector('button').addEventListener('click', () => Auth.signIn());
     }
   }).catch(() => {
-    holder.innerHTML = '<p class="am-note err">Không tải được Google sign-in.</p>';
+    holder.innerHTML = '<p class="am-note err">Could not load Google sign-in.</p>';
   });
 }
 function esc(s) {

@@ -1,4 +1,76 @@
-/* content.json, loaded once and shared by app.js and the views. */
+/* content.json, loaded once and shared by app.js and the views.
+
+   Two languages, one source of truth. content.json is the Vietnamese
+   original and always loads; content.en.json is a partial *overlay* keyed by
+   topic `n` and item `id`. Anything the overlay omits falls back to the
+   Vietnamese text, which is why the English file can grow one item at a time
+   without ever leaving a hole in the page.
+
+   The chrome around the content is always English (see CLAUDE.md) — this
+   switch is only about the study material itself. */
+
+const LANG_KEY = 'gazl.contentLang';
+const DEFAULT_LANG = 'en';
+const LANGS = ['en', 'vi'];
+
+const listeners = new Set();
+
+/** Deep-ish clone: the overlay must not mutate the Vietnamese source. */
+function cloneDays(days) {
+  return days.map(d => ({
+    ...d,
+    tags: [...(d.tags || [])],
+    sections: (d.sections || []).map(s => ({ ...s, items: (s.items || []).map(it => ({ ...it })) }))
+  }));
+}
+
+/** Applies whichever fields the overlay actually defines; the rest stays VI. */
+function overlayDays(days, over) {
+  if (!over) return days;
+  for (const d of days) {
+    const o = over[String(d.n)];
+    if (!o) continue;
+    for (const k of ['label', 'title', 'intro']) if (o[k]) d[k] = o[k];
+    if (Array.isArray(o.tags) && o.tags.length) d.tags = [...o.tags];
+    (d.sections || []).forEach((sec, i) => {
+      const t = Array.isArray(o.sections) ? o.sections[i] : null;
+      if (t) sec.title = t;
+      for (const it of sec.items || []) {
+        const oi = o.items && o.items[it.id];
+        if (!oi) continue;
+        if (oi.q) it.q = oi.q;
+        if (oi.a) { it.a = oi.a; it.translated = true; }
+      }
+    });
+  }
+  return days;
+}
+
+function overlayMicro(micro, over) {
+  if (!micro || !over) return micro;
+  const m = { ...micro, tags: [...(micro.tags || [])], chapters: (micro.chapters || []).map(c => ({ ...c, items: (c.items || []).map(it => ({ ...it })) })) };
+  for (const k of ['title', 'intro']) if (over[k]) m[k] = over[k];
+  if (Array.isArray(over.tags) && over.tags.length) m.tags = [...over.tags];
+  m.chapters.forEach((ch, i) => {
+    const t = Array.isArray(over.chapters) ? over.chapters[i] : null;
+    if (t) ch.title = t;
+    for (const it of ch.items || []) {
+      const oi = over.items && over.items[it.id];
+      if (!oi) continue;
+      if (oi.q) it.q = oi.q;
+      if (oi.a) { it.a = oi.a; it.translated = true; }
+    }
+  });
+  return m;
+}
+
+function readLang() {
+  try {
+    const v = localStorage.getItem(LANG_KEY);
+    if (LANGS.includes(v)) return v;
+  } catch (e) {}
+  return DEFAULT_LANG;
+}
 
 export const Content = {
   days: [],
@@ -6,15 +78,65 @@ export const Content = {
   loaded: false,
   error: null,
 
+  /** Language of the study material only — the UI chrome is always English. */
+  lang: readLang(),
+  /** Set once an English overlay has been fetched (or found missing). */
+  overlay: null,
+  overlayTried: false,
+
+  /** Raw Vietnamese source, kept so switching back needs no refetch. */
+  _base: null,
+
   async load() {
     if (this.loaded) return this;
     const res = await fetch('content.json', { cache: 'no-cache' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    this.days = data.days || data;
-    this.micro = data.micro || null;
+    this._base = { days: data.days || data, micro: data.micro || null };
+    if (this.lang !== 'vi') await this._loadOverlay();
+    this._apply();
     this.loaded = true;
     return this;
+  },
+
+  /** A missing or broken content.en.json is not fatal — it just means no EN. */
+  async _loadOverlay() {
+    if (this.overlayTried) return;
+    this.overlayTried = true;
+    try {
+      const res = await fetch('content.en.json', { cache: 'no-cache' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      this.overlay = await res.json();
+    } catch (e) {
+      this.overlay = null;
+    }
+  },
+
+  _apply() {
+    const days = cloneDays(this._base.days);
+    if (this.lang === 'vi' || !this.overlay) {
+      this.days = days;
+      this.micro = this._base.micro;
+    } else {
+      this.days = overlayDays(days, this.overlay.days);
+      this.micro = overlayMicro(this._base.micro, this.overlay.micro);
+    }
+  },
+
+  /** True when the reader is in EN but this item's answer is still Vietnamese. */
+  isFallback(item) {
+    return this.lang === 'en' && !item.translated;
+  },
+
+  onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+
+  async setLang(lang) {
+    if (!LANGS.includes(lang) || lang === this.lang) return;
+    this.lang = lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+    if (lang !== 'vi') await this._loadOverlay();
+    this._apply();
+    for (const fn of listeners) { try { fn(this); } catch (e) {} }
   },
 
   /** Track items only — the denominator of the progress ring. */

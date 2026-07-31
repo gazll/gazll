@@ -37,7 +37,9 @@ export function renderMarkdown(md) {
       i++; // skip closing :::
       const label = cm[2].trim();
       if (cm[1] === 'deep') {
-        html += "<div class='deep'><span class='deep-tag'>&#9656; ĐÀO SÂU · SENIOR</span>" + renderMarkdown(inner.join('\n')) + '</div>';
+        // Chrome, not content: this label stays English even when the body
+        // below it is the Vietnamese original.
+        html += "<div class='deep'><span class='deep-tag'>&#9656; DEEP DIVE · SENIOR</span>" + renderMarkdown(inner.join('\n')) + '</div>';
       } else {
         const cls = cm[1] === 'warn' ? 'warn' : 'takeaway';
         html += '<div class="' + cls + '">' + (label ? '<b>' + label + ':</b> ' : '') + inlineMd(inner.join(' ').trim()) + '</div>';

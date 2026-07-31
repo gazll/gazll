@@ -96,7 +96,9 @@ jobs:
         run: |
           node --experimental-vm-modules --test \
             tests/security.test.mjs \
-            tests/interviews.merge.test.mjs
+            tests/interviews.merge.test.mjs \
+            tests/auth.state.test.mjs \
+            tests/content.i18n.test.mjs
 
       - uses: actions/configure-pages@v6
 

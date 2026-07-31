@@ -3,9 +3,13 @@
 /* Entry point. The topic track and the Microservices view render here;
    shared pieces live in lib/ and the larger views in views/.
 
-   Adding a menu = adding one entry to VIEWS below. */
+   Adding a menu = adding one entry to VIEWS below.
+
+   Every string in this file is English on purpose — the interface is English
+   and does not switch. Only the study material has a VI/EN toggle, and that
+   lives in lib/content.js. */
 import { renderMarkdown, escapeHtml } from './lib/markdown.js';
-import { chevSVG, BADGE, debounce } from './lib/ui.js';
+import { chevSVG, BADGE, FALLBACK_BADGE, debounce } from './lib/ui.js';
 import { Content } from './lib/content.js';
 import { Store } from './lib/store.js';
 import { Auth, mountAuthUI } from './lib/auth.js';
@@ -19,6 +23,7 @@ let current = 0;
 let totalQ = 0;
 let dayItemIds = new Set();
 let groupFilter = 'all';
+let topicQuery = '';
 
 /* Topic groups. Order here is the order of the filter bar; `key` matches the
    `group` field of every topic in content.json. */
@@ -32,38 +37,37 @@ const GROUPS = [
 const GROUP_LABEL = Object.fromEntries(GROUPS.map(g => [g.key, g.label]));
 
 const panel = document.getElementById('panel');
-const stepper = document.getElementById('stepper');
 const dots = document.getElementById('dots');
 
 /* ---------- Views / navigation ---------- */
 const GUIDE_MD = [
-  'Đây là một site **all-in-one**. Nút ☰ mở **navigation panel** chia theo nhóm — `Technical` (học & luyện), `Tools` (công cụ rời), `Other`. Nhãn trong menu để tiếng Anh; phần nội dung vẫn tiếng Việt. Mỗi view có URL riêng (vd `#/guide`) nên chia sẻ/bookmark được.',
+  'This is an **all-in-one** site. The ☰ button opens the **navigation panel**, grouped into `Technical` (study & practice), `Tools` (standalone utilities) and `Other`. Every view has its own URL (e.g. `#/guide`), so any of them can be shared or bookmarked.',
   '',
-  ':::tip Thêm một menu mới',
-  'Mở `app.js`, thêm một phần tử vào mảng `VIEWS` — không cần sửa chỗ khác. Trường `sec` quyết định nó nằm ở nhóm nào trong panel.',
+  ':::tip Adding a menu entry',
+  'Open `app.js` and push one object into the `VIEWS` array — nothing else needs touching. The `sec` field decides which section of the panel it lands in.',
   ':::',
   '',
-  'Bốn kiểu entry:',
+  'Four kinds of entry:',
   '',
-  '- View Markdown: `{ id: "snippets", sec: "about", label: "Snippets", md: "..." }`',
-  '- View HTML tự do: `{ id: "x", sec: "technical", render: () => "&lt;div&gt;...&lt;/div&gt;" }`',
-  '- **Link sang tool khác**: `{ id: "abc", sec: "tool", label: "ABC", href: "abc-tool/" }` — có `href` thì entry mở tab mới và router bỏ qua nó, nên thêm tool mới chỉ tốn một dòng',
-  '- View chỉ hiện với một số user: thêm `when: () => Auth.isAdmin`',
+  '- Markdown view: `{ id: "snippets", sec: "about", label: "Snippets", md: "..." }`',
+  '- Free-form HTML view: `{ id: "x", sec: "technical", render: () => "&lt;div&gt;...&lt;/div&gt;" }`',
+  '- **Link to another tool**: `{ id: "abc", sec: "tool", label: "ABC", href: "abc-tool/" }` — an entry with `href` opens in a new tab and the router skips it, so adding a sibling app costs one line',
+  '- View limited to some users: add `when: () => Auth.isAdmin`',
   '',
-  ':::deep Lưu trữ',
-  'Tiến độ, ghi chú và nhật ký phỏng vấn được lưu vào `localStorage` ngay lập tức, rồi đồng bộ lên **Google Sheet** qua Apps Script khi đã đăng nhập Google. Mất mạng hay đóng tab giữa lúc đang lưu cũng không mất dữ liệu — hàng chờ nằm trong `localStorage` và được gửi lại ở lần mở sau.',
+  ':::deep Storage and languages',
+  'Progress, notes and the interview journal are written to `localStorage` immediately, then synced to a **Google Sheet** through Apps Script once you are signed in with Google. Losing the network or closing the tab mid-save costs nothing — the queue lives in `localStorage` and is resent on the next visit.',
   '',
-  'Nội dung sách nằm ở `content.json` (JSON + Markdown). Cú pháp: **đậm**, *nghiêng*, `code`, danh sách `-`, và ba khối callout `:::tip Nhãn`, `:::warn Nhãn`, `:::deep`.',
+  'The study material lives in `content.json` (JSON + Markdown). Supported syntax: **bold**, *italic*, `code`, `-` lists, and three callout blocks — `:::tip Label`, `:::warn Label`, `:::deep`.',
   '',
-  'Mỗi chủ đề có trường `group` (`core` · `data` · `design` · `platform` · `algorithm`) — đó là thứ tạo ra thanh lọc phía trên danh sách chủ đề.',
+  'The interface is always English. The **material** has a VI/EN switch at the top of the navigation panel. Vietnamese is the source of truth in `content.json`; `content.en.json` is a partial overlay keyed by topic number and item id, so English can be filled in one item at a time. Anything not translated yet falls back to Vietnamese and is tagged `VI` on the card.',
   '',
-  'Nhúng được raw HTML (sơ đồ SVG, bảng) ngay trong Markdown. Cập nhật nội dung: sửa `content.json` rồi `git push` — GitHub Actions tự deploy.',
+  'Every topic carries a `group` field (`core` · `data` · `design` · `platform` · `algorithm`) — that is what drives the filter chips in the topic picker.',
+  '',
+  'Raw HTML (SVG diagrams, tables) can be embedded straight into the Markdown. To update content: edit `content.json`, then `git push` — GitHub Actions deploys it.',
   ':::'
 ].join('\n');
 
-/* Nav panel sections, in display order. `key` matches the `sec` of a view.
-   The nav panel is the one English surface in an otherwise Vietnamese UI —
-   deliberate, so keep new menu labels English too. */
+/* Nav panel sections, in display order. `key` matches the `sec` of a view. */
 const NAV_SECTIONS = [
   { key: 'technical', label: 'Technical' },
   { key: 'tool', label: 'Tools' },
@@ -113,10 +117,10 @@ const iconSVG = name => '<svg class="nv-icon" viewBox="0 0 24 24" fill="none" st
 function noteBox(id) {
   const val = Store.getNote(id);
   return '<div class="notebox' + (val ? ' has-note' : '') + '">'
-    + '<div class="note-head"><span class="note-label">Ghi chú của mình</span>'
+    + '<div class="note-head"><span class="note-label">My notes</span>'
     + '<span class="note-state" data-note-state="' + id + '"></span></div>'
     + '<textarea class="note-input" data-note="' + id + '" rows="3" '
-    + 'placeholder="Tự viết lại câu trả lời bằng lời của mình — chỗ này mới là phần luyện thật.">'
+    + 'placeholder="Write the answer back in your own words — this is the part that actually trains you.">'
     + escapeHtml(val) + '</textarea></div>';
 }
 
@@ -130,13 +134,13 @@ function wireNotes(root) {
       Store.setNote(id, ta.value);
       ta.closest('.notebox').classList.toggle('has-note', Boolean(ta.value.trim()));
       if (state) {
-        state.textContent = 'đã lưu';
-        setTimeout(() => { if (state.textContent === 'đã lưu') state.textContent = ''; }, 1600);
+        state.textContent = 'saved';
+        setTimeout(() => { if (state.textContent === 'saved') state.textContent = ''; }, 1600);
       }
     }, 600);
 
     ta.addEventListener('input', () => {
-      if (state) state.textContent = 'đang gõ…';
+      if (state) state.textContent = 'typing…';
       save();
     });
     // Leaving the field saves now, without waiting out the debounce.
@@ -151,7 +155,7 @@ function wireNotes(root) {
 function renderMicro() {
   const m = MICRO;
   if (!m || !m.chapters) {
-    return '<div class="page"><p>Chưa có dữ liệu. Thêm khoá <code>micro</code> vào <code>content.json</code> '
+    return '<div class="page"><p>No data yet. Add a <code>micro</code> key to <code>content.json</code> '
       + '(<code>{ title, intro, tags, chapters:[{ title, items:[{id,lvl,q,a}] }] }</code>).</p></div>';
   }
   const count = m.chapters.reduce((s, c) => s + ((c.items || []).length), 0);
@@ -160,9 +164,9 @@ function renderMicro() {
     + '<p class="intro">' + m.intro + '</p>'
     + '<div class="tags">' + (m.tags || []).map(t => '<span class="tag">' + t + '</span>').join('') + '</div>'
     + '</div></div></section>'
-    + '<div class="toolbar"><span class="sectioncount">' + count + ' mục · ' + m.chapters.length + ' chương</span>'
-    + '<div class="legend"><span class="lg-core">QUAN TRỌNG</span><span class="lg-hard">NÂNG CAO</span><span class="lg-ext">MỞ RỘNG</span></div>'
-    + '<div class="tb-actions"><button class="btn-ghost" id="microToggleAll">Mở tất cả</button></div></div>';
+    + '<div class="toolbar"><span class="sectioncount">' + count + ' items · ' + m.chapters.length + ' chapters</span>'
+    + '<div class="legend"><span class="lg-core">ESSENTIAL</span><span class="lg-hard">ADVANCED</span><span class="lg-ext">EXTRA</span></div>'
+    + '<div class="tb-actions"><button class="btn-ghost" id="microToggleAll">Expand all</button></div></div>';
 
   html += m.chapters.map((ch, ci) => {
     const items = (ch.items || []).map(it => qcard(it)).join('');
@@ -170,7 +174,7 @@ function renderMicro() {
     return '<div class="chapter' + (isOpen ? ' open' : '') + '">'
       + '<button class="chapter-head" aria-expanded="' + isOpen + '">'
       + '<span class="chapter-title">' + ch.title + '</span>'
-      + '<span class="chapter-meta">' + (ch.items || []).length + ' mục' + chevSVG + '</span>'
+      + '<span class="chapter-meta">' + (ch.items || []).length + ' items' + chevSVG + '</span>'
       + '</button>'
       + '<div class="chapter-body"><div class="chapter-body-inner">' + items + '</div></div></div>';
   }).join('');
@@ -180,13 +184,16 @@ function renderMicro() {
 /** Shared by the track view and the Microservices view. */
 function qcard(it) {
   const badge = BADGE[it.lvl] || '';
+  // Reading in English but this answer has no English text yet — say so rather
+  // than letting Vietnamese appear with no explanation.
+  const fallback = Content.isFallback(it) ? FALLBACK_BADGE : '';
   const lvlClass = it.lvl ? (' lvl-' + it.lvl) : '';
   const done = Store.reviewed.has(it.id) ? ' done' : '';
   return '<div class="qcard' + lvlClass + done + '" data-qid="' + it.id + '">'
     + '<button class="qhead" aria-expanded="false">'
     + '<span class="qid">' + it.id + '</span>'
     + '<span class="qtext">' + it.q + '</span>'
-    + '<span class="qmeta">' + badge + chevSVG + '</span></button>'
+    + '<span class="qmeta">' + fallback + badge + chevSVG + '</span></button>'
     + '<div class="qbody"><div class="qbody-inner"><div class="answer"><div>'
     + renderMarkdown(it.a) + noteBox(it.id)
     + '</div></div></div></div></div>';
@@ -238,7 +245,7 @@ function syncMicroToggleLabel(root) {
   const chapters = [...r.querySelectorAll('.chapter')];
   const allOpen = chapters.length && chapters.every(c => c.classList.contains('open'));
   const btn = r.querySelector('#microToggleAll');
-  if (btn) btn.textContent = allOpen ? 'Đóng tất cả' : 'Mở tất cả';
+  if (btn) btn.textContent = allOpen ? 'Collapse all' : 'Expand all';
 }
 
 /* ---------------------------------------------------------------------
@@ -281,30 +288,30 @@ function buildNav() {
    dropped at the top of the document. */
 function wireNavPanel() {
   const toggle = document.getElementById('navToggle');
-  const panel = document.getElementById('navPanel');
+  const panelEl = document.getElementById('navPanel');
   const scrim = document.getElementById('navScrim');
   const nav = document.getElementById('mainnav');
-  if (!toggle || !panel || !scrim || !nav) return;
+  if (!toggle || !panelEl || !scrim || !nav) return;
 
   const isOpen = () => document.body.classList.contains('nav-open');
 
   const open = () => {
     document.body.classList.add('nav-open');
     toggle.setAttribute('aria-expanded', 'true');
-    panel.removeAttribute('inert');
-    (panel.querySelector('.navlink[aria-current="true"]') || panel.querySelector('.navlink'))?.focus();
+    panelEl.removeAttribute('inert');
+    (panelEl.querySelector('.navlink[aria-current="true"]') || panelEl.querySelector('.navlink'))?.focus();
   };
   const close = ({ refocus = true } = {}) => {
     if (!isOpen()) return;
     // Blur before `inert`: a focused element inside an inert subtree keeps focus.
-    if (panel.contains(document.activeElement)) document.activeElement.blur();
+    if (panelEl.contains(document.activeElement)) document.activeElement.blur();
     document.body.classList.remove('nav-open');
     toggle.setAttribute('aria-expanded', 'false');
-    panel.setAttribute('inert', '');
+    panelEl.setAttribute('inert', '');
     if (refocus) toggle.focus();
   };
 
-  panel.setAttribute('inert', '');
+  panelEl.setAttribute('inert', '');
   toggle.addEventListener('click', e => { e.stopPropagation(); isOpen() ? close() : open(); });
   scrim.addEventListener('click', () => close());
   document.getElementById('navClose')?.addEventListener('click', () => close());
@@ -318,12 +325,31 @@ function wireNavPanel() {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && isOpen()) { close(); return; }
     if (e.key !== 'Tab' || !isOpen()) return;
-    const f = [...panel.querySelectorAll('a[href], button:not([disabled])')].filter(el => el.offsetParent !== null);
+    const f = [...panelEl.querySelectorAll('a[href], button:not([disabled]), input')].filter(el => el.offsetParent !== null);
     if (!f.length) return;
     const first = f[0], last = f[f.length - 1];
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
+}
+
+/* ---------- content language switch (study material only) ---------- */
+
+function wireLangSwitch() {
+  const box = document.getElementById('langSwitch');
+  if (!box) return;
+  const paint = () => box.querySelectorAll('button').forEach(b => {
+    b.setAttribute('aria-pressed', String(b.dataset.lang === Content.lang));
+  });
+  box.addEventListener('click', async e => {
+    const b = e.target.closest('button[data-lang]');
+    if (!b || b.dataset.lang === Content.lang) return;
+    box.classList.add('busy');
+    await Content.setLang(b.dataset.lang);
+    box.classList.remove('busy');
+  });
+  Content.onChange(paint);
+  paint();
 }
 
 /* ---- Header: collapse toggle (remembered) + hide-on-scroll-down ---- */
@@ -336,9 +362,9 @@ function wireHeader() {
   const setCollapsed = on => {
     header.classList.toggle('collapsed', on);
     btn.setAttribute('aria-expanded', String(!on));
-    const label = on ? 'Mở rộng header' : 'Thu gọn header';
+    const label = on ? 'Expand header' : 'Collapse header';
     btn.setAttribute('aria-label', label);
-    btn.title = label + ' (phím H)';
+    btn.title = label + ' (H)';
   };
   let saved = null;
   try { saved = localStorage.getItem(KEY); } catch (e) {}
@@ -379,7 +405,10 @@ function wireHeader() {
     if (d !== dir) { dir = d; anchorY = lastY; }   // turned around: re-anchor
     lastY = y;
 
-    if (header.classList.contains('nav-open') || y <= TOP_ZONE) {
+    // Never slide the header out from under an open menu. `nav-open` is set on
+    // <body>, not on the header — reading it off the header always said false.
+    if (document.body.classList.contains('topic-open')
+      || document.body.classList.contains('nav-open') || y <= TOP_ZONE) {
       header.classList.remove('hidden');
       return;
     }
@@ -407,6 +436,7 @@ function showView(id) {
   // Swap only the view-* class; `nav-open` and anything else stays put.
   document.body.classList.forEach(c => { if (c.startsWith('view-')) document.body.classList.remove(c); });
   document.body.classList.add('view-' + id);
+  if (id !== 'track') closeTopicMenu();
 
   document.querySelectorAll('#mainnav .navlink:not(.is-external)')
     .forEach(a => a.setAttribute('aria-current', a.dataset.view === id));
@@ -429,45 +459,174 @@ function showView(id) {
   window.scrollTo({ top: 0 });
 }
 
+/* ---------------------------------------------------------------------
+   Topic picker
+
+   24 topics used to sit in a horizontally scrolling strip: the one you
+   wanted was usually off-screen, and on a trackpad it fought the page
+   scroll. Now the header shows only where you are, and one click opens a
+   vertical list with a text filter and the group chips. The list carries
+   per-topic progress, which the strip had no room for.
+--------------------------------------------------------------------- */
+
+const pick = {};
+
+function cacheTopicEls() {
+  pick.btn = document.getElementById('topicPick');
+  pick.menu = document.getElementById('topicMenu');
+  pick.list = document.getElementById('topicList');
+  pick.search = document.getElementById('topicSearch');
+  pick.scrim = document.getElementById('topicScrim');
+  pick.empty = document.getElementById('tmEmpty');
+  pick.num = document.getElementById('tpNum');
+  pick.label = document.getElementById('tpLabel');
+  pick.sub = document.getElementById('tpSub');
+}
+
+const pad2 = n => String(n).padStart(2, '0');
+
+/** Reviewed / total for one topic, straight off Store. */
+function topicProgress(d) {
+  const ids = d.sections.flatMap(s => s.items.map(it => it.id));
+  let done = 0;
+  for (const id of ids) if (Store.reviewed.has(id)) done++;
+  return { done, total: ids.length };
+}
+
+function topicMatches(d) {
+  if (groupFilter !== 'all' && d.group !== groupFilter) return false;
+  if (!topicQuery) return true;
+  const hay = [pad2(d.n), d.label, d.title, (d.tags || []).join(' '), GROUP_LABEL[d.group] || '']
+    .join(' ').toLowerCase();
+  return hay.includes(topicQuery);
+}
+
+function buildTopicList() {
+  let shown = 0;
+  pick.list.innerHTML = DAYS.map((d, i) => {
+    const { done, total } = topicProgress(d);
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const hit = topicMatches(d);
+    if (hit) shown++;
+    return '<button class="tm-row" role="option" data-i="' + i + '" data-group="' + d.group + '"'
+      + ' aria-selected="' + (i === current) + '"' + (hit ? '' : ' hidden') + '>'
+      + '<span class="tm-n">' + pad2(d.n) + '</span>'
+      + '<span class="tm-main">'
+      + '<span class="tm-label">' + escapeHtml(d.label) + '</span>'
+      + '<span class="tm-meta">' + (GROUP_LABEL[d.group] || d.group) + ' · ' + total + ' items</span>'
+      + '</span>'
+      + '<span class="tm-prog" title="' + done + ' of ' + total + ' reviewed">'
+      + '<span class="tm-bar" style="--p:' + pct + '"></span>'
+      + '<span class="tm-pct">' + done + '/' + total + '</span>'
+      + '</span></button>';
+  }).join('');
+
+  pick.empty.hidden = shown > 0;
+  pick.list.querySelectorAll('.tm-row').forEach(b => {
+    b.addEventListener('click', () => { goTo(parseInt(b.dataset.i, 10)); closeTopicMenu(); });
+  });
+}
+
+/** The collapsed state of the picker: which topic you are on right now. */
+function paintTopicButton() {
+  const d = DAYS[current];
+  if (!d || !pick.btn) return;
+  const { done, total } = topicProgress(d);
+  pick.num.textContent = pad2(d.n);
+  pick.btn.dataset.group = d.group;
+  pick.num.dataset.group = d.group;
+  pick.label.textContent = d.label;
+  pick.sub.textContent = (GROUP_LABEL[d.group] || d.group) + ' · ' + done + '/' + total + ' reviewed';
+  document.getElementById('tbCur').textContent = current + 1;
+  document.getElementById('prevTopic').disabled = current === 0;
+  document.getElementById('nextTopic').disabled = current === DAYS.length - 1;
+}
+
+function openTopicMenu() {
+  if (!pick.menu) return;
+  buildTopicList();
+  pick.menu.hidden = false;
+  document.body.classList.add('topic-open');
+  pick.btn.setAttribute('aria-expanded', 'true');
+  // Scroll the current topic into view inside the list, not the page.
+  const cur = pick.list.querySelector('[aria-selected="true"]');
+  if (cur) cur.scrollIntoView({ block: 'nearest' });
+  // Focusing the filter on a phone throws up the keyboard over the list you
+  // came here to read, so only take focus where there is room for both.
+  if (window.matchMedia('(min-width: 761px)').matches) pick.search.focus();
+}
+
+function closeTopicMenu() {
+  if (!pick.menu || pick.menu.hidden) return;
+  if (pick.menu.contains(document.activeElement)) pick.btn.focus();
+  pick.menu.hidden = true;
+  document.body.classList.remove('topic-open');
+  pick.btn.setAttribute('aria-expanded', 'false');
+}
+
+function isTopicMenuOpen() { return pick.menu && !pick.menu.hidden; }
+
+function wireTopicPicker() {
+  cacheTopicEls();
+  if (!pick.btn) return;
+
+  pick.btn.addEventListener('click', e => {
+    e.stopPropagation();
+    isTopicMenuOpen() ? closeTopicMenu() : openTopicMenu();
+  });
+  pick.scrim.addEventListener('click', () => closeTopicMenu());
+  document.addEventListener('click', e => {
+    if (isTopicMenuOpen() && !pick.menu.contains(e.target) && !pick.btn.contains(e.target)) closeTopicMenu();
+  });
+
+  pick.search.addEventListener('input', () => {
+    topicQuery = pick.search.value.trim().toLowerCase();
+    buildTopicList();
+  });
+
+  // Arrow keys walk the visible rows; Enter picks the focused one.
+  pick.menu.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.stopPropagation(); closeTopicMenu(); return; }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const rows = [...pick.list.querySelectorAll('.tm-row:not([hidden])')];
+    if (!rows.length) return;
+    e.preventDefault();
+    const at = rows.indexOf(document.activeElement);
+    const next = e.key === 'ArrowDown'
+      ? (at < 0 ? 0 : Math.min(at + 1, rows.length - 1))
+      : (at <= 0 ? 0 : at - 1);
+    rows[next].focus();
+  });
+
+  document.getElementById('prevTopic').addEventListener('click', () => goTo(current - 1));
+  document.getElementById('nextTopic').addEventListener('click', () => goTo(current + 1));
+
+  buildGroupBar();
+  paintTopicButton();
+  dots.innerHTML = DAYS.map((_, i) => '<span class="pdot' + (i === current ? ' on' : '') + '"></span>').join('');
+}
+
 /* ---------- topic track view ---------- */
 
-/* The filter only hides stepper buttons; DAYS and every index stay whole, so
-   `current`, the dots and the pager keep counting across the full track. */
+/* The filter only hides rows in the picker; DAYS and every index stay whole,
+   so `current`, the dots and the pager keep counting across the full track. */
 function buildGroupBar() {
   const bar = document.getElementById('groupbar');
+  if (!bar) return;
   const counts = DAYS.reduce((m, d) => (m[d.group] = (m[d.group] || 0) + 1, m), {});
   const chip = (key, label, n) =>
     '<button class="gchip" data-g="' + key + '" data-group="' + key + '" '
     + 'aria-pressed="' + (groupFilter === key) + '">' + label
     + '<span class="gcount">' + n + '</span></button>';
 
-  bar.innerHTML = chip('all', 'Tất cả', DAYS.length)
+  bar.innerHTML = chip('all', 'All', DAYS.length)
     + GROUPS.filter(g => counts[g.key]).map(g => chip(g.key, g.label, counts[g.key])).join('');
 
   bar.querySelectorAll('.gchip').forEach(b => b.addEventListener('click', () => {
     groupFilter = groupFilter === b.dataset.g ? 'all' : b.dataset.g;
     buildGroupBar();
-    applyGroupFilter();
+    buildTopicList();
   }));
-}
-
-function applyGroupFilter() {
-  stepper.querySelectorAll('.step').forEach(b => {
-    b.hidden = groupFilter !== 'all' && b.dataset.group !== groupFilter;
-  });
-  const active = stepper.querySelector('[aria-current="true"]');
-  if (active && !active.hidden) active.scrollIntoView({ inline: 'center', block: 'nearest' });
-}
-
-function buildStepper() {
-  stepper.innerHTML = DAYS.map((d, i) =>
-    '<button class="step" data-i="' + i + '" data-group="' + d.group + '" aria-current="' + (i === current) + '">'
-    + '<span class="sidx">' + (GROUP_LABEL[d.group] || d.group) + '</span>'
-    + '<span class="slabel">' + d.label + '</span></button>').join('');
-  stepper.querySelectorAll('.step').forEach(b => b.addEventListener('click', () => goTo(parseInt(b.dataset.i))));
-  dots.innerHTML = DAYS.map((_, i) => '<span class="pdot' + (i === current ? ' on' : '') + '"></span>').join('');
-  buildGroupBar();
-  applyGroupFilter();
 }
 
 function renderDay() {
@@ -486,12 +645,12 @@ function renderDay() {
     + '<div class="tags">' + d.tags.map(t => '<span class="tag">' + t + '</span>').join('') + '</div></div>'
     + '</div></section>'
     + '<div class="toolbar">'
-    + '<span class="sectioncount">' + dayQcount + ' mục · ' + d.sections.length + ' nhóm chủ đề</span>'
-    + '<div class="legend"><span class="lg-core">QUAN TRỌNG</span><span class="lg-hard">NÂNG CAO</span><span class="lg-ext">MỞ RỘNG</span></div>'
-    + '<div class="tb-actions"><button class="btn-ghost" id="toggleAll">Mở tất cả</button></div>'
+    + '<span class="sectioncount">' + dayQcount + ' items · ' + d.sections.length + ' sections</span>'
+    + '<div class="legend"><span class="lg-core">ESSENTIAL</span><span class="lg-hard">ADVANCED</span><span class="lg-ext">EXTRA</span></div>'
+    + '<div class="tb-actions"><button class="btn-ghost" id="toggleAll">Expand all</button></div>'
     + '</div>' + sectionsHTML;
 
-  wireQcards(panel, updateProgress);
+  wireQcards(panel, () => { updateProgress(); paintTopicButton(); });
 
   const toggleAll = document.getElementById('toggleAll');
   toggleAll.addEventListener('click', () => {
@@ -502,7 +661,7 @@ function renderDay() {
       c.querySelector('.qhead').setAttribute('aria-expanded', anyClosed);
       if (anyClosed && Store.markReviewed(c.dataset.qid)) c.classList.add('done');
     });
-    updateProgress(); syncToggleAllLabel();
+    updateProgress(); paintTopicButton(); syncToggleAllLabel();
   });
   syncToggleAllLabel();
 
@@ -510,14 +669,14 @@ function renderDay() {
   document.getElementById('prevBtn').disabled = current === 0;
   const nextBtn = document.getElementById('nextBtn');
   nextBtn.disabled = current === DAYS.length - 1;
-  nextBtn.textContent = current === DAYS.length - 1 ? 'Hoàn tất ✓' : 'Chủ đề tiếp →';
+  nextBtn.textContent = current === DAYS.length - 1 ? 'Finished ✓' : 'Next topic →';
 }
 
 function syncToggleAllLabel() {
   const cards = [...panel.querySelectorAll('.qcard')];
   const allOpen = cards.length && cards.every(c => c.classList.contains('open'));
   const btn = document.getElementById('toggleAll');
-  if (btn) btn.textContent = allOpen ? 'Đóng tất cả' : 'Mở tất cả';
+  if (btn) btn.textContent = allOpen ? 'Collapse all' : 'Expand all';
 }
 
 /**
@@ -535,23 +694,21 @@ function updateProgress() {
 function goTo(i) {
   if (i < 0 || i >= DAYS.length) return;
   current = i;
-  stepper.querySelectorAll('.step').forEach((b, idx) => b.setAttribute('aria-current', idx === current));
   dots.querySelectorAll('.pdot').forEach((dt, idx) => dt.classList.toggle('on', idx === current));
   renderDay();
+  paintTopicButton();
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  const active = stepper.querySelector('[aria-current="true"]');
-  if (active) active.scrollIntoView({ inline: 'center', block: 'nearest' });
 }
 
 /* ---------- sync status indicator ---------- */
 
 const SYNC_TEXT = {
-  offline: ['Chỉ lưu máy này', 'Chưa cấu hình backend — xem README để bật đồng bộ.'],
-  local: ['Chưa đăng nhập', 'Tiến độ đang lưu trên máy này. Đăng nhập để đồng bộ lên Google Sheet.'],
-  syncing: ['Đang lưu…', 'Đang gửi thay đổi lên Google Sheet.'],
-  synced: ['Đã đồng bộ', 'Mọi thay đổi đã lưu lên Google Sheet.'],
-  stale: ['Chờ đăng nhập lại', 'Phiên hết hạn. Dữ liệu vẫn an toàn trên máy và sẽ tự gửi sau khi đăng nhập lại.'],
-  error: ['Lưu lỗi — sẽ thử lại', 'Không gửi được lên Sheet. Dữ liệu vẫn nằm trong máy, sẽ thử lại.']
+  offline: ['On this device only', 'No backend configured — see the README to turn on sync.'],
+  local: ['Not signed in', 'Progress is kept on this device. Sign in to sync it to Google Sheets.'],
+  syncing: ['Saving…', 'Sending changes to Google Sheets.'],
+  synced: ['Synced', 'Everything has been saved to Google Sheets.'],
+  stale: ['Sign in again', 'The session ended. Your data is safe on this device and will be sent once you sign back in.'],
+  error: ['Save failed — will retry', 'Could not reach the Sheet. Your data is still on this device and will be retried.']
 };
 
 function mountSyncState(el) {
@@ -571,8 +728,8 @@ function mountSyncState(el) {
   // the failure reason — a title tooltip is unreachable on touch devices.
   el.addEventListener('click', () => {
     if (Store.lastError) {
-      alert('Lỗi đồng bộ gần nhất:\n\n' + Store.lastError
-        + '\n\nDữ liệu vẫn an toàn trên máy (' + Store.queue.length + ' thay đổi đang chờ).');
+      alert('Last sync error:\n\n' + Store.lastError
+        + '\n\nYour data is still safe on this device (' + Store.queue.length + ' change(s) pending).');
     }
     Store.flush();
   });
@@ -587,12 +744,12 @@ async function init() {
     MICRO = Content.micro;
   } catch (e) {
     panel.innerHTML = '<section class="hero"><div style="padding:8px 4px">'
-      + '<h2>Không tải được dữ liệu</h2>'
-      + '<p class="intro">Trang đọc <code>content.json</code> qua <code>fetch</code> nên cần chạy trên một web server (HTTP), '
-      + 'không mở trực tiếp bằng <code>file://</code>.</p>'
-      + '<p class="intro">Xem cục bộ: mở terminal trong thư mục <code>public/</code> rồi chạy '
-      + '<code>python -m http.server 8080</code> và truy cập <code>http://localhost:8080</code>.</p>'
-      + '<p class="intro" style="color:var(--clay)">Chi tiết lỗi: ' + (e && e.message ? e.message : e) + '</p>'
+      + '<h2>Could not load the content</h2>'
+      + '<p class="intro">The page reads <code>content.json</code> over <code>fetch</code>, so it has to run on '
+      + 'a web server (HTTP) — opening the file directly with <code>file://</code> will not work.</p>'
+      + '<p class="intro">To view it locally: open a terminal in <code>public/</code>, run '
+      + '<code>python -m http.server 8080</code> and go to <code>http://localhost:8080</code>.</p>'
+      + '<p class="intro" style="color:var(--clay)">Error detail: ' + (e && e.message ? e.message : e) + '</p>'
       + '</div></section>';
     return;
   }
@@ -600,16 +757,18 @@ async function init() {
   dayItemIds = Content.dayItemIds;
   totalQ = Content.totalDayItems;
   document.getElementById('totDay').textContent = DAYS.length;
+  document.getElementById('tbTot').textContent = DAYS.length;
 
   // Must precede the first render: qcard() reads reviewed state and notes.
   Store.attachAuth();
 
-  buildStepper();
+  wireTopicPicker();
   renderDay();
   updateProgress();
 
   buildNav();
   wireNavPanel();
+  wireLangSwitch();
   wireHeader();
   mountAuthUI(document.getElementById('authbar'));
   mountSyncState(document.getElementById('syncState'));
@@ -621,11 +780,22 @@ async function init() {
   document.getElementById('nextBtn').addEventListener('click', () => goTo(current + 1));
   document.addEventListener('keydown', e => {
     if (e.target.closest('button')) return;
-    // Arrow keys belong to the note field while it has focus.
+    // Arrow keys belong to the note field, and to the topic menu while open.
     if (e.target.closest('input, textarea, [contenteditable]')) return;
-    if (!isTrackActive()) return;
+    if (isTopicMenuOpen() || !isTrackActive()) return;
     if (e.key === 'ArrowRight') goTo(current + 1);
     if (e.key === 'ArrowLeft') goTo(current - 1);
+  });
+
+  // Switching the content language rebuilds every string that came from
+  // content.json, so the whole active view is repainted.
+  Content.onChange(() => {
+    DAYS = Content.days;
+    MICRO = Content.micro;
+    buildGroupBar();
+    paintTopicButton();
+    if (isTopicMenuOpen()) buildTopicList();
+    refreshCurrentView();
   });
 
   // Signing in reveals the Admin menu and brings in merged Sheet data, so
@@ -636,7 +806,7 @@ async function init() {
     const uid = Auth.session?.sub || null;
     if (uid !== lastUid) { lastUid = uid; refreshCurrentView(); }
   });
-  Store.onSync(() => { if (isTrackActive()) updateProgress(); });
+  Store.onSync(() => { if (isTrackActive()) { updateProgress(); paintTopicButton(); } });
 
   // One repaint once the first merge from the Sheet completes.
   let merged = false;
@@ -651,7 +821,7 @@ async function init() {
 
 /** Repaints the open view so new data shows (checkmarks, note contents). */
 function refreshCurrentView() {
-  if (isTrackActive()) { renderDay(); updateProgress(); }
+  if (isTrackActive()) { renderDay(); updateProgress(); paintTopicButton(); }
   else route();
 }
 

@@ -2,15 +2,23 @@
 
 ## Project
 
-Vietnamese-language study site for backend engineering interview prep. No
-framework, no build step, no package.json — vanilla ES modules served straight
-to the browser. `public/` is published to GitHub Pages by GitHub Actions.
+Study site for backend engineering interview prep. No framework, no build
+step, no package.json — vanilla ES modules served straight to the browser.
+`public/` is published to GitHub Pages by GitHub Actions.
 
-UI strings are Vietnamese and stay that way — with one deliberate exception:
-the **nav panel is English** (section titles, menu labels, their one-line
-descriptions, and the panel's own chrome). New menu entries follow it. The
-header crumb mirrors the active menu label, so it is English too; everything
-below the header stays Vietnamese. Code comments are English.
+**Two language layers, and they are not the same thing.**
+
+1. **The interface is always English and does not switch.** Every string in
+   `index.html`, `app.js`, `lib/` and `views/` is English: menus, buttons,
+   headings, badges, placeholders, `alert`/`confirm` text, `aria-label`s, and
+   the `DEEP DIVE · SENIOR` tag `lib/markdown.js` wraps around `:::deep`.
+   There is no UI string table and there should not be one. Code comments are
+   English too. (`lib/api.js` still matches Vietnamese *and* English in its
+   `authExpired` regex, because `apps-script/Code.gs` answers in Vietnamese.)
+
+2. **The study material has a VI/EN switch**, in the nav panel. `content.json`
+   is the Vietnamese source of truth; `content.en.json` is a partial overlay.
+   See "The English overlay" below.
 
 ## Layout
 
@@ -22,19 +30,22 @@ public/
   config.example.js  template to copy for local dev
   lib/
     markdown.js      renderMarkdown + renderUser (escaping variant)
-    ui.js            chevSVG, BADGE, debounce, localDay
-    content.js       loads content.json once, shared by all views
+    ui.js            chevSVG, BADGE, FALLBACK_BADGE, debounce, localDay
+    content.js       loads content.json + the EN overlay; owns the language
     api.js           transport to Apps Script
-    auth.js          Google Identity Services + header chip
+    auth.js          Google Identity Services + header avatar/state machine
     store.js         offline-first progress, notes, study log
     interviews.js    interview journal data layer
   views/
     interviews.js    interview journal CRUD (<dialog>)
     stats.js         streak + heatmap + per-topic progress
     admin.js         all-user overview (admin role only)
-  content.json       282 track items + 42 microservices items
+  content.json       282 track items + 42 microservices items (Vietnamese)
+  content.en.json    partial English overlay; anything absent falls back
   interviews.json    seed entries, merged under everyone's own Sheet rows
 apps-script/Code.gs  the entire backend (Google Sheet as database)
+tests/               security · interviews.merge · auth.state · content.i18n
+tools/               validate-content.mjs
 secret/              GITIGNORED. Personal setup notes and credentials
 ```
 
@@ -118,6 +129,39 @@ secret/              GITIGNORED. Personal setup notes and credentials
   `close()` blurs first, because focus inside a subtree that then becomes
   inert is not moved out on its own.
 
+- **A silent sign-in attempt must always end.** `Auth.connecting` is only true
+  while an attempt is genuinely in flight; `SILENT_MS` and the
+  `prompt()` notification each end it, and the resting state afterwards is
+  `stale` — a still badge plus a real sign-in button. Do not reintroduce
+  "has a hint and no token ⇒ connecting": FedCM suppressing the prompt is
+  routine, and that spelling left the header spinner running forever with no
+  way in. `Auth.state` is the single value the UI switches on.
+  `tests/auth.state.test.mjs` pins all of it.
+
+## The English overlay
+
+`content.json` (Vietnamese) always loads. `content.en.json` is fetched only
+when the reader is in EN, and it is a **partial overlay** — topics keyed by
+`n`, sections by index, items by id:
+
+```json
+{ "days": { "1": { "label": "…", "sections": ["…"],
+                   "items": { "1.1": { "q": "…", "a": "…" } } } } }
+```
+
+- **Anything absent falls back to Vietnamese.** That is what lets English be
+  filled in one item at a time. An item whose `a` has no translation renders
+  the Vietnamese text with a `VI` badge (`FALLBACK_BADGE`) so the reader knows
+  why it switched language mid-page.
+- **`_apply()` must keep cloning the source.** Overlaying in place would
+  overwrite the Vietnamese strings, and switching back to VI would then show
+  English.
+- **The overlay is validated, not trusted.** `validate-content.mjs` fails on a
+  topic `n` or item id that does not exist — otherwise a typo silently means
+  the translation you wrote never appears.
+- Current state: all 24 topics have English metadata; no item answers are
+  translated yet.
+
 ## Security model
 
 There is no RLS. `Code.gs` is the only thing enforcing access:
@@ -150,15 +194,20 @@ Three tests in `tests/security.test.mjs` pin this.
 ## Before pushing
 
 ```bash
+# structure of content.json + the English overlay, and a content report
+node tools/validate-content.mjs --stats
+
 # same check the CI runs
 for f in $(find public -name '*.js'); do node --input-type=module --check < "$f" || echo "FAIL $f"; done
 
-# auth, authorization, row-isolation and error-disclosure regressions,
-# plus the seed/own merge rules of the interview journal
-NODE_NO_WARNINGS=1 node --experimental-vm-modules --test \
-  tests/security.test.mjs tests/interviews.merge.test.mjs
+# auth/authorization/row-isolation/error-disclosure, the seed-vs-own merge
+# rules, the sign-in state machine, and the VI/EN overlay
+NODE_NO_WARNINGS=1 node --experimental-vm-modules --test tests/*.test.mjs
 
-# run it
+# CI also refuses any console.* under public/ or apps-script/
+grep -RInE 'console\.(log|info|warn|error|debug)|Logger\.log' public apps-script
+
+# run it (python may not be on PATH — `npx serve public` works too)
 cd public && python -m http.server 8080
 ```
 

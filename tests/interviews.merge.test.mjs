@@ -12,9 +12,12 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, cpSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const SCRIPT_URL = 'https://script.example.test/exec';
-const PUBLIC = new URL('../public/', import.meta.url).pathname;
+// fileURLToPath, not .pathname — the latter yields "/D:/…" on Windows, which
+// node then resolves against the current drive as "D:\D:\…".
+const PUBLIC = fileURLToPath(new URL('../public/', import.meta.url));
 
 let dir, Interviews, Auth;
 
@@ -60,8 +63,9 @@ before(async () => {
   cpSync(PUBLIC + 'lib', join(dir, 'lib'), { recursive: true });
   writeFileSync(join(dir, 'config.js'),
     `export const GOOGLE_CLIENT_ID = 'cid';\nexport const SCRIPT_URL = '${SCRIPT_URL}';\n`);
-  ({ Interviews } = await import(join(dir, 'lib/interviews.js')));
-  ({ Auth } = await import(join(dir, 'lib/auth.js')));
+  // pathToFileURL: a bare Windows path is not a URL the ESM loader accepts.
+  ({ Interviews } = await import(pathToFileURL(join(dir, 'lib/interviews.js')).href));
+  ({ Auth } = await import(pathToFileURL(join(dir, 'lib/auth.js')).href));
 });
 
 after(() => rmSync(dir, { recursive: true, force: true }));
@@ -131,7 +135,7 @@ test('importSeed refuses a row that is already the reader\'s own', async () => {
   stubFetch({ remote: [{ id: 'uuid-1', name: 'Grab', questions: [] }] });
   signIn();
   await Interviews.load();
-  await assert.rejects(() => Interviews.importSeed('uuid-1'), /đã nằm trong nhật ký/);
+  await assert.rejects(() => Interviews.importSeed('uuid-1'), /already in your journal/);
 });
 
 test('a backend failure still leaves the seed visible', async () => {

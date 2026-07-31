@@ -1,15 +1,15 @@
 /* "Gazl Try" view — interview journal, editable in place.
    Own rows (Google Sheet) and the repo's seed entries render in one list;
-   only own rows get Sửa/Xoá, seed entries get "lưu vào nhật ký" instead. */
+   only own rows get Edit/Delete, seed entries get "Save to my journal" instead. */
 import { Interviews } from '../lib/interviews.js';
 import { Auth } from '../lib/auth.js';
 import { escapeHtml as esc, renderUser, inlineUser } from '../lib/markdown.js';
 import { chevSVG } from '../lib/ui.js';
 
-const RESULT = { pending: 'Đang chờ', passed: 'Qua vòng', offer: 'Có offer', failed: 'Trượt' };
+const RESULT = { pending: 'Pending', passed: 'Passed', offer: 'Offer', failed: 'Rejected' };
 
 export function renderInterviews() {
-  return '<div id="ivRoot" class="iv-root"><div class="page"><p class="intro">Đang tải…</p></div></div>';
+  return '<div id="ivRoot" class="iv-root"><div class="page"><p class="intro">Loading…</p></div></div>';
 }
 
 export function mountInterviews(host) {
@@ -38,41 +38,43 @@ function paint(root, repaint) {
   const nSeed = Interviews.seedCompanies.length;
 
   let html = '<section class="hero"><div class="hero-head"><div>'
-    + '<h2>Gazl Try — Nhật ký phỏng vấn</h2>'
-    + '<p class="intro">Công ty đã phỏng vấn · câu hỏi họ hỏi · cách mình trả lời.</p>'
+    + '<h2>Gazl Try — interview journal</h2>'
+    + '<p class="intro">Companies interviewed · what they asked · how I answered.</p>'
     + '</div></div></section>';
 
   if (Interviews.error) {
-    html += '<div class="warn"><b>Không đọc được từ backend:</b> ' + esc(Interviews.error)
-      + ' — đang hiện dữ liệu mẫu từ <code>interviews.json</code>.</div>';
+    html += '<div class="warn"><b>Could not read from the backend:</b> ' + esc(Interviews.error)
+      + ' — showing the sample entries from <code>interviews.json</code> instead.</div>';
   }
 
   const breakdown = editable && nSeed
-    ? ' (' + nOwn + ' của mình · ' + nSeed + ' mẫu)'
+    ? ' (' + nOwn + ' mine · ' + nSeed + ' samples)'
     : '';
 
   html += '<div class="toolbar">'
-    + '<span class="sectioncount">' + cos.length + ' công ty' + breakdown + ' · ' + totalQ + ' câu hỏi'
-    + (editable ? '' : ' · <span class="ro">chỉ xem</span>') + '</span>'
+    + '<span class="sectioncount">' + cos.length + (cos.length === 1 ? ' company' : ' companies') + breakdown
+    + ' · ' + totalQ + (totalQ === 1 ? ' question' : ' questions')
+    + (editable ? '' : ' · <span class="ro">read-only</span>') + '</span>'
     // .tb-actions, not .legend: .legend is display:none below 760px.
     + '<div class="tb-actions">'
     + (editable
-      ? '<button class="btn-primary" id="ivAdd">+ Thêm công ty</button>'
+      ? '<button class="btn-primary" id="ivAdd">+ Add company</button>'
       : '<span class="hint">' + (Auth.enabled
-        ? 'Đăng nhập Google để thêm/sửa và lưu lên Google Sheet.'
-        : 'Chưa cấu hình backend — xem README để bật lưu trữ.') + '</span>')
+        ? 'Sign in with Google to add or edit entries and save them to your Sheet.'
+        : 'No backend configured — see the README to turn on storage.') + '</span>')
     + '</div></div>';
 
   if (!cos.length) {
     html += '<div class="page"><p>' + (editable
-      ? 'Chưa có công ty nào. Bấm <b>+ Thêm công ty</b> để bắt đầu.'
-      : 'Chưa có dữ liệu.') + '</p></div>';
+      ? 'No companies yet. Hit <b>+ Add company</b> to start.'
+      : 'Nothing here yet.') + '</p></div>';
   }
 
   for (const c of cos) html += companyCard(c, editable);
   if (editable && nSeed) {
-    html += '<p class="foot-note">Mục <b>Mẫu</b> đến từ <code>interviews.json</code> trong repo — ai cũng thấy '
-      + 'và không sửa được. Bấm <b>Lưu vào nhật ký</b> để chép sang nhật ký riêng của bạn rồi sửa thoải mái.</p>';
+    html += '<p class="foot-note">Entries marked <b>Sample</b> come from <code>interviews.json</code> in the repo — '
+      + 'everyone sees them and nobody can edit them. Hit <b>Save to my journal</b> to copy one into your own '
+      + 'journal, where it is yours to edit.</p>';
   }
   html += formDialog();
 
@@ -88,26 +90,26 @@ function companyCard(c, editable) {
   const stack = (c.stack || []).map(t => '<span class="tag">' + esc(t) + '</span>').join('');
 
   // Seed rows live in the repo, not the Sheet: importing is the only write.
-  const seedBadge = c.own ? '' : '<span class="seed-badge">Mẫu</span>';
+  const seedBadge = c.own ? '' : '<span class="seed-badge">Sample</span>';
   let actions = '';
   if (editable && c.own) {
     actions = '<div class="co-actions">'
-      + '<button class="btn-ghost sm" data-edit="' + esc(c.id) + '">Sửa</button>'
-      + '<button class="btn-ghost sm danger" data-del="' + esc(c.id) + '">Xoá</button></div>';
+      + '<button class="btn-ghost sm" data-edit="' + esc(c.id) + '">Edit</button>'
+      + '<button class="btn-ghost sm danger" data-del="' + esc(c.id) + '">Delete</button></div>';
   } else if (editable) {
     actions = '<div class="co-actions">'
-      + '<button class="btn-ghost sm" data-import="' + esc(c.id) + '">Lưu vào nhật ký</button></div>';
+      + '<button class="btn-ghost sm" data-import="' + esc(c.id) + '">Save to my journal</button></div>';
   }
 
   const qs = (c.questions || []).map((it, idx) => {
     const round = it.round ? '<span class="qround">' + esc(it.round) + '</span>' : '';
-    const note = it.note ? '<div class="takeaway"><b>Ghi chú:</b> ' + inlineUser(it.note) + '</div>' : '';
+    const note = it.note ? '<div class="takeaway"><b>Takeaway:</b> ' + inlineUser(it.note) + '</div>' : '';
     return '<div class="qcard"><button class="qhead" aria-expanded="false">'
       + '<span class="qid">Q' + (idx + 1) + '</span>'
       + '<span class="qtext">' + inlineUser(it.q) + '</span>'
       + '<span class="qmeta">' + round + chevSVG + '</span></button>'
       + '<div class="qbody"><div class="qbody-inner"><div class="answer"><div>'
-      + '<div class="ans-label">Mình trả lời</div>' + renderUser(it.a) + note
+      + '<div class="ans-label">How I answered</div>' + renderUser(it.a) + note
       + '</div></div></div></div></div>';
   }).join('');
 
@@ -116,7 +118,7 @@ function companyCard(c, editable) {
     + seedBadge + res + actions + '</div>'
     + (meta ? '<div class="company-meta">' + meta + '</div>' : '')
     + (stack ? '<div class="tags">' + stack + '</div>' : '')
-    + (qs || '<p class="intro empty-q">Chưa có câu hỏi nào.</p>')
+    + (qs || '<p class="intro empty-q">No questions recorded yet.</p>')
     + '</div>';
 }
 
@@ -125,26 +127,26 @@ function companyCard(c, editable) {
 function formDialog() {
   return '<dialog class="modal" id="ivDialog">'
     + '<form id="ivForm" class="modal-form">'
-    + '<h3 id="ivTitle">Thêm công ty</h3>'
+    + '<h3 id="ivTitle">Add company</h3>'
     + '<input type="hidden" name="id">'
     + '<div class="fgrid">'
-    + field('name', 'Tên công ty *', 'text', 'VD: Grab', true)
-    + field('role', 'Vị trí', 'text', 'VD: Senior Backend Engineer')
-    + field('date', 'Thời gian', 'text', 'VD: 2026-06')
-    + '<label class="f"><span>Kết quả</span><select name="result">'
+    + field('name', 'Company name *', 'text', 'e.g. Grab', true)
+    + field('role', 'Role', 'text', 'e.g. Senior Backend Engineer')
+    + field('date', 'When', 'text', 'e.g. 2026-06')
+    + '<label class="f"><span>Result</span><select name="result">'
     + Object.entries(RESULT).map(([k, v]) => '<option value="' + k + '">' + v + '</option>').join('')
     + '</select></label>'
     + '</div>'
-    + field('stack', 'Stack (cách nhau bởi dấu phẩy)', 'text', 'Java, Spring Boot, PostgreSQL')
+    + field('stack', 'Stack (comma separated)', 'text', 'Java, Spring Boot, PostgreSQL')
     + '<div class="qeditor">'
-    + '<div class="qeditor-head"><span>Câu hỏi</span>'
-    + '<button type="button" class="btn-ghost sm" id="ivAddQ">+ Thêm câu hỏi</button></div>'
+    + '<div class="qeditor-head"><span>Questions</span>'
+    + '<button type="button" class="btn-ghost sm" id="ivAddQ">+ Add question</button></div>'
     + '<div id="ivQList"></div>'
     + '</div>'
     + '<p class="form-err" id="ivErr" hidden></p>'
     + '<div class="modal-actions">'
-    + '<button type="button" class="btn-ghost" id="ivCancel">Huỷ</button>'
-    + '<button type="submit" class="btn-primary" id="ivSave">Lưu</button>'
+    + '<button type="button" class="btn-ghost" id="ivCancel">Cancel</button>'
+    + '<button type="submit" class="btn-primary" id="ivSave">Save</button>'
     + '</div></form></dialog>';
 }
 
@@ -158,11 +160,11 @@ function field(name, label, type, placeholder, required) {
 function questionRow(q = {}, idx = 0) {
   return '<div class="qrow" data-qrow>'
     + '<div class="qrow-head"><span class="qid">Q' + (idx + 1) + '</span>'
-    + '<input type="text" data-f="round" placeholder="Vòng (VD: Vòng 1 · Technical)" value="' + esc(q.round || '') + '">'
-    + '<button type="button" class="btn-ghost sm danger" data-rmq aria-label="Xoá câu hỏi">✕</button></div>'
-    + '<textarea data-f="q" rows="2" placeholder="Câu hỏi họ hỏi *">' + esc(q.q || '') + '</textarea>'
-    + '<textarea data-f="a" rows="4" placeholder="Mình trả lời (dùng được **đậm**, `code`, danh sách -)">' + esc(q.a || '') + '</textarea>'
-    + '<textarea data-f="note" rows="2" placeholder="Ghi chú / rút ra được gì">' + esc(q.note || '') + '</textarea>'
+    + '<input type="text" data-f="round" placeholder="Round (e.g. Round 1 · Technical)" value="' + esc(q.round || '') + '">'
+    + '<button type="button" class="btn-ghost sm danger" data-rmq aria-label="Remove question">✕</button></div>'
+    + '<textarea data-f="q" rows="2" placeholder="What they asked *">' + esc(q.q || '') + '</textarea>'
+    + '<textarea data-f="a" rows="4" placeholder="How I answered (**bold**, `code` and - lists work here)">' + esc(q.a || '') + '</textarea>'
+    + '<textarea data-f="note" rows="2" placeholder="Takeaway / what to do differently">' + esc(q.note || '') + '</textarea>'
     + '</div>';
 }
 
@@ -200,7 +202,7 @@ function wire(root, repaint) {
   const open = (company) => {
     form.reset();
     errEl.hidden = true;
-    root.querySelector('#ivTitle').textContent = company ? 'Sửa công ty' : 'Thêm công ty';
+    root.querySelector('#ivTitle').textContent = company ? 'Edit company' : 'Add company';
     form.id.value = company?.id || '';
     form.name.value = company?.name || '';
     form.role.value = company?.role || '';
@@ -219,24 +221,24 @@ function wire(root, repaint) {
 
   root.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
     const c = Interviews.find(b.dataset.del);
-    if (!c || !confirm('Xoá "' + c.name + '" và toàn bộ câu hỏi của nó?')) return;
+    if (!c || !confirm('Delete "' + c.name + '" and every question under it?')) return;
     b.disabled = true;
     try { await Interviews.remove(c.id); repaint(); }
-    catch (e) { alert('Xoá không được: ' + (e.message || e)); b.disabled = false; }
+    catch (e) { alert('Could not delete: ' + (e.message || e)); b.disabled = false; }
   }));
 
   root.querySelectorAll('[data-import]').forEach(b => b.addEventListener('click', async () => {
     const c = Interviews.find(b.dataset.import);
     if (!c) return;
     b.disabled = true;
-    b.textContent = 'Đang lưu…';
+    b.textContent = 'Saving…';
     try {
       await Interviews.importSeed(c.id);
       repaint();          // the copy is now an own row; the seed card drops out
     } catch (e) {
-      alert('Lưu không được: ' + (e.message || e));
+      alert('Could not save: ' + (e.message || e));
       b.disabled = false;
-      b.textContent = 'Lưu vào nhật ký';
+      b.textContent = 'Save to my journal';
     }
   }));
 
@@ -269,7 +271,7 @@ function wire(root, repaint) {
     };
 
     save.disabled = true;
-    save.textContent = 'Đang lưu…';
+    save.textContent = 'Saving…';
     try {
       await Interviews.save(company);
       dlg.close();
@@ -279,7 +281,7 @@ function wire(root, repaint) {
       errEl.hidden = false;
     } finally {
       save.disabled = false;
-      save.textContent = 'Lưu';
+      save.textContent = 'Save';
     }
   });
 }

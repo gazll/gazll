@@ -53,8 +53,8 @@ export const Interviews = {
   /** Copy a seed company into the reader's own Sheet rows. */
   async importSeed(id) {
     const c = this.find(id);
-    if (!c) throw new Error('Không tìm thấy công ty này.');
-    if (c.own) throw new Error('Công ty này đã nằm trong nhật ký của bạn.');
+    if (!c) throw new Error('No such company.');
+    if (c.own) throw new Error('That company is already in your journal.');
     return this.save({
       name: c.name,
       role: c.role,
@@ -87,8 +87,8 @@ function requireToken() {
   const token = Auth.token;
   if (!token) {
     throw new Error(Auth.session
-      ? 'Phiên đăng nhập đã hết hạn — đăng nhập lại rồi thử lại.'
-      : 'Cần đăng nhập Google để lưu nhật ký phỏng vấn.');
+      ? 'Your session expired — sign in again and retry.'
+      : 'Sign in with Google to save the interview journal.');
   }
   return token;
 }

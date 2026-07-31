@@ -17,8 +17,8 @@ export class ApiError extends Error {
 }
 
 export async function call(action, payload = {}, idToken = null) {
-  if (!SCRIPT_URL) throw new ApiError('Chưa cấu hình SCRIPT_URL.');
-  if (!idToken) throw new ApiError('Chưa đăng nhập.', { authExpired: true });
+  if (!SCRIPT_URL) throw new ApiError('SCRIPT_URL is not configured.');
+  if (!idToken) throw new ApiError('Not signed in.', { authExpired: true });
 
   let res;
   try {
@@ -32,7 +32,7 @@ export async function call(action, payload = {}, idToken = null) {
       redirect: 'follow'
     });
   } catch (e) {
-    throw new ApiError('Không kết nối được backend: ' + (e.message || e));
+    throw new ApiError('Could not reach the backend: ' + (e.message || e));
   }
 
   const text = await res.text();
@@ -44,15 +44,16 @@ export async function call(action, payload = {}, idToken = null) {
     // are wrong or the script failed to load.
     throw new ApiError(
       res.ok
-        ? 'Backend trả về không phải JSON — kiểm tra deployment đặt "Who has access: Anyone" chưa.'
-        : 'Backend lỗi HTTP ' + res.status
+        ? 'The backend did not return JSON — check that the deployment is set to "Who has access: Anyone".'
+        : 'Backend returned HTTP ' + res.status
     );
   }
 
   // Every response is HTTP 200; the outcome is this flag.
   if (!body.ok) {
-    const msg = body.error || 'Backend báo lỗi không rõ.';
-    throw new ApiError(msg, { authExpired: /token|idToken|hết hạn|đăng nhập/i.test(msg) });
+    const msg = body.error || 'The backend reported an unspecified error.';
+    // Code.gs still answers in Vietnamese, so both wordings must match here.
+    throw new ApiError(msg, { authExpired: /token|idToken|hết hạn|đăng nhập|expired|sign ?in/i.test(msg) });
   }
   return body.data;
 }

@@ -10,8 +10,11 @@
      node tools/validate-content.mjs --stats    # check + content report
 */
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+// fileURLToPath, not .pathname — on Windows the latter yields "/D:/…", which
+// node then resolves against the current drive as "D:\D:\…".
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const data = JSON.parse(readFileSync(ROOT + 'public/content.json', 'utf8'));
 const GROUPS = new Set(['core', 'data', 'design', 'platform', 'algorithm']);
 const LVLS = new Set(['core', 'hard', 'ext']);
@@ -107,13 +110,52 @@ for (const it of items) {
   }
 }
 
+/* ---------- content.en.json — the optional English overlay ----------
+
+   Every field in it is optional and falls back to the Vietnamese source, so
+   the only real failure mode is an overlay that points at nothing: a topic
+   number or item id that does not exist gets silently ignored at runtime and
+   the reader just never sees the translation they wrote. */
+let en = null;
+try { en = JSON.parse(readFileSync(ROOT + 'public/content.en.json', 'utf8')); }
+catch (e) { if (e.code !== 'ENOENT') errs.push(`content.en.json: ${e.message}`); }
+
+let enTopics = 0, enItems = 0;
+if (en) {
+  const byN = new Map(data.days.map(d => [String(d.n), d]));
+  for (const [n, o] of Object.entries(en.days || {})) {
+    const topic = byN.get(n);
+    if (!topic) { errs.push(`content.en.json: topic "${n}" does not exist`); continue; }
+    enTopics++;
+    if (Array.isArray(o.sections) && o.sections.length > topic.sections.length) {
+      errs.push(`content.en.json topic ${n}: ${o.sections.length} section titles for ${topic.sections.length} sections`);
+    }
+    for (const [id, oi] of Object.entries(o.items || {})) {
+      if (!seen.has(id)) { errs.push(`content.en.json topic ${n}: item "${id}" does not exist`); continue; }
+      if (!String(id).startsWith(n + '.')) errs.push(`content.en.json: item "${id}" is filed under topic ${n}`);
+      if (oi.a) enItems++;
+    }
+  }
+  const micro = en.micro || {};
+  const chapters = Array.isArray(micro.chapters) ? micro.chapters.length : 0;
+  const realChapters = (data.micro?.chapters || []).length;
+  if (chapters > realChapters) {
+    errs.push(`content.en.json micro: ${chapters} chapter titles for ${realChapters} chapters`);
+  }
+}
+
 if (errs.length) {
-  console.error(`\ncontent.json FAILED — ${errs.length} problem(s):\n`);
+  console.error(`\ncontent FAILED — ${errs.length} problem(s):\n`);
   for (const e of errs) console.error('  - ' + e);
   process.exit(1);
 }
 
 console.log(`content.json OK — ${data.days.length} topics, ${items.length} items, ${markers.size} SVG markers`);
+if (en) {
+  console.log(`content.en.json OK — ${enTopics}/${data.days.length} topics translated, ${enItems}/${items.length} answers`);
+} else {
+  console.log('content.en.json — absent, everything falls back to Vietnamese');
+}
 
 if (process.argv.includes('--stats')) {
   const by = (fn) => items.reduce((m, i) => (m[fn(i)] = (m[fn(i)] || 0) + 1, m), {});

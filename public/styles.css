@@ -41,32 +41,88 @@
     background:conic-gradient(var(--emerald) calc(var(--p)*1%), var(--line-strong) 0);display:grid;place-items:center;}
   .ring::after{content:"";width:30px;height:30px;border-radius:50%;background:var(--paper)}
 
-  .stepper-wrap{border-bottom:1px solid var(--line);background:rgba(255,255,255,.4)}
-  .stepper{max-width:1120px;margin:0 auto;padding:10px 16px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;}
-  .step{flex:0 0 auto;min-width:120px;cursor:pointer;border:1px solid var(--line);background:var(--surface);
-    border-radius:10px;padding:8px 12px;text-align:left;transition:.18s ease;position:relative;font:inherit;color:inherit;}
-  .step[hidden]{display:none}
-  .step:hover{border-color:var(--line-strong);transform:translateY(-1px)}
-  .step .sidx{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--brass);font-weight:600;letter-spacing:.6px}
-  .step .slabel{display:block;font-size:12px;font-weight:500;color:var(--ink-soft);margin-top:1px;line-height:1.2}
-  .step[aria-current="true"]{background:linear-gradient(180deg,var(--emerald),var(--emerald-deep));border-color:var(--emerald-deep);box-shadow:var(--shadow);}
-  .step[aria-current="true"] .sidx{color:rgba(255,255,255,.7)}
-  .step[aria-current="true"] .slabel{color:#fff}
-  .step:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
+  /* ---------- topic picker ----------
+     One button showing where you are; the list of 24 topics lives in a
+     dropdown with a text filter. It replaced a horizontally scrolling strip
+     of buttons, where the topic you wanted was almost always off-screen. */
+  .topicbar{position:relative;border-bottom:1px solid var(--line);background:rgba(255,255,255,.4)}
+  .tb-inner{max-width:1120px;margin:0 auto;padding:9px 16px;display:flex;align-items:center;gap:10px}
 
-  /* topic groups — one accent colour per group, reused by the stepper chip,
+  .topicpick{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:11px;cursor:pointer;font:inherit;
+    color:inherit;text-align:left;border:1px solid var(--line);background:var(--surface);
+    border-radius:11px;padding:7px 12px;transition:.16s ease}
+  .topicpick:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
+  .topicpick:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
+  .tp-n{flex:none;font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;
+    color:#fff;background:var(--g,var(--emerald));border-radius:8px;padding:4px 8px;line-height:1.15}
+  .tp-text{min-width:0;display:flex;flex-direction:column}
+  .tp-label{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:14px;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
+  .tp-sub{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.5px;color:var(--muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tp-chev{flex:none;margin-left:auto;width:17px;height:17px;color:var(--muted);transition:transform .2s ease}
+  .topicpick[aria-expanded="true"] .tp-chev{transform:rotate(180deg)}
+
+  .tb-steps{flex:none;display:flex;align-items:center;gap:2px}
+  .tstep{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
+    color:var(--ink-soft);cursor:pointer;display:grid;place-items:center;padding:0;transition:.15s ease}
+  .tstep svg{width:16px;height:16px}
+  .tstep:hover:not(:disabled){border-color:var(--emerald);color:var(--emerald)}
+  .tstep:disabled{opacity:.35;cursor:default}
+  .tstep:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
+  .tb-count{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);padding:0 5px;white-space:nowrap}
+  .tb-count b{color:var(--emerald-deep)}
+
+  /* Below header.top (z-index 50) on purpose: the header is a stacking context,
+     so a scrim above it would also cover the dropdown living inside it. */
+  .topic-scrim{position:fixed;inset:0;z-index:40;background:rgba(20,35,58,.18);
+    opacity:0;pointer-events:none;transition:opacity .18s ease}
+  body.topic-open .topic-scrim{opacity:1;pointer-events:auto}
+
+  .topicmenu{position:absolute;z-index:70;left:16px;right:16px;top:calc(100% - 4px);
+    max-width:520px;background:var(--surface);border:1px solid var(--line-strong);
+    border-radius:14px;box-shadow:0 22px 48px -20px rgba(20,35,58,.42);
+    overflow:hidden;animation:menuIn .16s ease}
+  .topicmenu[hidden]{display:none}
+
+  .tm-search{display:flex;align-items:center;gap:8px;padding:11px 13px;border-bottom:1px solid var(--line)}
+  .tm-search svg{flex:none;width:15px;height:15px;color:var(--muted)}
+  .tm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:14px;
+    color:var(--ink);padding:2px 0}
+  .tm-search input:focus{outline:none}
+  .tm-search input::placeholder{color:var(--muted)}
+  /* the native clear button in Chrome sits oddly against a borderless field */
+  .tm-search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+
+  .tm-list{max-height:min(58vh,430px);overflow-y:auto;scrollbar-width:thin;padding:6px}
+  .tm-row{width:100%;display:flex;align-items:center;gap:11px;cursor:pointer;font:inherit;color:inherit;
+    text-align:left;border:1px solid transparent;background:none;border-radius:10px;padding:8px 10px;
+    transition:background .13s ease,border-color .13s ease}
+  .tm-row[hidden]{display:none}
+  .tm-row:hover{background:var(--g-soft,var(--emerald-soft))}
+  .tm-row:focus-visible{outline:2px solid var(--emerald);outline-offset:-2px}
+  .tm-row[aria-selected="true"]{background:var(--g-soft,var(--emerald-soft));border-color:var(--g,var(--emerald))}
+  .tm-n{flex:none;width:26px;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--g,var(--muted))}
+  .tm-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+  .tm-label{font-size:14px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tm-meta{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.5px;color:var(--muted);text-transform:uppercase}
+  .tm-prog{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px;width:58px}
+  .tm-bar{--p:0;width:100%;height:4px;border-radius:999px;background:var(--line-strong);position:relative;overflow:hidden}
+  .tm-bar::after{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--p)*1%);
+    border-radius:999px;background:var(--g,var(--emerald))}
+  .tm-pct{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--muted)}
+  .tm-empty{margin:0;padding:16px 14px 20px;text-align:center;font-size:13px;color:var(--muted)}
+  .tm-empty[hidden]{display:none}
+
+  /* topic groups — one accent colour per group, reused by the picker,
      the filter bar and the hero number */
   [data-group="core"]     {--g:var(--indigo);      --g-soft:var(--indigo-soft);  --g-line:#cdd5ef}
   [data-group="data"]     {--g:var(--emerald-deep);--g-soft:var(--emerald-soft); --g-line:#cfe6da}
   [data-group="design"]   {--g:var(--brass);       --g-soft:#faf5e9;             --g-line:#e3d6b8}
   [data-group="platform"] {--g:var(--clay);        --g-soft:var(--clay-soft);    --g-line:#e6c6c0}
   [data-group="algorithm"]{--g:#5B3E8E;            --g-soft:#EFEAF7;             --g-line:#d5c9ea}
-  .step[data-group] .sidx{color:var(--g)}
-  .step[data-group]::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;
-    border-radius:0 3px 3px 0;background:var(--g);opacity:.85}
-  .step[aria-current="true"]::before{opacity:0}
 
-  .groupbar{max-width:1120px;margin:0 auto;padding:8px 16px 0;display:flex;gap:6px;flex-wrap:wrap}
+  .groupbar{display:flex;gap:6px;flex-wrap:wrap;padding:9px 13px;border-bottom:1px solid var(--line)}
   .gchip{cursor:pointer;font:inherit;font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;
     letter-spacing:.6px;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;
     padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);
@@ -143,6 +199,24 @@
   .np-foot{margin:0;padding:12px 18px 16px;border-top:1px solid var(--line);
     font-size:11.5px;line-height:1.5;color:var(--muted)}
 
+  /* ---------- content language switch ----------
+     Only the study material has two languages; the interface is always
+     English, so this control lives with the site settings rather than in the
+     reading surface. */
+  .np-lang{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 16px;border-bottom:1px solid var(--line)}
+  .npl-label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.8px;
+    text-transform:uppercase;color:var(--muted)}
+  .langswitch{display:inline-flex;border:1px solid var(--line);border-radius:999px;
+    background:var(--paper);padding:2px;gap:2px}
+  .langswitch.busy{opacity:.55;pointer-events:none}
+  .langswitch button{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+    letter-spacing:.6px;cursor:pointer;border:0;background:none;color:var(--muted);
+    padding:3px 11px;border-radius:999px;transition:.15s ease}
+  .langswitch button:hover{color:var(--ink)}
+  .langswitch button[aria-pressed="true"]{background:var(--emerald);color:#fff}
+  .langswitch button:focus-visible{outline:2px solid var(--emerald);outline-offset:1px}
+
   /* header collapse button */
   .hdrtoggle{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
     color:var(--ink-soft);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;transition:.15s ease}
@@ -156,7 +230,7 @@
   header.top.collapsed .top-inner{padding-top:5px;padding-bottom:5px}
   header.top.collapsed .brand h1{display:none}
   header.top.collapsed .seal{width:30px;height:30px;font-size:13px;border-radius:9px}
-  header.top.collapsed .stepper-wrap{display:none}
+  header.top.collapsed .topicbar{display:none}
   header.top.collapsed .progress-meta{display:none}
   header.top.collapsed .ring{width:28px;height:28px}
   header.top.collapsed .ring::after{width:22px;height:22px}
@@ -249,6 +323,8 @@
   .qbadge.hard{color:var(--clay);border-color:#e6c6c0;background:var(--clay-soft)}
   .qbadge.core{color:var(--emerald-deep);border-color:#cfe6da;background:var(--emerald-soft)}
   .qbadge.ext{color:var(--indigo);border-color:#cdd5ef;background:var(--indigo-soft)}
+  /* reading in EN, this answer is still the Vietnamese original */
+  .qbadge.vi{color:var(--brass);border-color:#e3d6b8;background:#faf5e9;font-weight:600}
   .chev{flex:none;width:20px;height:20px;color:var(--muted);transition:transform .25s}
   .qcard.open .chev{transform:rotate(90deg);color:var(--emerald)}
 
@@ -356,9 +432,15 @@
     .authbtn{width:34px;height:34px}
     .avatar{width:26px;height:26px}
     /* the filter bar scrolls sideways rather than stacking into rows */
-    .groupbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:8px 16px 0}
+    .groupbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:9px 12px}
     .groupbar::-webkit-scrollbar{display:none}
     .gchip{flex:0 0 auto}
+    /* the dropdown goes full width and the prev/next pair drops away — the
+       pager at the foot of the page already does that job on a phone */
+    .tb-inner{padding:8px 12px}
+    .tb-steps{display:none}
+    .topicmenu{left:8px;right:8px;max-width:none}
+    .tm-list{max-height:min(62vh,400px)}
 
     main{padding:22px 14px 84px}
     /* hero */
@@ -372,6 +454,8 @@
     .qhead{padding:13px 14px;gap:10px}
     .qtext{font-size:15px}
     .qmeta .qbadge{display:none}
+    /* the level badge is decoration; "this is still Vietnamese" is not */
+    .qmeta .qbadge.vi{display:inline}
     .answer{padding:2px 14px 16px 14px}
     .legend{display:none}
     /* page (markdown views) */
@@ -424,6 +508,18 @@
   .authbtn:hover{border-color:var(--emerald);transform:translateY(-1px)}
   .authbtn:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
 
+  /* An avatar on its own is too quiet to read as "you are signed out", so the
+     states that need a click say so in words. Keyed off data-state rather
+     than :has(), so the pill shape does not depend on selector support. */
+  .authbtn[data-state="anon"],
+  .authbtn[data-state="stale"],
+  .authbtn[data-state="error"]{width:auto;border-radius:999px;padding:0 12px 0 6px;gap:7px;
+    grid-auto-flow:column;place-items:center}
+  .auth-chip{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.4px;
+    color:var(--ink-soft);white-space:nowrap}
+  .authbtn[data-state="stale"] .auth-chip,
+  .authbtn[data-state="error"] .auth-chip{color:var(--clay)}
+
   .avatar{width:28px;height:28px;border-radius:50%;flex:none;object-fit:cover;border:1px solid var(--line);display:block}
   .avatar.sm{width:22px;height:22px}
   .avatar-fallback{display:grid;place-items:center;background:linear-gradient(145deg,var(--emerald),var(--emerald-deep));
@@ -438,9 +534,15 @@
     border-right-color:transparent;animation:spin 1.1s linear infinite}
   .authbtn[data-state="error"]::after{border-color:var(--clay)}
   .authbtn[data-state="error"]{border-color:#e6c6c0;background:var(--clay-soft)}
+  /* `stale` is a resting state, not an activity: a still ring, never a spinner.
+     The spinner used to run forever whenever silent sign-in quietly failed. */
+  .authbtn[data-state="stale"]::after{border-color:var(--brass);border-style:dashed}
   .authbtn[data-state="offline"]{opacity:.7}
   .authbtn[data-state="anon"]:hover .avatar-anon{color:var(--emerald)}
   @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){
+    .authbtn[data-state="connecting"]::after{animation:none;border-right-color:var(--brass);opacity:.6}
+  }
 
   .av-admin{position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;
     background:var(--indigo);color:#fff;font-size:8px;line-height:14px;text-align:center;
