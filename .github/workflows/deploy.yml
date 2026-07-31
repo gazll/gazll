@@ -87,10 +87,13 @@ jobs:
           done
           [ "$fail" -eq 0 ] || exit 1
 
-      - name: Run security regression tests
+      - name: Run regression tests
         env:
           NODE_NO_WARNINGS: '1'
-        run: node --experimental-vm-modules --test tests/security.test.mjs
+        run: |
+          node --experimental-vm-modules --test \
+            tests/security.test.mjs \
+            tests/interviews.merge.test.mjs
 
       - uses: actions/configure-pages@v6
 

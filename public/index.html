@@ -17,7 +17,7 @@
   worker-src 'none';
   upgrade-insecure-requests
 ">
-<title>Backend Engineering — Technical Mastery Track (16 ngày)</title>
+<title>Backend Engineering — Technical Mastery Track</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -47,20 +47,23 @@
     </button>
     <button class="navtoggle" id="navToggle" aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="mainnav">☰</button>
   </div>
-  <div class="stepper-wrap track-only"><div class="stepper" id="stepper"></div></div>
+  <div class="stepper-wrap track-only">
+    <div class="groupbar" id="groupbar" role="group" aria-label="Lọc theo nhóm chủ đề"></div>
+    <div class="stepper" id="stepper"></div>
+  </div>
 </header>
 
 <main>
-  <!-- VIEW: 16-day track -->
+  <!-- VIEW: topic track -->
   <section id="view-track" class="view">
     <div id="panel" class="day-panel"></div>
     <nav class="pager">
-      <button class="pbtn prev" id="prevBtn">← Ngày trước</button>
+      <button class="pbtn prev" id="prevBtn">← Chủ đề trước</button>
       <div>
-        <div class="pcenter">Ngày <b id="curDay">1</b> / <span id="totDay">16</span></div>
+        <div class="pcenter">Chủ đề <b id="curDay">1</b> / <span id="totDay">19</span></div>
         <div class="pdots" id="dots"></div>
       </div>
-      <button class="pbtn next" id="nextBtn">Ngày tiếp →</button>
+      <button class="pbtn next" id="nextBtn">Chủ đề tiếp →</button>
     </nav>
     <p class="foot-note">Tự trả lời từng mục trước khi mở lời giải — đó là cách luyện hiệu quả nhất.</p>
   </section>

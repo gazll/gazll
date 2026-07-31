@@ -149,7 +149,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "core"
     },
     {
       "n": 2,
@@ -254,7 +255,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "core"
     },
     {
       "n": 3,
@@ -384,7 +386,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "core"
     },
     {
       "n": 4,
@@ -477,7 +480,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "design"
     },
     {
       "n": 5,
@@ -582,7 +586,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "data"
     },
     {
       "n": 6,
@@ -669,7 +674,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "data"
     },
     {
       "n": 7,
@@ -755,7 +761,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "data"
     },
     {
       "n": 8,
@@ -848,7 +855,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "data"
     },
     {
       "n": 9,
@@ -948,7 +956,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "design"
     },
     {
       "n": 10,
@@ -1064,7 +1073,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "design"
     },
     {
       "n": 11,
@@ -1152,7 +1162,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "design"
     },
     {
       "n": 12,
@@ -1268,7 +1279,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "design"
     },
     {
       "n": 13,
@@ -1379,7 +1391,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "platform"
     },
     {
       "n": 14,
@@ -1514,7 +1527,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "platform"
     },
     {
       "n": 15,
@@ -1619,7 +1633,8 @@
             }
           ]
         }
-      ]
+      ],
+      "group": "core"
     },
     {
       "n": 16,
@@ -1732,6 +1747,235 @@
               "lvl": "ext",
               "q": "Các câu hỏi ngược thể hiện chiều sâu (phù hợp domain OTA/fintech)?",
               "a": "- Hệ thống xử lý double-booking và overbooking thế nào? Reconciliation với hãng/PSP ra sao?\n- Đường đi của một booking qua hệ thống; đảm bảo consistency tiền & ghế thế nào?\n- Tích hợp GDS/NDC: xử lý unknown-state & idempotency ở đâu?\n- Quan sát hệ thống: tracing/log/alert; quy trình on-call & post-mortem (văn hoá học hỏi hay đổ lỗi)?\n- Tech debt và cách team cân bằng feature vs refactor? Ràng buộc compliance ảnh hưởng thiết kế thế nào?\n\n:::tip Chốt\ncâu hỏi ngược tốt vừa giúp bạn đánh giá đội/hệ thống, vừa cho thấy bạn tư duy như người sẽ vận hành lâu dài — đúng chất senior.\n:::\n\n:::deep\nMục đích kép: vừa *đánh giá đội/hệ thống* vừa *thể hiện chiều sâu & tư duy vận hành lâu dài*.\n\nPhân nhóm:\n- [[b:kỹ thuật/domain]] (double-booking/overbooking, consistency tiền-ghế, GDS unknown-state, idempotency ở đâu) — hiểu bài toán thật\n- [[b:vận hành]] (observability, on-call, post-mortem blameless, SLO, alert fatigue) — quan tâm sản xuất\n- [[b:kỹ thuật-tổ chức]] (feature vs tech debt, ai quyết kiến trúc, compliance ảnh hưởng thiết kế, ranh giới service)\n\n[[r:Tránh câu hời hợt]] ('có OT không') ở vòng kỹ thuật. Câu mạnh: 'khi một giao dịch treo ở trạng thái không xác định lúc 2 giờ sáng, quy trình phát hiện & xử lý của team là gì?' — vừa domain, vừa vận hành, cho thấy bạn hiểu nỗi đau thật của hệ thống tiền bạc.\n:::"
+            }
+          ]
+        }
+      ],
+      "group": "algorithm"
+    },
+    {
+      "n": 17,
+      "group": "design",
+      "label": "Thiết kế REST API",
+      "title": "Thiết kế REST API — resource, hợp đồng và vòng đời",
+      "intro": "Ngày 4 nói REST *là gì*; chủ đề này nói *thiết kế thế nào*. Từ mô hình hoá resource, ánh xạ hành động nghiệp vụ, tới idempotency, chuẩn lỗi và cách khai tử một version mà không gãy client — đúng những gì interviewer đào khi bạn nói 'em thiết kế API'.",
+      "tags": [
+        "Resource modeling",
+        "Idempotency-Key",
+        "RFC 9457",
+        "PATCH",
+        "Async 202",
+        "Sunset header",
+        "Bulk API"
+      ],
+      "sections": [
+        {
+          "title": "Mô hình hoá resource & URI",
+          "items": [
+            {
+              "id": "17.1",
+              "lvl": "core",
+              "q": "Từ use case tới resource: mô hình hoá và đặt tên URI thế nào cho đúng?",
+              "a": "Bắt đầu từ [[g:danh từ nghiệp vụ]], không phải từ bảng DB và càng không phải từ method của service.\n\n**Quy tắc đặt tên:**\n- danh từ số nhiều, chữ thường, gạch nối: `/flight-bookings`\n- phân cấp thể hiện quan hệ sở hữu: `/bookings/{id}/passengers`\n- [[r:không đặt động từ vào URI]]: `/getBooking`, `/createBooking` là RPC đội lốt REST\n- lồng tối đa 2 cấp — sâu hơn thì tách resource độc lập + query param\n\nResource [[o:không phải]] là bảng. `/bookings` có thể ghép từ 4 bảng; ngược lại một bảng `user` có thể lộ ra `/users` và `/users/{id}/preferences` như hai resource khác nhau.\n\n:::deep\nÁnh xạ 1-1 giữa resource và bảng là [[r:rò rỉ mô hình lưu trữ]] ra hợp đồng công khai — sau này đổi schema là phá client.\n\n- resource nên bám [[g:bounded context]] (DDD), không bám ERD\n- id trong URI dùng [[o:id đối ngoại]] (UUID/mã booking `VN8H2K`), không dùng auto-increment nội bộ: số tuần tự lộ lượng đơn và cho phép dò tuần tự (IDOR)\n- quan hệ nhiều-nhiều: tạo resource cho chính mối quan hệ (`/bookings/{id}/seat-assignments`) khi nó có thuộc tính riêng\n- collection luôn trả object bọc ngoài (`{\"data\":[...], \"next\":\"...\"}`), [[r:đừng trả mảng trần]] — không còn chỗ thêm metadata mà không phá client\n\nOTA: `/flights` (search, read-heavy, cache được) tách hẳn khỏi `/bookings` (transactional) — khác nhau cả về consistency lẫn rate limit.\n:::"
+            },
+            {
+              "id": "17.2",
+              "lvl": "hard",
+              "q": "Hành động không phải CRUD (cancel, refund, issue ticket) ánh xạ vào REST ra sao?",
+              "a": "Đây là câu interviewer hay dùng để phân biệt người đọc tutorial với người từng thiết kế thật. Ba cách, theo thứ tự ưu tiên:\n\n**1. Biến hành động thành resource** — tốt nhất khi hành động có vòng đời riêng:\n\n`POST /bookings/{id}/refunds` → tạo một `Refund` có id, trạng thái, lịch sử. Truy vấn lại được: `GET /refunds/{rid}`.\n\n**2. Đổi state qua sub-resource** — khi chỉ là chuyển trạng thái:\n\n`PUT /bookings/{id}/status` với body `{\"value\":\"CANCELLED\"}`.\n\n**3. Controller action** — lối thoát cuối, dùng động từ có chủ đích:\n\n`POST /bookings/{id}:cancel` (kiểu Google AIP) hoặc `/bookings/{id}/cancel`.\n\n[[g:Nguyên tắc chọn]]: hành động cần audit / retry / trạng thái riêng → cách 1. Chỉ lật một cờ → cách 2. Còn lại → cách 3, và đừng thấy tội lỗi.\n\n:::deep\nCách 1 thắng vì nó trả lời được những câu mà cách 3 không trả lời được: *refund đang tới đâu? ai bấm? thử lại lần mấy?*\n\n- hành động sinh tiền ([[o:refund, charge, payout]]) [[g:luôn]] nên là resource — bạn sẽ cần lịch sử của nó, chắc chắn\n- `POST` tới action là [[r:không idempotent]] theo mặc định → cặp với `Idempotency-Key` (xem 17.5)\n- tránh dồn nhiều hành động vào một endpoint bằng field `action` trong body: mất khả năng phân quyền, rate limit và đo lường theo từng hành động\n- state transition không hợp lệ trả [[b:409 Conflict]] kèm state hiện tại, không phải 400\n\nOTA: `POST /bookings/{id}/cancellations` cho phép cancel một phần (huỷ 1 trong 3 hành khách) — điều mà `PUT .../status` không diễn đạt nổi.\n:::"
+            },
+            {
+              "id": "17.3",
+              "lvl": "core",
+              "q": "PUT vs PATCH: JSON Merge Patch và JSON Patch khác nhau thế nào, chọn cái nào?",
+              "a": "[[b:PUT]] = thay [[o:toàn bộ]] representation. Thiếu field = field đó bị xoá/về default. Idempotent.\n\n[[b:PATCH]] = cập nhật [[o:một phần]]. Bản thân PATCH [[r:không đảm bảo idempotent]] — tuỳ định dạng patch.\n\n<table class=\"cmp\"><thead><tr><th></th><th>JSON Merge Patch (RFC 7396)</th><th>JSON Patch (RFC 6902)</th></tr></thead><tbody>\n<tr><td>Content-Type</td><td><code>application/merge-patch+json</code></td><td><code>application/json-patch+json</code></td></tr>\n<tr><td>Cú pháp</td><td>giống object gốc, chỉ field muốn đổi</td><td>mảng operation: add/remove/replace/move/test</td></tr>\n<tr><td>Xoá field</td><td><code>null</code></td><td><code>{\"op\":\"remove\",\"path\":\"/x\"}</code></td></tr>\n<tr><td>Set field = null</td><td>không diễn đạt được</td><td>được</td></tr>\n<tr><td>Sửa 1 phần tử mảng</td><td>không (phải gửi cả mảng)</td><td>được, theo index</td></tr>\n<tr><td>Idempotent</td><td>có</td><td>không (<code>add</code> vào mảng)</td></tr>\n</tbody></table>\n\nChọn: [[g:Merge Patch]] cho 95% CRUD thường — client dễ viết. [[g:JSON Patch]] khi cần sửa phần tử mảng, cần `test` để optimistic concurrency, hoặc build collaborative editing.\n\n:::deep\nCái bẫy kinh điển của Merge Patch: [[r:không phân biệt được 'không gửi field' với 'set field = null']]. Trong Java, `{\"note\": null}` và `{}` cùng deserialize ra `note == null`.\n\nCách xử lý: bọc field trong `Optional`-like wrapper (`JsonNullable` của openapi-generator), hoặc đọc raw `JsonNode` và kiểm tra `has(\"note\")`.\n\n- PATCH + optimistic concurrency: yêu cầu `If-Match: \"&lt;etag&gt;\"`, trả [[b:412 Precondition Failed]] nếu lệch → chống lost update khi 2 người sửa cùng lúc\n- PUT lên resource chưa tồn tại: có thể tạo mới (upsert) và trả 201 — nhưng phải nêu rõ trong tài liệu\n- [[r:PATCH mà không validate]] toàn bộ entity sau khi merge là lỗ hổng phổ biến: từng field hợp lệ nhưng tổ hợp thì không\n:::"
+            },
+            {
+              "id": "17.4",
+              "lvl": "ext",
+              "q": "Bulk API và field selection: giảm chattiness mà không phải chuyển sang GraphQL?",
+              "a": "Ba kỹ thuật, dùng khi client thật sự đau chứ không phải phòng xa:\n\n**1. Field selection** — `GET /bookings?fields=id,status,total` → giảm payload, giữ covering index dùng được.\n\n**2. Expand / embed** — `GET /bookings/{id}?expand=passengers,payments` → gộp N+1 round-trip của client thành 1. Giới hạn [[o:whitelist]] và độ sâu.\n\n**3. Bulk endpoint** — `POST /bookings/bulk` nhận mảng, trả mảng kết quả từng phần tử.\n\nBulk phải trả [[b:207 Multi-Status]] hoặc 200 kèm mảng có `status` từng item — [[r:đừng để một phần tử lỗi làm fail cả lô]] trừ khi khách hàng yêu cầu all-or-nothing (và khi đó nói rõ là transaction).\n\n:::deep\n- bulk + `Idempotency-Key`: key phải ở [[g:cấp từng item]], không phải cấp request — retry lô 100 item mà 3 item đã thành công thì chỉ 97 item còn lại được xử lý\n- giới hạn cứng kích thước lô (vd 100) và trả [[b:413]] khi vượt; lô lớn → chuyển sang async job (17.7)\n- `expand` sâu tuỳ ý = [[r:tự tạo DoS]] cho chính mình — mỗi cấp expand nhân số query\n- field selection giúp cả DB: `fields=id,status` cho phép index-only scan (xem 18.5)\n- khi client cần shape dữ liệu tự do thật sự → đó mới là lúc cân nhắc GraphQL (4.6), và nhận luôn chi phí: query depth limit, persisted query, N+1 resolver\n\nĐừng build cả ba từ ngày đầu. [[o:Đo]] xem client gọi gì nhiều nhất rồi mới thêm.\n:::"
+            }
+          ]
+        },
+        {
+          "title": "Hợp đồng, lỗi & vòng đời",
+          "items": [
+            {
+              "id": "17.5",
+              "lvl": "hard",
+              "q": "Idempotency-Key: thiết kế đầu-cuối cho POST tạo booking / thanh toán?",
+              "a": "Bài toán: client gọi `POST /payments`, mạng timeout. Server đã trừ tiền hay chưa? Client retry → [[r:trừ tiền hai lần]].\n\n**Hợp đồng:** client sinh key (UUID) cho mỗi *ý định* nghiệp vụ, gửi qua header `Idempotency-Key`. Retry dùng [[o:lại đúng key cũ]].\n\n**Phía server:**\n1. `INSERT` key vào bảng `idempotency_keys` với unique constraint → thắng cuộc đi tiếp, thua cuộc nhảy bước 4\n2. thực thi nghiệp vụ\n3. lưu [[g:status + response body + hash của request]] vào chính hàng đó\n4. lần gọi sau cùng key: trả nguyên response đã lưu, không chạy lại\n\n<pre><code><span class=\"k\">INSERT INTO</span> idempotency_keys(key, user_id, req_hash, state)\n<span class=\"k\">VALUES</span>(?,?,?,<span class=\"s\">'IN_PROGRESS'</span>)\n<span class=\"k\">ON CONFLICT</span>(key) <span class=\"k\">DO NOTHING</span>;  <span class=\"c\">-- 0 row =&gt; đã có người xử lý</span></code></pre>\n\nKey khác nhưng body giống → là request mới, [[o:cứ xử lý]]. Key giống nhưng body khác → trả [[b:422]], đó là bug phía client.\n\n:::deep\nBa chi tiết phân biệt câu trả lời sách vở với câu trả lời từng vận hành:\n\n- **`req_hash`**: không có nó, client dùng lại key cho payload khác sẽ nhận nhầm kết quả cũ. Hash body chuẩn hoá rồi so.\n- **Trạng thái `IN_PROGRESS`**: request đầu chưa xong mà retry tới → trả [[b:409]] kèm `Retry-After`, [[r:đừng chạy song song]] cũng đừng block vô hạn.\n- **TTL**: giữ key 24h–7 ngày rồi dọn. Giữ mãi thì bảng phình; dọn sớm thì retry muộn lọt lưới.\n\nViệc lưu key và việc thực thi nghiệp vụ phải [[g:cùng một transaction]] — hoặc dùng outbox — nếu không sẽ có cửa sổ mà tiền đã trừ nhưng key chưa ghi.\n\nGET/PUT/DELETE đã idempotent sẵn theo ngữ nghĩa, không cần key. Chỉ POST và các controller action mới cần.\n\nStripe, Adyen, VNPay đều dùng đúng mô hình này — nói được tên header và bảng lưu là ghi điểm.\n:::"
+            },
+            {
+              "id": "17.6",
+              "lvl": "core",
+              "q": "Chuẩn hoá lỗi: RFC 9457 Problem Details gồm gì và vì sao nên dùng?",
+              "a": "Mỗi service tự chế một format lỗi là cách nhanh nhất để client phải viết 5 parser khác nhau. [[g:RFC 9457]] (thay thế RFC 7807) chuẩn hoá việc đó.\n\n`Content-Type: application/problem+json`\n\n<pre><code>{\n  <span class=\"s\">\"type\"</span>:     <span class=\"s\">\"https://api.acme.vn/errors/seat-unavailable\"</span>,\n  <span class=\"s\">\"title\"</span>:    <span class=\"s\">\"Ghế đã được giữ\"</span>,\n  <span class=\"s\">\"status\"</span>:   <span class=\"n\">409</span>,\n  <span class=\"s\">\"detail\"</span>:   <span class=\"s\">\"Ghế 12A trên chuyến VN231 đã được giữ lúc 10:04.\"</span>,\n  <span class=\"s\">\"instance\"</span>: <span class=\"s\">\"/bookings/8H2K\"</span>,\n  <span class=\"s\">\"traceId\"</span>:  <span class=\"s\">\"4bf92f3577b34da6\"</span>,      <span class=\"c\">// extension tự thêm</span>\n  <span class=\"s\">\"errors\"</span>:   [{<span class=\"s\">\"field\"</span>:<span class=\"s\">\"seatNo\"</span>,<span class=\"s\">\"code\"</span>:<span class=\"s\">\"TAKEN\"</span>}]\n}</code></pre>\n\n- [[b:type]] — URI định danh *loại* lỗi, ổn định, client switch trên nó\n- [[b:title]] — mô tả ngắn cho người, không đổi theo instance\n- [[b:status]] — lặp lại HTTP status để tiện log\n- [[b:detail]] — mô tả cụ thể lần lỗi này\n- [[b:instance]] — resource gây lỗi\n\n[[r:Đừng bắt client parse `title`]] để phân nhánh — dịch tiếng là gãy. Phân nhánh trên `type` (hoặc một field `code` ổn định).\n\n:::tip Ghi điểm\nNói được: *'status code cho tầng hạ tầng — proxy, retry, circuit breaker; `type`/`code` cho tầng nghiệp vụ.'* Hai tầng, hai mục đích.\n:::\n\n:::deep\n- [[r:Tuyệt đối không]] đưa stack trace, tên bảng, câu SQL hay message của exception gốc vào `detail` — đó là rò rỉ thông tin. Log đầy đủ ở server, trả `traceId` cho client đọc lên hotline.\n- gắn `traceId` = trace id của OpenTelemetry → khách báo lỗi là tra ra đúng request trong 10 giây\n- validation lỗi nhiều field: dùng extension `errors[]`, đừng nối chuỗi\n- 401 vs 403: [[o:401 = chưa biết bạn là ai]] (thiếu/hết hạn token), [[o:403 = biết rồi nhưng không đủ quyền]]. Nhầm hai cái này làm client retry sai cách.\n- lỗi tạm thời (429, 503) [[g:phải]] kèm `Retry-After` — không có nó client tự chế backoff và thường chế sai\n- Spring Boot 3: `ProblemDetail` + `@ExceptionHandler` là built-in, bật `spring.mvc.problemdetails.enabled=true`\n:::"
+            },
+            {
+              "id": "17.7",
+              "lvl": "hard",
+              "q": "Long-running operation trong REST: 202 + polling, webhook hay streaming?",
+              "a": "Xuất vé, đối soát, export báo cáo — chạy 30 giây tới vài phút. [[r:Giữ HTTP connection chờ]] là sai: timeout của LB (thường 60s), retry của client, và thread bị treo.\n\n**Mẫu chuẩn — 202 + polling:**\n\n1. `POST /reports` → [[b:202 Accepted]], header `Location: /operations/{opId}`, body chứa `opId`\n2. client `GET /operations/{opId}` → `{\"state\":\"RUNNING\",\"progress\":42}`\n3. xong → `{\"state\":\"SUCCEEDED\",\"resultUrl\":\"/reports/{id}\"}` hoặc `{\"state\":\"FAILED\",\"error\":{...}}`\n\nTrả kèm `Retry-After` trong response polling để client không đập 10 lần/giây.\n\n<table class=\"cmp\"><thead><tr><th>Cách</th><th>Hợp khi</th><th>Đánh đổi</th></tr></thead><tbody>\n<tr><td>202 + polling</td><td>mặc định, client là browser/mobile</td><td>độ trễ = chu kỳ poll; tốn request</td></tr>\n<tr><td>Webhook / callback</td><td>client là server (B2B, đối tác)</td><td>client phải có endpoint public + verify chữ ký + idempotent</td></tr>\n<tr><td>SSE / WebSocket</td><td>cần tiến độ realtime trên UI</td><td>connection stateful, khó scale qua LB</td></tr>\n</tbody></table>\n\n:::deep\n`operations` là một [[g:resource thật]] — có id, có trạng thái, `GET` được, và tồn tại sau khi job xong. Đó là điều khiến nó khác một job queue nội bộ.\n\n- `POST /reports` [[g:phải]] idempotent qua `Idempotency-Key` (17.5), nếu không mỗi lần retry sinh một job nặng mới\n- cho phép huỷ: `DELETE /operations/{opId}` hoặc `POST /operations/{opId}:cancel`\n- `resultUrl` nên là [[o:pre-signed URL]] có hạn, không phải link công khai vĩnh viễn\n- webhook: ký payload bằng HMAC + timestamp (chống replay), retry có backoff, và [[r:client phải xử lý được duplicate]] — at-least-once là mặc định\n- giữ operation record thêm vài ngày sau khi xong: client mất mạng giữa chừng vẫn tra lại được\n\nOTA: xuất vé gọi sang GDS mất 5–40s → 202 + polling cho app khách, webhook cho đối tác B2B. Cùng một job, hai kênh thông báo.\n:::"
+            },
+            {
+              "id": "17.8",
+              "lvl": "hard",
+              "q": "Deprecation & versioning thực chiến: rollout và tắt một version cũ thế nào cho an toàn?",
+              "a": "Ngày 4 (mục 4.4) nói *chọn kiểu versioning*. Câu này là phần khó hơn: [[o:tắt version cũ mà không gãy ai]].\n\n**Quy trình 5 bước:**\n\n1. **Đo trước** — log `api_version` + `client_id` trên mọi request. Không có số liệu thì không được tắt gì cả.\n2. **Báo hiệu bằng header** — trên chính response của version cũ:\n   - `Deprecation: @1735689600` (RFC 9745, timestamp Unix)\n   - `Sunset: Sat, 01 Nov 2026 00:00:00 GMT` (RFC 8594)\n   - `Link: &lt;https://docs.acme.vn/migrate/v2&gt;; rel=\"deprecation\"`\n3. **Liên hệ trực tiếp** top client theo lưu lượng — header không tự đọc email hộ ai.\n4. **Brownout** — chủ ý trả [[b:503]] vài phút mỗi ngày, tăng dần. Client còn sống sẽ hiện lỗi và người ta sẽ gọi bạn *trước* deadline thay vì sau.\n5. **Tắt** — trả [[b:410 Gone]] kèm Problem Details chỉ sang docs migration, không phải 404.\n\n:::deep\nNguyên tắc vàng: [[g:thay đổi thêm vào (additive) không cần version mới]]. Thêm field optional, thêm enum value *có tài liệu*, thêm endpoint — client viết đúng sẽ bỏ qua field lạ.\n\n[[r:Breaking]] thì luôn cần version: xoá/đổi tên field, đổi kiểu, siết validation, đổi ngữ nghĩa field cũ, đổi status code trả về.\n\n- [[o:Bẫy enum]]: thêm giá trị enum mới *là* breaking với client dùng `switch` không có `default`. Ghi trong tài liệu ngay từ v1: 'client phải chấp nhận giá trị enum chưa biết.'\n- consumer-driven contract test (Pact) bắt breaking change ở CI, trước khi nó lên prod\n- chạy song song tối đa [[o:2 version]]; version thứ 3 xuất hiện là dấu hiệu quy trình deprecation đã hỏng\n- v2 nên là [[g:adapter mỏng]] trước cùng một core domain, không phải fork code — fork là nhân đôi bug fix\n- khoảng deprecation hợp lý: 6–12 tháng cho API công khai, 1–3 tháng cho internal\n\nNói được bước 4 (brownout) là điểm cộng lớn — rất ít ứng viên nhắc tới.\n:::"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "n": 18,
+      "group": "data",
+      "label": "Tối ưu query",
+      "title": "Tối ưu query — đọc plan, viết lại, và giữ cho nó không chậm lại",
+      "intro": "Ngày 5 dừng ở 'đọc EXPLAIN và vài kỹ thuật'. Chủ đề này đi hết quy trình: đo cái gì, đọc plan ra sao, optimizer chọn join thế nào và chọn sai khi nào, viết predicate cho index dùng được, và vì sao một query đang nhanh bỗng chậm lúc 2 giờ sáng.",
+      "tags": [
+        "EXPLAIN ANALYZE",
+        "Join algorithm",
+        "Sargable",
+        "Plan regression",
+        "Materialized view",
+        "Keyset",
+        "pg_stat_statements"
+      ],
+      "sections": [
+        {
+          "title": "Đo trước — đọc execution plan",
+          "items": [
+            {
+              "id": "18.1",
+              "lvl": "core",
+              "q": "Quy trình chuẩn khi gặp một query chậm: bắt đầu từ đâu?",
+              "a": "[[r:Sai lầm số một]]: nhảy thẳng vào `ADD INDEX`. Index thừa làm chậm mọi write và ăn buffer pool.\n\n**Sáu bước:**\n\n1. **Tìm đúng thủ phạm** — `pg_stat_statements` / slow query log / APM. Sắp theo [[o:total_time]] = mean × calls, không phải theo mean. Query 20ms gọi 3 triệu lần đau hơn query 2s gọi 10 lần.\n2. **Tái hiện** — chạy trên dữ liệu có phân bố giống prod. Bảng 1000 dòng ở local luôn nhanh, không nói lên gì.\n3. **Đọc plan** — `EXPLAIN (ANALYZE, BUFFERS)` (Postgres) / `EXPLAIN ANALYZE` (MySQL 8). Tìm node tốn thời gian nhất, không phải node đầu tiên.\n4. **Đặt giả thuyết** — thiếu index? predicate không sargable? join sai thứ tự? thống kê lệch? đọc thừa cột?\n5. **Sửa một thứ, đo lại** — sửa hai thứ cùng lúc là mất khả năng biết cái nào có tác dụng.\n6. **Chốt baseline** — lưu plan tốt lại để sau này so khi nghi regression.\n\n:::tip Câu hỏi luôn phải hỏi trước\n*'Query này có cần chạy không?'* Nhanh nhất là query không chạy: cache, đọc từ read model, hoặc phát hiện tầng trên gọi thừa.\n:::\n\n:::deep\nTrước khi tối ưu, [[g:xác định mục tiêu]]: p99 dưới bao nhiêu ms, ở mức concurrency nào. Không có số thì tối ưu không có điểm dừng.\n\n- đo [[o:p95/p99]], đừng đo trung bình — trung bình giấu đúng cái làm khách khó chịu\n- `EXPLAIN` (không ANALYZE) chỉ *ước lượng*, không chạy thật; `EXPLAIN ANALYZE` chạy thật → [[r:cẩn thận với UPDATE/DELETE]], bọc trong transaction rồi `ROLLBACK`\n- cache của DB làm lần chạy thứ hai luôn nhanh hơn — so sánh phải cùng trạng thái cache, xem `BUFFERS` để biết đọc từ đĩa hay bộ nhớ\n- MySQL: `SET profiling=1` hoặc performance_schema; Postgres: `auto_explain` để log plan của query chậm ngay tại prod\n- 80% ca thật kết thúc ở: thiếu index phù hợp, `SELECT *`, N+1 từ ORM, hoặc OFFSET lớn\n:::"
+            },
+            {
+              "id": "18.2",
+              "lvl": "hard",
+              "q": "Đọc sâu EXPLAIN ANALYZE: rows ước lượng vs thực tế, loops và buffers nói lên điều gì?",
+              "a": "Plan là cây; đọc từ [[o:node lá lên gốc]], mỗi node có chi phí *tích luỹ* của cây con bên dưới.\n\n<pre><code>Nested Loop  (cost=0.86..8534 rows=<span class=\"n\">1</span> width=64)\n             (actual time=0.05..<span class=\"r\">2841</span> rows=<span class=\"r\">48210</span> loops=<span class=\"n\">1</span>)\n  -&gt; Seq Scan on bookings b  (actual rows=<span class=\"n\">48210</span> loops=<span class=\"n\">1</span>)\n       Filter: (created_at &gt; now() - <span class=\"s\">'7 days'</span>)\n       Buffers: shared read=<span class=\"r\">31204</span>\n  -&gt; Index Scan on passengers p  (actual rows=<span class=\"n\">1</span> loops=<span class=\"r\">48210</span>)\n       Index Cond: (p.booking_id = b.id)</code></pre>\n\n**Ba con số phải nhìn:**\n\n- [[b:rows ước lượng vs actual rows]] — lệch 1 rows vs 48210 là [[r:cờ đỏ]]. Optimizer chọn Nested Loop vì tưởng chỉ có 1 dòng; thực tế nó lặp 48210 lần. Nguyên nhân gần như luôn là [[o:thống kê cũ hoặc tương quan cột]].\n- [[b:loops]] — chi phí thật của node = `actual time × loops`. Node hiện 0.05ms nhưng loops=48210 thì tốn 2.4s. [[r:Rất dễ đọc sót]].\n- [[b:Buffers]] — `shared hit` = đọc từ bộ nhớ (rẻ), `shared read` = đọc từ đĩa (đắt). 31204 block read ≈ 244MB I/O cho một query.\n\n**Sửa:** `ANALYZE bookings;` để cập nhật thống kê → optimizer ước lượng đúng → đổi sang Hash Join.\n\n:::deep\n- `rows` ở Postgres là số dòng [[o:mỗi loop]]; ở MySQL `EXPLAIN ANALYZE` cũng vậy. Tổng thật = rows × loops.\n- `Rows Removed by Filter` lớn = đọc nhiều rồi vứt đi → predicate nên đẩy xuống index\n- `Heap Fetches` cao trong Index Only Scan = visibility map cũ → `VACUUM` để lấy lại index-only thật sự\n- lệch ước lượng do [[o:tương quan cột]] (`city='Hà Nội' AND district='Cầu Giấy'` — optimizer nhân xác suất như thể độc lập): tạo `CREATE STATISTICS` (Postgres 10+) trên cặp cột\n- `Sort Method: external merge Disk: 84MB` = `work_mem` không đủ, đang sort trên đĩa → tăng work_mem cho session hoặc bỏ bớt sort\n- MySQL: `Using filesort` + `Using temporary` cùng lúc trong query có `GROUP BY ... ORDER BY` khác cột là mẫu chậm kinh điển\n- so plan cũ/mới bằng `explain.dalibo.com` hoặc `pev2` — nhìn cây trực quan nhanh hơn đọc text\n:::"
+            },
+            {
+              "id": "18.3",
+              "lvl": "hard",
+              "q": "Join algorithm và join order: optimizer chọn thế nào, và khi nào nó chọn sai?",
+              "a": "<table class=\"cmp\"><thead><tr><th>Thuật toán</th><th>Cách chạy</th><th>Chi phí</th><th>Tốt khi</th></tr></thead><tbody>\n<tr><td>Nested Loop</td><td>mỗi dòng bảng ngoài → tra index bảng trong</td><td>O(n × log m)</td><td>bảng ngoài <b>rất nhỏ</b>, bảng trong có index</td></tr>\n<tr><td>Hash Join</td><td>build hash table từ bảng nhỏ, probe bằng bảng lớn</td><td>O(n + m)</td><td>join lớn, equality, đủ <code>work_mem</code></td></tr>\n<tr><td>Merge Join</td><td>sort cả hai rồi trộn</td><td>O(n log n + m log m)</td><td>hai vế <b>đã sắp sẵn</b> theo khoá join</td></tr>\n</tbody></table>\n\nOptimizer là [[g:cost-based]]: ước lượng cardinality mỗi node từ thống kê (histogram, n_distinct), gán chi phí I/O + CPU, chọn cây rẻ nhất. Tất cả treo trên [[o:một giả định duy nhất]] — rằng ước lượng cardinality đúng.\n\n**Nó chọn sai khi:**\n- thống kê cũ sau khi bulk load ([[r:ca phổ biến nhất]]) → `ANALYZE`\n- tương quan cột → optimizer nhân xác suất như biến độc lập\n- predicate optimizer không ước lượng nổi: hàm tự viết, `LIKE '%x%'`, biến bind chưa biết giá trị\n- join quá nhiều bảng (Postgres: hơn `join_collapse_limit`=8 sẽ ngừng tìm thứ tự tối ưu)\n\nTriệu chứng đặc trưng: [[r:Nested Loop với loops rất lớn]] — dấu hiệu optimizer tưởng bảng ngoài nhỏ.\n\n:::deep\nJoin order quan trọng hơn join algorithm: join `A⋈B` trước rồi `⋈C` có thể sinh 10 triệu dòng trung gian, trong khi `A⋈C` trước rồi `⋈B` chỉ sinh 200. Optimizer duyệt các thứ tự bằng quy hoạch động — số cách tăng giai thừa nên nó phải cắt.\n\n- [[g:Sửa gốc trước]]: `ANALYZE`, tăng `default_statistics_target` cho cột lệch, `CREATE STATISTICS` cho cột tương quan\n- ép plan là [[r:phương án cuối]]: MySQL `STRAIGHT_JOIN` / optimizer hints, Oracle hints, Postgres `pg_hint_plan` hoặc mẹo `SET enable_nestloop=off` cho session. Hint đóng băng plan — dữ liệu đổi thì hint thành sai\n- MySQL trước 8.0.18 [[r:không có Hash Join]] — chỉ Block Nested Loop, nên join lớn thiếu index cực chậm. Biết mốc này là biết vì sao code cũ hay dùng subquery thay join\n- Postgres: `work_mem` quá nhỏ → Hash Join phải chia batch ra đĩa; nhớ `work_mem` tính theo *mỗi node sort/hash*, không phải mỗi query\n- semi-join (`EXISTS`) thường rẻ hơn `IN (subquery)` trả nhiều dòng, và luôn rẻ hơn `DISTINCT` sau join\n:::"
+            },
+            {
+              "id": "18.4",
+              "lvl": "hard",
+              "q": "Plan regression: query đang nhanh bỗng chậm — truy nguyên thế nào?",
+              "a": "Không đổi code, không đổi index, mà p99 nhảy từ 20ms lên 4s. Bốn nguyên nhân, theo tần suất:\n\n**1. Thống kê thay đổi** — bảng vừa nạp thêm 10 triệu dòng, autovacuum chưa kịp `ANALYZE` → cardinality lệch → đổi plan. Sửa: `ANALYZE`, chỉnh `autovacuum_analyze_scale_factor` cho bảng lớn.\n\n**2. Parameter sniffing** — DB cache plan theo giá trị tham số *lần đầu*. `WHERE status = 'PENDING'` (0.1% dòng) sinh plan Index Scan; lần sau chạy với `'COMPLETED'` (95% dòng) vẫn dùng plan đó → [[r:index scan 9.5 triệu dòng]]. Đau nhất ở SQL Server/Oracle; Postgres có custom vs generic plan (`plan_cache_mode`).\n\n**3. Dữ liệu vượt ngưỡng** — bảng lớn dần tới lúc index không còn nằm vừa buffer pool → mọi lần tra là I/O thật. Không có gì \"thay đổi\", chỉ là qua ngưỡng.\n\n**4. Bloat / index phình** — nhiều UPDATE/DELETE, autovacuum không theo kịp → heap và index đầy dead tuple, phải đọc nhiều page hơn cho cùng số dòng.\n\n:::deep\nCách truy nguyên có kỷ luật:\n\n1. `pg_stat_statements`: `mean_exec_time` của query đó đổi từ khi nào → khoanh mốc thời gian\n2. so plan hiện tại với baseline đã lưu (18.1 bước 6)\n3. `pg_stat_user_tables`: `last_analyze`, `n_dead_tup`, `n_mod_since_analyze`\n4. kiểm tra buffer hit ratio và kích thước bảng theo thời gian\n\nPhòng ngừa:\n- [[g:`ANALYZE` ngay sau mọi bulk load / migration]] — một dòng trong script, tránh được rất nhiều đêm mất ngủ\n- theo dõi `n_dead_tup` và tuning autovacuum cho bảng ghi nhiều (`autovacuum_vacuum_scale_factor` mặc định 0.2 là quá lớn với bảng 100 triệu dòng)\n- Postgres 12+: `plan_cache_mode = force_custom_plan` cho query có phân bố tham số lệch mạnh\n- lưu plan baseline vào repo cho các query quan trọng, so trong CI hoặc job định kỳ\n- Oracle có [[o:SQL Plan Management]] (baseline được duyệt mới cho dùng); Postgres/MySQL chưa có tương đương → phải tự giám sát\n\nNói được *parameter sniffing* và *autovacuum chưa kịp ANALYZE* là dấu hiệu đã vận hành thật, không chỉ đọc tài liệu.\n:::"
+            }
+          ]
+        },
+        {
+          "title": "Viết lại query & chỉnh mô hình",
+          "items": [
+            {
+              "id": "18.5",
+              "lvl": "core",
+              "q": "Sargable predicate: viết WHERE thế nào để index thật sự được dùng?",
+              "a": "[[b:Sargable]] = *Search ARGument able* — predicate mà DB có thể chuyển thành phép [[g:tìm theo range trên B+Tree]] thay vì quét rồi lọc.\n\nQuy tắc gốc: [[o:vế trái phải là cột trần]].\n\n<pre><code><span class=\"c\">-- KHÔNG sargable: hàm bọc lên cột =&gt; quét toàn bảng</span>\n<span class=\"k\">WHERE</span> <span class=\"f\">DATE</span>(created_at) = <span class=\"s\">'2026-07-31'</span>\n<span class=\"k\">WHERE</span> <span class=\"f\">YEAR</span>(created_at) = <span class=\"n\">2026</span>\n<span class=\"k\">WHERE</span> <span class=\"f\">UPPER</span>(email) = <span class=\"s\">'A@B.VN'</span>\n<span class=\"k\">WHERE</span> amount * <span class=\"n\">1.1</span> &gt; <span class=\"n\">1000</span>\n<span class=\"k\">WHERE</span> status != <span class=\"s\">'DONE'</span>\n<span class=\"k\">WHERE</span> phone <span class=\"k\">LIKE</span> <span class=\"s\">'%1234'</span>\n<span class=\"c\">--</span>\n<span class=\"c\">-- Sargable: cột đứng một mình</span>\n<span class=\"k\">WHERE</span> created_at &gt;= <span class=\"s\">'2026-07-31'</span> <span class=\"k\">AND</span> created_at &lt; <span class=\"s\">'2026-08-01'</span>\n<span class=\"k\">WHERE</span> email = <span class=\"s\">'a@b.vn'</span>            <span class=\"c\">-- + cột lưu lowercase, hoặc citext</span>\n<span class=\"k\">WHERE</span> amount &gt; <span class=\"n\">1000</span> / <span class=\"n\">1.1</span>\n<span class=\"k\">WHERE</span> status <span class=\"k\">IN</span> (<span class=\"s\">'NEW'</span>,<span class=\"s\">'PENDING'</span>)\n<span class=\"k\">WHERE</span> phone <span class=\"k\">LIKE</span> <span class=\"s\">'0912%'</span></code></pre>\n\nBốn thủ phạm hay gặp nhất: [[r:hàm bọc cột]], [[r:tính toán trên cột]], [[r:phủ định (`!=`, `NOT IN`)]], [[r:`LIKE` mở đầu bằng `%`]].\n\n:::deep\n- [[g:Lối thoát]] khi buộc phải dùng hàm: [[o:functional index]] — `CREATE INDEX ON users ((lower(email)))` (Postgres) hoặc generated column + index (MySQL 5.7+). Query giữ nguyên `WHERE lower(email)=?` và vẫn dùng index.\n- [[r:Ép kiểu ngầm]] là ca khó thấy nhất: cột `VARCHAR` mà truyền số (`WHERE phone = 912345678`) → MySQL ép cả cột sang số → mất index, không có cảnh báo nào. Luôn khớp kiểu tham số.\n- collation lệch giữa hai cột join cũng làm mất index vì phải convert\n- `OR` giữa hai cột khác nhau thường phá index → viết lại thành `UNION ALL` hai nhánh, mỗi nhánh dùng index riêng\n- `LIKE '%abc%'` cần full-text (`tsvector`/`FULLTEXT`) hoặc trigram (`pg_trgm` + GIN); `LIKE '%abc'` giải bằng index trên cột đảo ngược (`reverse(col)`)\n- `NOT IN` với subquery có `NULL` trả về rỗng một cách lặng lẽ — dùng `NOT EXISTS` an toàn hơn cả về ngữ nghĩa lẫn plan\n- sargable mới là điều kiện *cần*; còn phải đủ [[o:selectivity]] — index trên cột `gender` gần như không bao giờ được dùng (5.6)\n:::"
+            },
+            {
+              "id": "18.6",
+              "lvl": "hard",
+              "q": "COUNT(*) và phân trang trên bảng vài chục triệu dòng?",
+              "a": "Hai thứ đắt nhất trên màn hình danh sách, và cả hai thường [[o:không cần chính xác]].\n\n**COUNT(*) tổng** — MySQL/InnoDB và Postgres đều phải quét (MVCC: mỗi transaction thấy số dòng khác nhau, không cache được).\n\n- [[g:Ước lượng]] khi chỉ cần hiển thị: `SELECT reltuples::bigint FROM pg_class WHERE relname='bookings'` — tức thì, sai số vài %\n- [[g:Đếm có trần]]: `SELECT count(*) FROM (SELECT 1 FROM t WHERE ... LIMIT 1001) x` → UI hiện \"1000+\"\n- [[g:Bảng đếm]] cập nhật bằng trigger/CDC khi cần chính xác\n- [[r:Bỏ hẳn tổng số trang]] — Google, Slack, Stripe đều chỉ có next/prev\n\n**Phân trang** — `OFFSET 500000 LIMIT 20` phải đọc và vứt 500k dòng.\n\n<pre><code><span class=\"c\">-- Keyset: nhanh và ổn định, dùng index (created_at, id)</span>\n<span class=\"k\">SELECT</span> id, code, created_at <span class=\"k\">FROM</span> bookings\n<span class=\"k\">WHERE</span> user_id = ?\n  <span class=\"k\">AND</span> (created_at, id) &lt; (?, ?)   <span class=\"c\">-- cursor trang trước</span>\n<span class=\"k\">ORDER BY</span> created_at <span class=\"k\">DESC</span>, id <span class=\"k\">DESC</span>\n<span class=\"k\">LIMIT</span> <span class=\"n\">20</span>;</code></pre>\n\nTie-breaker `id` là [[o:bắt buộc]] — thiếu nó, các dòng cùng `created_at` sẽ bị nhảy hoặc lặp giữa các trang.\n\n:::deep\n- [[r:Hạn chế của keyset]]: không nhảy thẳng \"trang 500\". Nếu nghiệp vụ thật sự cần → giữ OFFSET nhưng chặn cứng `OFFSET` tối đa, hoặc dùng `search_after` của Elasticsearch\n- cursor trả cho client nên là [[o:opaque]] (base64 của tuple + chữ ký) — lộ `created_at` thô là lộ dữ liệu và cho phép client tự chế cursor\n- ORDER BY [[g:phải khớp thứ tự index]] (kể cả chiều ASC/DESC) thì mới bỏ được bước sort; Postgres đọc ngược index được, nhưng index đa cột trộn chiều (`a ASC, b DESC`) thì cần khai báo đúng lúc tạo\n- covering index (`INCLUDE` ở Postgres / thêm cột vào index ở MySQL) cho phép [[g:index-only scan]] — không chạm heap, thường nhanh gấp nhiều lần\n- `COUNT(*)` và `COUNT(1)` [[o:y hệt nhau]] về hiệu năng — huyền thoại cũ; `COUNT(col)` thì khác vì bỏ qua NULL\n- deep pagination cho export → dùng cursor DB hoặc job async (17.7), đừng cho client lặp OFFSET\n\nOTA: lịch sử booking của khách luôn sắp theo thời gian giảm dần → keyset là lựa chọn tự nhiên, và bỏ luôn tổng số trang.\n:::"
+            },
+            {
+              "id": "18.7",
+              "lvl": "hard",
+              "q": "Aggregation nặng: pre-aggregate, materialized view hay đẩy sang OLAP?",
+              "a": "Dashboard \"doanh thu 12 tháng theo hãng bay\" quét 200 triệu dòng mỗi lần mở. Không có index nào cứu được — [[o:phải đổi cách tính, không phải cách tra]].\n\nThang lựa chọn, từ rẻ tới đắt:\n\n**1. Cache kết quả** — Redis, TTL 5–60 phút. Rẻ nhất, làm trước. Đủ cho phần lớn dashboard.\n\n**2. Materialized view** — Postgres `CREATE MATERIALIZED VIEW`, refresh định kỳ:\n\n<pre><code><span class=\"k\">CREATE MATERIALIZED VIEW</span> mv_revenue_daily <span class=\"k\">AS</span>\n<span class=\"k\">SELECT</span> airline_id, created_at::date <span class=\"k\">AS</span> d,\n       <span class=\"f\">count</span>(*) <span class=\"k\">AS</span> bookings, <span class=\"f\">sum</span>(total) <span class=\"k\">AS</span> revenue\n<span class=\"k\">FROM</span> bookings <span class=\"k\">GROUP BY</span> <span class=\"n\">1</span>, <span class=\"n\">2</span>;\n<span class=\"c\">--</span>\n<span class=\"k\">CREATE UNIQUE INDEX</span> <span class=\"k\">ON</span> mv_revenue_daily(airline_id, d);\n<span class=\"k\">REFRESH MATERIALIZED VIEW</span> <span class=\"k\">CONCURRENTLY</span> mv_revenue_daily;</code></pre>\n\n`CONCURRENTLY` cần unique index nhưng [[g:không khoá đọc]] — thiếu nó là khoá cả view trong lúc refresh.\n\n**3. Rollup table tăng dần** — bảng `revenue_daily` cập nhật bằng job/CDC chỉ cho ngày thay đổi. Rẻ hơn refresh toàn bộ, và giữ được dữ liệu nhiều năm.\n\n**4. Đẩy sang OLAP** — ClickHouse / BigQuery / Redshift qua CDC (Debezium). Khi cần ad-hoc query tuỳ ý trên hàng tỉ dòng.\n\n:::deep\nRanh giới quyết định: [[o:query có biết trước không?]]\n\n- biết trước, ít chiều → rollup table hoặc materialized view\n- ad-hoc, nhiều chiều, người dùng tự chọn → OLAP columnar. Nhồi ad-hoc analytics vào OLTP là [[r:cách chắc chắn nhất để giết prod]]\n\n- materialized view [[r:không tự cập nhật]] ở Postgres (Oracle có fast refresh on commit); phải có job và phải giám sát job đó\n- rollup tăng dần cần xử lý [[o:dữ liệu tới muộn]] (booking sửa lại sau 3 ngày) → refresh cửa sổ N ngày gần nhất, đừng chỉ hôm nay\n- read replica là bước trung gian tốt: đẩy toàn bộ báo cáo sang replica, chấp nhận lag vài giây — thường đủ và tốn gần như không công\n- OLAP columnar nhanh vì chỉ đọc cột cần + nén theo cột + vector hoá; đổi lại không hợp point-lookup và update lẻ\n- [[g:Approximate]] khi được phép: `HyperLogLog` (`APPROX_COUNT_DISTINCT`) cho unique visitor — sai số ~2% mà nhanh hơn hàng trăm lần\n- window function (`SUM() OVER`) thường thay được self-join hoặc correlated subquery, nhanh hơn nhiều mà vẫn ở trong OLTP\n:::"
+            },
+            {
+              "id": "18.8",
+              "lvl": "ext",
+              "q": "Tối ưu ở tầng ứng dụng: connection pool, statement timeout, batch và fetch size?",
+              "a": "Query tối ưu rồi vẫn chậm — vì phần lớn thời gian không nằm trong DB.\n\n**Connection pool (HikariCP)**\n- pool size hợp lý: [[o:cores × 2 + số spindle]], thường 10–20. [[r:Pool 200 không nhanh hơn]] — chỉ chuyển hàng đợi từ app sang DB và làm mọi query chậm đều.\n- `connectionTimeout` (chờ lấy connection) phải [[g:ngắn]] (2–5s) → fail fast thay vì dồn ứ\n- pool cạn thường là [[o:triệu chứng]], không phải nguyên nhân: query chậm giữ connection lâu, hoặc transaction mở bao cả lời gọi HTTP ra ngoài\n\n**Timeout — ba tầng, phải xếp tăng dần**\n- `statement_timeout` ở DB (vd 5s) — lưới an toàn cuối, [[g:luôn đặt]]\n- `@Transactional(timeout=...)` ở app\n- socket/HTTP timeout ở client\n\nThiếu tầng DB thì một query hỏng có thể chạy 40 phút và giữ khoá suốt thời gian đó.\n\n**Batch & fetch**\n- ghi: `rewriteBatchedStatements=true` (MySQL) + `hibernate.jdbc.batch_size=50` → 1000 INSERT lẻ thành ~20 round-trip\n- đọc lớn: đặt `fetchSize` (Postgres cần thêm `autoCommit=false`) để streaming thay vì nạp cả result set vào heap → tránh OOM\n\n:::deep\n- [[r:Transaction dài]] là kẻ thù số một: mở transaction → gọi API đối tác 3s → commit. Connection bị giữ 3s vô ích, MVCC giữ snapshot cũ, autovacuum không dọn được dead tuple. Tách lời gọi ngoài ra khỏi transaction.\n- `open-in-view` của Spring Boot mặc định [[r:bật]] — giữ connection suốt lúc render view và che giấu N+1. Tắt: `spring.jpa.open-in-view=false`, rồi sửa những chỗ vỡ ra (chúng vốn đã sai).\n- N+1 (6.9): phát hiện bằng `hibernate.generate_statistics` hoặc datasource-proxy; sửa bằng `JOIN FETCH` / `@EntityGraph` / `@BatchSize` — không phải bằng `EAGER`\n- [[o:pool riêng cho từng loại tải]]: pool nhỏ riêng cho báo cáo, pool chính cho request khách → job nặng không làm cạn pool của luồng tiền\n- `PreparedStatement` giúp cả bảo mật lẫn hiệu năng (bỏ qua bước parse), nhưng cache prepared statement quá lớn tốn bộ nhớ phía DB\n- đo được [[g:thời gian chờ pool]] tách khỏi thời gian chạy query (Micrometer expose sẵn `hikaricp.connections.acquire`) — thiếu số này là đoán mò\n:::"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "n": 19,
+      "group": "algorithm",
+      "label": "DSA & LeetCode",
+      "title": "DSA & LeetCode — dạng bài và khung trình bày",
+      "intro": "Vòng coding của backend senior hiếm khi hỏi bài lạ; nó hỏi bài quen và xem bạn *trình bày* thế nào. Chủ đề này gom các dạng hay gặp, kèm khung nói ra thành tiếng khi làm bài — trong đó có bài Rakuten đã hỏi (LC 30).",
+      "tags": [
+        "Sliding window",
+        "Two pointers",
+        "Hash + prefix sum",
+        "Heap / top-K",
+        "Binary search on answer",
+        "BFS/DFS",
+        "LC 30"
+      ],
+      "sections": [
+        {
+          "title": "Khung giải & dạng bài nền",
+          "items": [
+            {
+              "id": "19.1",
+              "lvl": "core",
+              "q": "Khung sáu bước giải một bài coding interview (nói ra thành tiếng)?",
+              "a": "Interviewer chấm [[o:quá trình]] nhiều hơn đáp án. Im lặng 15 phút rồi code đúng vẫn thua nói rõ ràng rồi code gần đúng.\n\n1. **Nhắc lại đề bằng lời mình** (30s) — bắt sai hiểu ngay lập tức.\n2. **Hỏi ràng buộc** — `n` tới đâu? có âm không? có trùng không? input rỗng? unicode hay ASCII? Ràng buộc [[g:quyết định thuật toán]]: n ≤ 1000 cho phép O(n²), n ≤ 10⁵ thì không.\n3. **Ví dụ tay** — tự viết một ví dụ nhỏ và một edge case. Thường lộ ra hiểu nhầm.\n4. **Brute force trước, nói độ phức tạp** — *\"cách ngây thơ là O(n²) vì...; giờ em tìm cách bỏ công việc lặp lại\"*. [[r:Đừng nhảy thẳng vào lời giải tối ưu]] — nếu kẹt là không có gì để nộp.\n5. **Tối ưu, nêu ý tưởng trước khi gõ** — *\"em sẽ dùng hash map đổi tra cứu O(n) thành O(1), thành O(n) tổng\"*. Chờ interviewer gật rồi mới code.\n6. **Chạy tay + edge case** — đọc code với ví dụ ban đầu, rồi nêu chủ động các biên (19.x, và 16.13).\n\n:::tip Câu cứu sinh khi bí\n*\"Em thấy bài này giống dạng sliding window vì cửa sổ chỉ mở rộng hoặc co lại, không quay lui. Em thử hướng đó nhé?\"* — nói được cách bạn *nhận dạng*, interviewer thường gợi ý tiếp.\n:::\n\n:::deep\nỞ mức senior, hai điều được chấm nặng hơn tốc độ code:\n\n- [[g:Đặt tên và cấu trúc]]: tách hàm nhỏ, tên biến có nghĩa (`left`/`right` hơn `i`/`j`), không nhồi mọi thứ vào một hàm 60 dòng\n- [[g:Nói về đánh đổi]]: *\"cách này O(n) thời gian nhưng O(k) bộ nhớ; nếu bộ nhớ là ràng buộc thì em quay lại O(n·k) không tốn thêm\"*\n\n- luôn nêu [[o:cả time và space]], và nêu cho *cả* brute force lẫn lời giải cuối\n- viết code chạy được trước, tối ưu vi mô sau — nhưng nói rõ là bạn *biết* chỗ nào tối ưu được\n- khi interviewer im lặng bất thường, hỏi thẳng: *\"Anh/chị thấy hướng này ổn không?\"* — họ thường đang chờ bạn hỏi\n- nếu hết giờ chưa xong: tóm tắt phần còn thiếu và cách bạn sẽ làm — vẫn được điểm\n:::"
+            },
+            {
+              "id": "19.2",
+              "lvl": "hard",
+              "q": "Sliding window: khung chung, và phân biệt fixed-size với variable-size?",
+              "a": "Nhận dạng: bài hỏi về [[o:dãy con liên tiếp]] (substring / subarray) thoả một tính chất, và tính chất đó [[g:đơn điệu]] — mở rộng cửa sổ chỉ làm nó \"tệ hơn\", co lại chỉ làm \"tốt hơn\". Khi đó con trỏ không bao giờ quay lui → O(n).\n\n**Variable-size (co giãn)** — khung chuẩn:\n\n<pre><code><span class=\"k\">int</span> left = <span class=\"n\">0</span>, best = <span class=\"n\">0</span>;\n<span class=\"k\">for</span> (<span class=\"k\">int</span> right = <span class=\"n\">0</span>; right &lt; n; right++) {\n    add(a[right]);                      <span class=\"c\">// mở rộng bên phải</span>\n    <span class=\"k\">while</span> (!valid()) {                 <span class=\"c\">// vi phạm =&gt; co bên trái</span>\n        remove(a[left]);\n        left++;\n    }\n    best = Math.<span class=\"f\">max</span>(best, right - left + <span class=\"n\">1</span>);\n}</code></pre>\n\n**Fixed-size (k cố định)** — không cần `while`, chỉ trượt:\n\n<pre><code><span class=\"k\">for</span> (<span class=\"k\">int</span> right = <span class=\"n\">0</span>; right &lt; n; right++) {\n    add(a[right]);\n    <span class=\"k\">if</span> (right &gt;= k) remove(a[right - k]);   <span class=\"c\">// bỏ phần tử rơi ra</span>\n    <span class=\"k\">if</span> (right &gt;= k - <span class=\"n\">1</span>) record(left = right - k + <span class=\"n\">1</span>);\n}</code></pre>\n\nMỗi phần tử vào đúng một lần và ra đúng một lần → [[g:O(n)]] dù có `while` lồng trong `for`. Đây là điểm interviewer hay hỏi lại: *\"vòng while lồng trong for sao vẫn O(n)?\"*\n\n:::deep\n- Điều kiện [[r:bắt buộc]] để sliding window đúng: tính chất phải đơn điệu theo độ dài cửa sổ. Mảng có [[r:số âm]] phá vỡ điều đó cho bài \"subarray sum ≥ k\" → phải dùng prefix sum + deque hoặc binary search, không phải sliding window.\n- `while` co lại vs `if` co lại: `while` cho bài \"cửa sổ *dài nhất* thoả điều kiện\", `if` cho bài cửa sổ kích thước cố định\n- trạng thái cửa sổ thường là `HashMap` đếm tần suất, hoặc một biến tổng, hoặc `Deque` đơn điệu (bài max/min trong cửa sổ)\n- biến thể \"đúng k loại ký tự\" = `atMost(k) - atMost(k-1)` — mẹo rất hay được hỏi\n- bài kinh điển theo độ khó: LC 3 (không lặp ký tự) → LC 76 (minimum window substring) → LC 30 (19.3) → LC 239 (sliding window maximum, cần deque)\n:::"
+            },
+            {
+              "id": "19.3",
+              "lvl": "hard",
+              "q": "LC 30 · Substring with Concatenation of All Words — Rakuten đã hỏi bài này, giải thế nào?",
+              "a": "**Đề:** cho `s` và mảng `words` (mọi từ [[o:cùng độ dài]] `w`, có thể trùng nhau). Tìm mọi vị trí bắt đầu của substring là ghép của [[g:tất cả]] các từ trong `words`, mỗi từ đúng một lần, không có ký tự chen giữa.\n\n`s = \"barfoothefoobarman\"`, `words = [\"foo\",\"bar\"]` → `[0, 9]`\n\n**Chìa khoá:** mọi từ cùng độ dài `w`, nên chuỗi có thể xem như một dãy [[o:token]] — nhưng có `w` cách cắt token khác nhau (bắt đầu từ offset 0, 1, ... w−1). Chạy sliding window [[g:độc lập cho từng offset]], mỗi bước nhảy `w` ký tự.\n\n**Brute force** — thử mọi vị trí `i`, cắt `k` từ rồi so Counter: O(n × k × w). Nói cái này trước.\n\n**Tối ưu — sliding window theo từ:**\n\n<pre><code><span class=\"k\">public</span> List&lt;Integer&gt; <span class=\"f\">findSubstring</span>(String s, String[] words) {\n    <span class=\"k\">int</span> k = words.length, w = words[<span class=\"n\">0</span>].<span class=\"f\">length</span>();\n    List&lt;Integer&gt; res = <span class=\"k\">new</span> ArrayList&lt;&gt;();\n    <span class=\"k\">if</span> (s.<span class=\"f\">length</span>() &lt; (<span class=\"k\">long</span>) k * w) <span class=\"k\">return</span> res;\n    Map&lt;String,Integer&gt; need = <span class=\"k\">new</span> HashMap&lt;&gt;();\n    <span class=\"k\">for</span> (String x : words) need.<span class=\"f\">merge</span>(x, <span class=\"n\">1</span>, Integer::sum);\n<span class=\"c\">    </span>\n    <span class=\"k\">for</span> (<span class=\"k\">int</span> off = <span class=\"n\">0</span>; off &lt; w; off++) {          <span class=\"c\">// w cách cắt token</span>\n        Map&lt;String,Integer&gt; win = <span class=\"k\">new</span> HashMap&lt;&gt;();\n        <span class=\"k\">int</span> left = off, formed = <span class=\"n\">0</span>;\n        <span class=\"k\">for</span> (<span class=\"k\">int</span> r = off; r + w &lt;= s.<span class=\"f\">length</span>(); r += w) {\n            String word = s.<span class=\"f\">substring</span>(r, r + w);\n            <span class=\"k\">if</span> (!need.<span class=\"f\">containsKey</span>(word)) {          <span class=\"c\">// từ lạ =&gt; vứt cả cửa sổ</span>\n                win.<span class=\"f\">clear</span>(); formed = <span class=\"n\">0</span>; left = r + w;\n                <span class=\"k\">continue</span>;\n            }\n            win.<span class=\"f\">merge</span>(word, <span class=\"n\">1</span>, Integer::sum); formed++;\n            <span class=\"k\">while</span> (win.<span class=\"f\">get</span>(word) &gt; need.<span class=\"f\">get</span>(word)) {  <span class=\"c\">// thừa =&gt; co trái</span>\n                String out = s.<span class=\"f\">substring</span>(left, left + w);\n                win.<span class=\"f\">merge</span>(out, -<span class=\"n\">1</span>, Integer::sum);\n                formed--; left += w;\n            }\n            <span class=\"k\">if</span> (formed == k) {                       <span class=\"c\">// đủ =&gt; ghi nhận</span>\n                res.<span class=\"f\">add</span>(left);\n                String out = s.<span class=\"f\">substring</span>(left, left + w);\n                win.<span class=\"f\">merge</span>(out, -<span class=\"n\">1</span>, Integer::sum);\n                formed--; left += w;                 <span class=\"c\">// trượt đúng 1 từ</span>\n            }\n        }\n    }\n    <span class=\"k\">return</span> res;\n}</code></pre>\n\n**Độ phức tạp:** vòng ngoài `w` lần, vòng trong `n/w` bước, mỗi bước cắt substring O(w) → [[g:O(n × w)]] thời gian, [[g:O(k × w)]] bộ nhớ. Với `w` nhỏ (đề LC: ≤ 30) thì thực tế là tuyến tính theo `n`.\n\n:::warn Ba chỗ dễ sai\n`words` [[r:có từ trùng]] (`[\"word\",\"good\",\"best\",\"word\"]`) → phải đếm tần suất, dùng `Set` là sai. Gặp từ lạ phải [[r:reset toàn bộ]] cửa sổ chứ không co dần. Và khi đủ `k` từ, [[r:vẫn phải trượt trái đúng một từ]] rồi đi tiếp — không `break`, vì vị trí kế tiếp có thể cũng hợp lệ (`\"aaaaaa\"`, `[\"aa\",\"aa\"]` → `[0,1,2]`).\n:::\n\n:::deep\nVì sao cần vòng `off` từ 0 tới w−1: cửa sổ chỉ nhảy theo bội số của `w`, nên xuất phát từ 0 sẽ không bao giờ chạm vị trí 1, 2, ... Mỗi offset là một \"làn\" độc lập, và w làn phủ hết mọi vị trí.\n\n`formed` (đếm số từ hợp lệ trong cửa sổ) tránh phải so hai map mỗi bước — đây là điểm biến O(n·k) thành O(n).\n\n**Test case nên nêu chủ động:**\n- `s=\"barfoothefoobarman\"`, `[\"foo\",\"bar\"]` → `[0,9]`\n- `s=\"wordgoodgoodgoodbestword\"`, `[\"word\",\"good\",\"best\",\"word\"]` → `[]` (từ trùng)\n- `s=\"aaaaaa\"`, `[\"aa\",\"aa\"]` → `[0,1,2]` (kết quả gối nhau)\n- `s=\"a\"`, `[\"a\"]` → `[0]` (biên)\n- `s` ngắn hơn `k*w` → `[]` (thoát sớm)\n\n**Tối ưu thêm nếu bị hỏi:** thay `String` key bằng [[o:id số]] (map mỗi từ sang một `int` qua `HashMap` dựng sẵn) → so sánh và hash rẻ hơn nhiều so với `String.substring` + `hashCode`. Hoặc rolling hash để tránh cấp phát substring. Nêu được hai hướng này là ghi điểm.\n\n[[b:Nhận dạng chung]]: \"tất cả các từ, mỗi từ đúng một lần, liên tiếp\" + \"mọi từ cùng độ dài\" = sliding window trên token. Cùng họ với LC 76 (minimum window substring) và LC 438 (find all anagrams), chỉ khác đơn vị trượt là *từ* thay vì *ký tự*.\n:::"
+            },
+            {
+              "id": "19.4",
+              "lvl": "core",
+              "q": "Two pointers: nhận dạng và các biến thể hay gặp?",
+              "a": "Ba biến thể, ba dấu hiệu nhận dạng khác nhau:\n\n**1. Hai đầu chụm vào (`left=0, right=n-1`)** — cần mảng [[o:đã sắp xếp]] hoặc tính chất đối xứng.\n- Two Sum trên mảng sắp xếp: tổng nhỏ quá → `left++`, lớn quá → `right--`\n- Container With Most Water, Valid Palindrome, 3Sum (sort rồi cố định 1 + two pointers)\n\n**2. Cùng chiều, tốc độ khác nhau (fast/slow)** — thường để tách \"vùng đã xử lý\" khỏi \"vùng đang duyệt\".\n- Remove Duplicates: `slow` là vị trí ghi kế tiếp, `fast` duyệt\n- Move Zeroes, Remove Element\n\n**3. Fast/slow trên linked list (Floyd)** — `slow` đi 1, `fast` đi 2.\n- Phát hiện chu trình: gặp nhau ⇒ có chu trình\n- Tìm giữa danh sách: `fast` tới cuối thì `slow` ở giữa\n- Tìm điểm vào chu trình: gặp nhau xong, đưa một con trỏ về đầu rồi cả hai đi 1 bước/lần\n\n[[o:Điểm chung]] với sliding window: con trỏ không quay lui → O(n). Khác ở chỗ two pointers không nhất thiết duy trì một \"cửa sổ\" có trạng thái.\n\n:::deep\n- Bài yêu cầu [[g:O(1) bộ nhớ]] mà có vẻ cần hash map thường là gợi ý two pointers (sau khi sort, nếu được phép sort)\n- 3Sum: sort O(n log n) rồi cố định `i`, two pointers cho phần còn lại → O(n²); [[r:xử lý trùng]] bằng cách bỏ qua giá trị lặp ở cả `i`, `left`, `right` là chỗ đa số làm sai\n- Floyd hoạt động vì hiệu khoảng cách tăng đúng 1 mỗi bước → chắc chắn gặp nhau trong chu trình. Chứng minh được điểm vào chu trình bằng đại số là điểm cộng.\n- merge hai mảng sắp xếp tại chỗ → duyệt [[o:từ cuối về đầu]] để không ghi đè (LC 88) — mẹo hay bị quên\n- luôn kiểm tra biên `left &lt; right` (không phải `&lt;=`) khi hai đầu chụm, và `fast != null && fast.next != null` với linked list\n:::"
+            }
+          ]
+        },
+        {
+          "title": "Dạng bài hay bị hỏi",
+          "items": [
+            {
+              "id": "19.5",
+              "lvl": "hard",
+              "q": "Hash map + prefix sum: dạng bài subarray sum và vì sao sliding window không dùng được?",
+              "a": "**Bài mẫu:** đếm số subarray có tổng đúng bằng `k`, mảng [[r:có thể chứa số âm]].\n\nSliding window [[r:hỏng]] ở đây: có số âm thì mở rộng cửa sổ không còn làm tổng tăng đơn điệu → không biết khi nào nên co.\n\n**Ý tưởng:** gọi `P[i]` là tổng tiền tố tới `i`. Subarray `(j, i]` có tổng `k` ⟺ `P[i] − P[j] = k` ⟺ `P[j] = P[i] − k`. Vậy chỉ cần đếm xem đã gặp giá trị `P[i] − k` bao nhiêu lần.\n\n<pre><code><span class=\"k\">int</span> <span class=\"f\">subarraySum</span>(<span class=\"k\">int</span>[] a, <span class=\"k\">int</span> k) {\n    Map&lt;Integer,Integer&gt; seen = <span class=\"k\">new</span> HashMap&lt;&gt;();\n    seen.<span class=\"f\">put</span>(<span class=\"n\">0</span>, <span class=\"n\">1</span>);              <span class=\"c\">// prefix rỗng: quan trọng!</span>\n    <span class=\"k\">int</span> sum = <span class=\"n\">0</span>, count = <span class=\"n\">0</span>;\n    <span class=\"k\">for</span> (<span class=\"k\">int</span> x : a) {\n        sum += x;\n        count += seen.<span class=\"f\">getOrDefault</span>(sum - k, <span class=\"n\">0</span>);\n        seen.<span class=\"f\">merge</span>(sum, <span class=\"n\">1</span>, Integer::sum);\n    }\n    <span class=\"k\">return</span> count;\n}</code></pre>\n\nO(n) thời gian, O(n) bộ nhớ. Dòng `seen.put(0, 1)` xử lý trường hợp chính prefix từ đầu đã bằng `k` — [[r:quên là sai ngay test case đầu]].\n\n:::deep\nCùng một khuôn, đổi cái \"đếm\" là ra bài khác:\n\n- **Tổng chia hết cho k** → lưu `sum % k` (nhớ chuẩn hoá số âm: `((sum % k) + k) % k`)\n- **Subarray dài nhất tổng = k** → map lưu [[o:index đầu tiên]] gặp prefix đó, và chỉ ghi khi chưa có\n- **Số 0 và 1 bằng nhau** → đổi 0 thành −1, thành bài tổng = 0\n- **Số chẵn/lẻ, XOR** → prefix XOR, cùng công thức `P[i] ^ P[j] = k`\n\n- 2D: prefix sum 2 chiều + bao hàm–loại trừ cho truy vấn tổng hình chữ nhật O(1)\n- cần cập nhật động → [[o:Fenwick tree / BIT]] thay prefix array (query và update đều O(log n))\n- [[r:Tràn số]]: tổng của 10⁵ phần tử tới 10⁹ vượt `int` → dùng `long`. Interviewer hay hỏi chính chỗ này.\n- phân biệt rõ: sliding window cho [[g:mảng không âm]], prefix sum + hash cho [[g:mảng có âm]]. Nói được ranh giới này là điểm cộng lớn.\n:::"
+            },
+            {
+              "id": "19.6",
+              "lvl": "hard",
+              "q": "Heap và top-K: khi nào heap, khi nào quickselect, khi nào sort?",
+              "a": "Bài \"tìm k phần tử lớn nhất trong n phần tử\":\n\n<table class=\"cmp\"><thead><tr><th>Cách</th><th>Thời gian</th><th>Bộ nhớ</th><th>Dùng khi</th></tr></thead><tbody>\n<tr><td>Sort rồi lấy k</td><td>O(n log n)</td><td>O(1)–O(n)</td><td>k gần n, hoặc cần cả thứ tự</td></tr>\n<tr><td>Min-heap kích thước k</td><td>O(n log k)</td><td>O(k)</td><td><b>k ≪ n</b>, hoặc dữ liệu chảy (stream)</td></tr>\n<tr><td>Quickselect</td><td>O(n) trung bình, O(n²) xấu nhất</td><td>O(1)</td><td>một lần, có toàn bộ mảng trong bộ nhớ</td></tr>\n</tbody></table>\n\n**Mẹo dễ nhầm:** tìm k phần tử [[o:lớn nhất]] thì dùng [[g:min-heap]] (đỉnh là nhỏ nhất trong nhóm k → đẩy ra dễ). Ngược lại tìm k nhỏ nhất thì max-heap.\n\n<pre><code>PriorityQueue&lt;Integer&gt; pq = <span class=\"k\">new</span> PriorityQueue&lt;&gt;();   <span class=\"c\">// min-heap</span>\n<span class=\"k\">for</span> (<span class=\"k\">int</span> x : a) {\n    pq.<span class=\"f\">offer</span>(x);\n    <span class=\"k\">if</span> (pq.<span class=\"f\">size</span>() &gt; k) pq.<span class=\"f\">poll</span>();     <span class=\"c\">// bỏ phần tử nhỏ nhất</span>\n}   <span class=\"c\">// còn lại đúng k phần tử lớn nhất</span></code></pre>\n\nCâu trả lời \"senior\" là chọn theo ràng buộc: *\"nếu n là stream không giữ hết được thì bắt buộc heap O(n log k); nếu có sẵn mảng và chỉ hỏi một lần thì quickselect O(n) trung bình.\"*\n\n:::deep\n- **Two heaps** (max-heap nửa nhỏ + min-heap nửa lớn) cho [[o:median của stream]] — LC 295, bài hay bị hỏi ở fintech vì liên quan tới thống kê realtime\n- **Merge k sorted lists**: heap chứa k con trỏ đầu → O(N log k), N là tổng phần tử\n- **Top-K tần suất**: đếm bằng HashMap rồi heap theo count; nếu count bị chặn (≤ n) thì [[g:bucket sort]] cho O(n) thật sự\n- quickselect xấu nhất O(n²) khi pivot xấu → chọn pivot ngẫu nhiên, hoặc median-of-medians cho O(n) đảm bảo (lý thuyết, hiếm khi code trong phỏng vấn)\n- `PriorityQueue` của Java [[r:không phải]] cấu trúc sắp xếp — duyệt nó không ra thứ tự tăng dần, chỉ `poll()` mới đúng thứ tự\n- xây heap từ mảng có sẵn là O(n) (`heapify`), không phải O(n log n) — chi tiết hay được hỏi vặn\n- quy mô thật: top-K trên hàng tỉ bản ghi phân tán → mỗi shard tính top-K cục bộ rồi gộp; hoặc [[o:Count-Min Sketch]] khi chấp nhận xấp xỉ. Liên hệ được sang system design là điểm cộng.\n:::"
+            },
+            {
+              "id": "19.7",
+              "lvl": "hard",
+              "q": "Binary search on answer: nhận dạng dạng 'tối thiểu hoá giá trị lớn nhất'?",
+              "a": "Dạng bài mà đa số người không nhận ra là binary search, vì [[o:không có mảng nào được sắp xếp cả]].\n\n**Dấu hiệu:** đề hỏi *\"giá trị nhỏ nhất của X sao cho vẫn làm được\"* hoặc *\"tối thiểu hoá giá trị lớn nhất\"* / *\"tối đa hoá giá trị nhỏ nhất\"*, và tồn tại hàm kiểm tra [[g:đơn điệu]] `feasible(x)`: nếu `x` làm được thì mọi `x' > x` cũng làm được.\n\nKhi đó nhị phân trên [[o:không gian đáp án]], không phải trên mảng:\n\n<pre><code><span class=\"k\">int</span> lo = maxElement, hi = totalSum;      <span class=\"c\">// biên hợp lệ</span>\n<span class=\"k\">while</span> (lo &lt; hi) {\n    <span class=\"k\">int</span> mid = lo + (hi - lo) / <span class=\"n\">2</span>;        <span class=\"c\">// tránh tràn int</span>\n    <span class=\"k\">if</span> (<span class=\"f\">feasible</span>(mid)) hi = mid;         <span class=\"c\">// còn cơ hội nhỏ hơn</span>\n    <span class=\"k\">else</span>                 lo = mid + <span class=\"n\">1</span>;\n}\n<span class=\"k\">return</span> lo;                                <span class=\"c\">// lo == hi == đáp án nhỏ nhất</span></code></pre>\n\n**Ví dụ:** *\"chia mảng thành m đoạn liên tiếp sao cho tổng đoạn lớn nhất là nhỏ nhất\"* (LC 410). `feasible(x)` = tham lam quét một lượt, đếm cần bao nhiêu đoạn nếu mỗi đoạn ≤ `x`; đủ nếu ≤ m. Độ phức tạp O(n log(sum)).\n\nCùng họ: Koko Eating Bananas (LC 875), Ship Packages in D Days (LC 1011), Minimum Time to Complete Trips.\n\n:::deep\n- Việc khó nhất [[o:không phải]] binary search mà là viết `feasible()` — thường là một vòng greedy O(n). Nói rõ *\"em nhị phân trên đáp án, còn kiểm tra khả thi thì greedy\"* là đã thể hiện đúng cấu trúc lời giải.\n- Chọn biên đúng: `lo` = giá trị nhỏ nhất *có thể* hợp lệ (thường là `max(a)`, vì mỗi phần tử phải nằm vừa một đoạn), `hi` = chắc chắn hợp lệ (`sum(a)`). Biên sai là nguồn bug số một.\n- Khuôn `while (lo &lt; hi)` + `hi = mid` / `lo = mid + 1` trả về [[g:phần tử nhỏ nhất thoả]] — thuộc lòng một khuôn duy nhất và dùng mãi, đừng mỗi lần chế lại. Bài \"lớn nhất thoả\" thì đối xứng: `lo = mid`, `hi = mid - 1`, và `mid` phải làm tròn lên.\n- `mid = (lo + hi) / 2` [[r:tràn int]] khi cả hai gần `Integer.MAX_VALUE` — bug nổi tiếng từng nằm trong `Arrays.binarySearch` của JDK suốt 9 năm. Dùng `lo + (hi - lo) / 2`.\n- đáp án là số thực (vd bán kính nhỏ nhất) → lặp cố định ~100 lần hoặc tới khi `hi - lo &lt; 1e-9`, đừng so bằng\n- liên hệ thực tế: chọn ngưỡng rate limit, chọn số worker nhỏ nhất để tiêu thụ kịp queue — cùng một khuôn tư duy\n:::"
+            },
+            {
+              "id": "19.8",
+              "lvl": "ext",
+              "q": "Graph: BFS, DFS, topological sort và Dijkstra — chọn cái nào?",
+              "a": "<table class=\"cmp\"><thead><tr><th>Thuật toán</th><th>Trả lời câu hỏi</th><th>Độ phức tạp</th></tr></thead><tbody>\n<tr><td>BFS</td><td>đường đi ngắn nhất theo <b>số cạnh</b> (không trọng số); duyệt theo tầng</td><td>O(V + E)</td></tr>\n<tr><td>DFS</td><td>có tồn tại đường đi? liệt kê thành phần liên thông; phát hiện chu trình</td><td>O(V + E)</td></tr>\n<tr><td>Topological sort</td><td>thứ tự thực hiện khi có phụ thuộc (DAG)</td><td>O(V + E)</td></tr>\n<tr><td>Dijkstra</td><td>đường đi ngắn nhất có <b>trọng số không âm</b></td><td>O(E log V)</td></tr>\n<tr><td>Union-Find</td><td>hai đỉnh cùng nhóm? đếm nhóm; Kruskal</td><td>~O(α(n)) mỗi thao tác</td></tr>\n</tbody></table>\n\n**Bẫy hay gặp nhất:** dùng DFS cho bài \"đường đi ngắn nhất\". DFS tìm ra *một* đường, [[r:không phải đường ngắn nhất]]. Không trọng số → BFS. Có trọng số → Dijkstra.\n\n**Topological sort (Kahn)** — cũng chính là cách phát hiện chu trình trong đồ thị có hướng:\n\n<pre><code>Queue&lt;Integer&gt; q = <span class=\"k\">new</span> ArrayDeque&lt;&gt;();\n<span class=\"k\">for</span> (<span class=\"k\">int</span> v = <span class=\"n\">0</span>; v &lt; n; v++) <span class=\"k\">if</span> (indeg[v] == <span class=\"n\">0</span>) q.<span class=\"f\">offer</span>(v);\n<span class=\"k\">int</span> done = <span class=\"n\">0</span>;\n<span class=\"k\">while</span> (!q.<span class=\"f\">isEmpty</span>()) {\n    <span class=\"k\">int</span> v = q.<span class=\"f\">poll</span>(); order.<span class=\"f\">add</span>(v); done++;\n    <span class=\"k\">for</span> (<span class=\"k\">int</span> nx : adj[v]) <span class=\"k\">if</span> (--indeg[nx] == <span class=\"n\">0</span>) q.<span class=\"f\">offer</span>(nx);\n}\n<span class=\"k\">return</span> done == n ? order : List.<span class=\"f\">of</span>();   <span class=\"c\">// done &lt; n =&gt; có chu trình</span></code></pre>\n\n:::deep\n- Rất nhiều bài [[o:không nói chữ \"graph\"]] nào: lịch học (LC 207 — topo sort), word ladder (LC 127 — BFS), số đảo (LC 200 — DFS/Union-Find), gói phụ thuộc, deadlock giữa các transaction (5.10 — phát hiện chu trình). Nhận ra \"đây là đồ thị\" mới là phần khó.\n- BFS trên lưới: hàng đợi + mảng `visited`, đánh dấu [[r:lúc đưa vào hàng đợi]] chứ không phải lúc lấy ra — nếu không cùng một ô vào queue nhiều lần\n- **Multi-source BFS**: đẩy tất cả nguồn vào queue ngay từ đầu (bài \"cam thối\", \"khoảng cách tới ô 0 gần nhất\") — nhiều người làm BFS n lần, chậm gấp n\n- **0-1 BFS**: cạnh chỉ có trọng số 0 hoặc 1 → dùng `Deque` (0 đẩy đầu, 1 đẩy cuối) cho O(V+E), không cần Dijkstra\n- Dijkstra [[r:sai với cạnh âm]] → Bellman-Ford O(VE); Bellman-Ford còn phát hiện được chu trình âm (dùng trong arbitrage tỷ giá — ví dụ đẹp cho fintech)\n- DFS đệ quy trên đồ thị 10⁵ đỉnh có thể [[r:StackOverflow]] trong Java → chuyển sang stack tường minh\n- phát hiện chu trình đồ thị *có hướng* cần 3 màu (trắng/xám/đen), đồ thị *vô hướng* chỉ cần visited + bỏ qua cạnh về cha — nhầm hai cái này là lỗi phổ biến\n:::"
             }
           ]
         }

@@ -13,7 +13,7 @@ UI strings are Vietnamese and stay that way. Code comments are English.
 ```
 public/
   index.html         shell; loads app.js as <script type="module">
-  app.js             entry: hash router, 16-day track view, Microservices view
+  app.js             entry: hash router, topic track view, Microservices view
   config.js          GITIGNORED. Generated at deploy time from repo variables
   config.example.js  template to copy for local dev
   lib/
@@ -26,10 +26,10 @@ public/
     interviews.js    interview journal data layer
   views/
     interviews.js    interview journal CRUD (<dialog>)
-    stats.js         streak + heatmap + per-day progress
+    stats.js         streak + heatmap + per-topic progress
     admin.js         all-user overview (admin role only)
-  content.json       210 track items + 42 microservices items
-  interviews.json    seed data shown to signed-out visitors
+  content.json       234 track items + 42 microservices items
+  interviews.json    seed entries, merged under everyone's own Sheet rows
 apps-script/Code.gs  the entire backend (Google Sheet as database)
 secret/              GITIGNORED. Personal setup notes and credentials
 ```
@@ -41,14 +41,43 @@ secret/              GITIGNORED. Personal setup notes and credentials
   and if it degrades to an empty string the regex wraps **every number** in
   `<code>`. Do not "tidy" that line into a literal.
 
-- **`item_id` is one flat key space.** Track items are `1.1`–`16.14`,
+- **`item_id` is one flat key space.** Track items are `1.1`–`19.8`,
   microservices items are `M1.1`–`M10.6`. They do not collide, which is why
   `progress` and `notes` can share a single id column.
 
+  A topic's `n` and its items' id prefix are **stored keys**, not display
+  order. Renumbering a topic orphans every `progress` and `notes` row already
+  in the Sheet — append new topics at the end instead.
+
 - **The progress ring counts track items only.** `Store.reviewed` also holds
   microservices items, so `updateProgress()` intersects with
-  `Content.dayItemIds` first — otherwise it exceeds the 210 denominator and
-  renders past 100%.
+  `Content.dayItemIds` first — otherwise it exceeds the track denominator and
+  renders past 100%. The denominator is derived, never hardcoded.
+
+- **Every topic needs a `group`.** One of `core` · `data` · `design` ·
+  `platform` · `algorithm`. It drives the stepper chip, the filter bar
+  (`buildGroupBar`) and the hero accent; the colours are the
+  `[data-group="…"]` custom-property blocks in `styles.css`. A topic with an
+  unknown group renders with no accent colour and drops out of the filter bar.
+
+- **Raw HTML blocks in `content.json` end at the first blank line.**
+  `renderMarkdown` collects lines starting with `<` until a blank one, so a
+  blank line inside a `<pre>` or `<table>` truncates it and dumps the rest as
+  literal text. Use a comment-only line as a separator instead.
+
+- **The interview journal merges two sources; `own` separates them.** Sheet
+  rows carry `own: true`, `interviews.json` entries `own: false` and an id of
+  `seed-N` (Sheet ids are UUIDs, so they cannot collide). Only own rows may be
+  edited or deleted — a seed row has no Sheet row behind it, so `Sửa`/`Xoá`
+  would fail. `importSeed()` copies one across, stripping every id so the
+  backend creates new rows rather than editing. Seed entries whose name
+  matches an own row are dropped, which is what makes import look in-place.
+
+- **Syntax-highlight classes are scoped to `pre code`.** `.k .s .c .n .r .f`
+  are one letter long and collide with UI classes — `.f` is also the interview
+  modal's form-field class (`display:flex;flex-direction:column`), which put
+  every highlighted function name on its own line until both sides were
+  scoped. Keep new palette rules under `pre code`.
 
 - **`Store.flush()` must stay serialized.** Two parallel pushes each slice the
   queue by their own `batch.length` and drop the other's ops. `_inflight` +
@@ -89,8 +118,10 @@ their own rows through the verified Apps Script API.
 # same check the CI runs
 for f in $(find public -name '*.js'); do node --input-type=module --check < "$f" || echo "FAIL $f"; done
 
-# auth, authorization, row-isolation and error-disclosure regressions
-NODE_NO_WARNINGS=1 node --experimental-vm-modules --test tests/security.test.mjs
+# auth, authorization, row-isolation and error-disclosure regressions,
+# plus the seed/own merge rules of the interview journal
+NODE_NO_WARNINGS=1 node --experimental-vm-modules --test \
+  tests/security.test.mjs tests/interviews.merge.test.mjs
 
 # run it
 cd public && python -m http.server 8080

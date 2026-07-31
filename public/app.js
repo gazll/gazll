@@ -1,6 +1,6 @@
 'use strict';
 
-/* Entry point. The 16-day track and the Microservices view render here;
+/* Entry point. The topic track and the Microservices view render here;
    shared pieces live in lib/ and the larger views in views/.
 
    Adding a menu = adding one entry to VIEWS below. */
@@ -18,6 +18,18 @@ let MICRO = null;
 let current = 0;
 let totalQ = 0;
 let dayItemIds = new Set();
+let groupFilter = 'all';
+
+/* Topic groups. Order here is the order of the filter bar; `key` matches the
+   `group` field of every topic in content.json. */
+const GROUPS = [
+  { key: 'core', label: 'Core' },
+  { key: 'data', label: 'Data' },
+  { key: 'design', label: 'Design' },
+  { key: 'platform', label: 'Platform' },
+  { key: 'algorithm', label: 'Algorithm' }
+];
+const GROUP_LABEL = Object.fromEntries(GROUPS.map(g => [g.key, g.label]));
 
 const panel = document.getElementById('panel');
 const stepper = document.getElementById('stepper');
@@ -25,7 +37,7 @@ const dots = document.getElementById('dots');
 
 /* ---------- Views / navigation ---------- */
 const GUIDE_MD = [
-  'Đây là một site **all-in-one**. Thanh điều hướng trên cùng chuyển giữa các *view*; lộ trình 16 ngày chỉ là view đầu tiên. Mỗi view có URL riêng (vd `#/guide`) nên chia sẻ/bookmark được.',
+  'Đây là một site **all-in-one**. Thanh điều hướng trên cùng chuyển giữa các *view*; lộ trình theo chủ đề chỉ là view đầu tiên. Mỗi view có URL riêng (vd `#/guide`) nên chia sẻ/bookmark được.',
   '',
   ':::tip Thêm một menu mới',
   'Mở `app.js`, thêm một phần tử vào mảng `VIEWS` — không cần sửa chỗ khác.',
@@ -42,12 +54,14 @@ const GUIDE_MD = [
   '',
   'Nội dung sách nằm ở `content.json` (JSON + Markdown). Cú pháp: **đậm**, *nghiêng*, `code`, danh sách `-`, và ba khối callout `:::tip Nhãn`, `:::warn Nhãn`, `:::deep`.',
   '',
+  'Mỗi chủ đề có trường `group` (`core` · `data` · `design` · `platform` · `algorithm`) — đó là thứ tạo ra thanh lọc phía trên danh sách chủ đề.',
+  '',
   'Nhúng được raw HTML (sơ đồ SVG, bảng) ngay trong Markdown. Cập nhật nội dung: sửa `content.json` rồi `git push` — GitHub Actions tự deploy.',
   ':::'
 ].join('\n');
 
 const VIEWS = [
-  { id: 'track', label: 'Lộ trình 16 ngày' },
+  { id: 'track', label: 'Lộ trình chủ đề' },
   { id: 'gazl', label: 'Gazl Try', render: renderInterviews, mount: mountInterviews },
   { id: 'micro', label: 'Microservices', render: renderMicro, mount: wireMicro },
   { id: 'stats', label: 'Thống kê', render: renderStats, mount: mountStats },
@@ -315,15 +329,45 @@ function showView(id) {
   window.scrollTo({ top: 0 });
 }
 
-/* ---------- 16-day track view ---------- */
+/* ---------- topic track view ---------- */
+
+/* The filter only hides stepper buttons; DAYS and every index stay whole, so
+   `current`, the dots and the pager keep counting across the full track. */
+function buildGroupBar() {
+  const bar = document.getElementById('groupbar');
+  const counts = DAYS.reduce((m, d) => (m[d.group] = (m[d.group] || 0) + 1, m), {});
+  const chip = (key, label, n) =>
+    '<button class="gchip" data-g="' + key + '" data-group="' + key + '" '
+    + 'aria-pressed="' + (groupFilter === key) + '">' + label
+    + '<span class="gcount">' + n + '</span></button>';
+
+  bar.innerHTML = chip('all', 'Tất cả', DAYS.length)
+    + GROUPS.filter(g => counts[g.key]).map(g => chip(g.key, g.label, counts[g.key])).join('');
+
+  bar.querySelectorAll('.gchip').forEach(b => b.addEventListener('click', () => {
+    groupFilter = groupFilter === b.dataset.g ? 'all' : b.dataset.g;
+    buildGroupBar();
+    applyGroupFilter();
+  }));
+}
+
+function applyGroupFilter() {
+  stepper.querySelectorAll('.step').forEach(b => {
+    b.hidden = groupFilter !== 'all' && b.dataset.group !== groupFilter;
+  });
+  const active = stepper.querySelector('[aria-current="true"]');
+  if (active && !active.hidden) active.scrollIntoView({ inline: 'center', block: 'nearest' });
+}
 
 function buildStepper() {
   stepper.innerHTML = DAYS.map((d, i) =>
-    '<button class="step" data-i="' + i + '" aria-current="' + (i === current) + '">'
-    + '<span class="sidx">DAY ' + String(d.n).padStart(2, '0') + '</span>'
+    '<button class="step" data-i="' + i + '" data-group="' + d.group + '" aria-current="' + (i === current) + '">'
+    + '<span class="sidx">' + (GROUP_LABEL[d.group] || d.group) + '</span>'
     + '<span class="slabel">' + d.label + '</span></button>').join('');
   stepper.querySelectorAll('.step').forEach(b => b.addEventListener('click', () => goTo(parseInt(b.dataset.i))));
   dots.innerHTML = DAYS.map((_, i) => '<span class="pdot' + (i === current ? ' on' : '') + '"></span>').join('');
+  buildGroupBar();
+  applyGroupFilter();
 }
 
 function renderDay() {
@@ -336,7 +380,8 @@ function renderDay() {
 
   panel.innerHTML =
     '<section class="hero"><div class="hero-head">'
-    + '<div class="daynum"><small>NGÀY</small>' + d.n + '</div>'
+    + '<div class="daynum" data-group="' + d.group + '"><small>'
+    + (GROUP_LABEL[d.group] || d.group).toUpperCase() + '</small>' + d.n + '</div>'
     + '<div><h2>' + d.title + '</h2><p class="intro">' + d.intro + '</p>'
     + '<div class="tags">' + d.tags.map(t => '<span class="tag">' + t + '</span>').join('') + '</div></div>'
     + '</div></section>'
@@ -361,11 +406,11 @@ function renderDay() {
   });
   syncToggleAllLabel();
 
-  document.getElementById('curDay').textContent = d.n;
+  document.getElementById('curDay').textContent = current + 1;
   document.getElementById('prevBtn').disabled = current === 0;
   const nextBtn = document.getElementById('nextBtn');
   nextBtn.disabled = current === DAYS.length - 1;
-  nextBtn.textContent = current === DAYS.length - 1 ? 'Hoàn tất ✓' : 'Ngày tiếp →';
+  nextBtn.textContent = current === DAYS.length - 1 ? 'Hoàn tất ✓' : 'Chủ đề tiếp →';
 }
 
 function syncToggleAllLabel() {
@@ -377,7 +422,7 @@ function syncToggleAllLabel() {
 
 /**
  * Track items only. Store.reviewed also holds Microservices items, and
- * counting those would push the ring past 100% of its 210 denominator.
+ * counting those would push the ring past 100% of the track denominator.
  */
 function updateProgress() {
   let done = 0;

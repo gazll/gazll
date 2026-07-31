@@ -2,23 +2,22 @@
   "version": 1,
   "companies": [
     {
-      "name": "Công ty mẫu (xoá/sửa trong interviews.json)",
+      "name": "Rakuten",
       "role": "Senior Backend Engineer",
-      "date": "2026-06",
+      "date": "2026-07",
       "result": "pending",
-      "stack": ["Java", "Spring Boot", "PostgreSQL", "Kafka"],
+      "stack": [
+        "Java",
+        "Spring Boot",
+        "MySQL",
+        "Kafka"
+      ],
       "questions": [
         {
-          "round": "Vòng 1 · Technical",
-          "q": "Giải thích cách `@Transactional` hoạt động và vì sao self-invocation mất transaction?",
-          "a": "Spring tạo **proxy** bao quanh bean; transaction mở/đóng ở proxy. Self-invocation (gọi method nội bộ qua `this`) **không đi qua proxy** nên advice không chạy → mất transaction. Cách xử lý: tách sang bean khác, hoặc tự inject chính mình, hoặc dùng `TransactionTemplate`.",
-          "note": "Trả lời ổn, nhưng nên vẽ thêm sơ đồ proxy để rõ hơn. Cần ôn lại propagation."
-        },
-        {
-          "round": "Vòng 1 · Technical",
-          "q": "Chống double-booking một ghế khi nhiều người đặt cùng lúc?",
-          "a": "Dùng **atomic conditional update** (`UPDATE seats SET status='HELD' WHERE id=? AND status='FREE'`) — thắng cuộc = 1 row affected. Kèm TTL hold + reconciliation.",
-          "note": "Quên nhắc tới hot-seat (hàng nghìn người đua 1 ghế) → lần sau nêu hàng đợi per-flight."
+          "round": "Vòng 1 · Coding",
+          "q": "LeetCode 30 · Substring with Concatenation of All Words — cho `s` và mảng `words` (mọi từ cùng độ dài), tìm mọi vị trí bắt đầu của substring ghép đủ tất cả các từ, mỗi từ đúng một lần.",
+          "a": "Chốt ràng buộc trước: mọi từ **cùng độ dài** `w`, `words` **có thể trùng nhau**, kết quả có thể gối nhau.\n\nBrute force: thử mọi vị trí `i`, cắt `k` từ rồi so tần suất → O(n × k × w).\n\nTối ưu — **sliding window theo từ**. Vì mọi từ cùng độ dài, chuỗi là một dãy token; có `w` cách cắt token nên chạy `w` cửa sổ độc lập, mỗi bước nhảy `w` ký tự:\n\n1. `need` = HashMap đếm tần suất các từ trong `words`\n2. với mỗi `off` từ 0 tới `w-1`: giữ `win` (đếm trong cửa sổ), `left`, `formed`\n3. đọc từ tại `r`: nếu **không có trong `need`** → `win.clear()`, `formed = 0`, `left = r + w`\n4. nếu có → `win.merge(word, 1, Integer::sum)`, `formed++`; trong khi `win.get(word) > need.get(word)` thì co trái một từ\n5. khi `formed == k` → ghi nhận `left`, rồi **trượt trái đúng một từ** và đi tiếp\n\nĐộ phức tạp: **O(n × w)** thời gian, **O(k × w)** bộ nhớ. Biến `formed` là chỗ tránh phải so hai map mỗi bước.\n\n:::warn Ba chỗ dễ sai\nDùng `Set` thay vì đếm tần suất (sai khi `words` có từ trùng). Gặp từ lạ mà co dần thay vì reset cả cửa sổ. Và khi đủ `k` từ thì `break` thay vì trượt tiếp — `s=\"aaaaaa\"`, `words=[\"aa\",\"aa\"]` phải ra `[0,1,2]`.\n:::\n\nTest case đã nêu chủ động: `\"barfoothefoobarman\"` + `[\"foo\",\"bar\"]` → `[0,9]`; `\"wordgoodgoodgoodbestword\"` + `[\"word\",\"good\",\"best\",\"word\"]` → `[]`; `\"aaaaaa\"` + `[\"aa\",\"aa\"]` → `[0,1,2]`; `s` ngắn hơn `k*w` → `[]`.",
+          "note": "Làm được nhưng mất ~5 phút mới nhận ra phải chạy w cửa sổ theo offset — lúc đầu chỉ chạy một cửa sổ từ index 0 nên trượt hết các vị trí lệch. Quên luôn case words có từ trùng, interviewer phải gợi ý. Lần sau: nói ra brute force + độ phức tạp trước, rồi mới tối ưu. Có bị hỏi thêm cách tối ưu — trả lời map mỗi từ sang int id để so sánh rẻ hơn String.substring, nên ôn thêm rolling hash."
         }
       ]
     }

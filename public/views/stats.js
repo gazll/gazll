@@ -157,19 +157,19 @@ function level(n, max) {
   return 4;
 }
 
-/* ---------- per-day track progress ---------- */
+/* ---------- per-topic track progress ---------- */
 
 function perDay(reviewed) {
   const rows = Content.dayCounts().map(d => {
     const done = d.ids.filter(id => reviewed.has(id)).length;
     const pct = d.ids.length ? Math.round(done / d.ids.length * 100) : 0;
-    return '<a class="pd-row" href="#/track" data-day="' + d.n + '">'
-      + '<span class="pd-n">D' + String(d.n).padStart(2, '0') + '</span>'
+    return '<a class="pd-row" href="#/track" data-day="' + d.n + '" data-group="' + esc(d.group) + '">'
+      + '<span class="pd-n">' + String(d.n).padStart(2, '0') + '</span>'
       + '<span class="pd-label">' + esc(d.label) + '</span>'
       + '<span class="pd-bar"><span class="pd-fill" style="width:' + pct + '%"></span></span>'
       + '<span class="pd-num">' + done + '/' + d.ids.length + '</span></a>';
   }).join('');
 
-  return '<div class="toolbar"><span class="sectioncount">Tiến độ theo ngày</span></div>'
+  return '<div class="toolbar"><span class="sectioncount">Tiến độ theo chủ đề</span></div>'
     + '<div class="perday">' + rows + '</div>';
 }

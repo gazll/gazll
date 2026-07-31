@@ -1,5 +1,6 @@
 /* "Gazl Try" view — interview journal, editable in place.
-   Signed out: read-only from interviews.json. Signed in: Google Sheet. */
+   Own rows (Google Sheet) and the repo's seed entries render in one list;
+   only own rows get Sửa/Xoá, seed entries get "lưu vào nhật ký" instead. */
 import { Interviews } from '../lib/interviews.js';
 import { Auth } from '../lib/auth.js';
 import { escapeHtml as esc, renderUser, inlineUser } from '../lib/markdown.js';
@@ -33,6 +34,8 @@ function paint(root, repaint) {
   const cos = Interviews.companies;
   const totalQ = cos.reduce((s, c) => s + (c.questions || []).length, 0);
   const editable = Interviews.editable;
+  const nOwn = Interviews.ownCompanies.length;
+  const nSeed = Interviews.seedCompanies.length;
 
   let html = '<section class="hero"><div class="hero-head"><div>'
     + '<h2>Gazl Try — Nhật ký phỏng vấn</h2>'
@@ -44,8 +47,12 @@ function paint(root, repaint) {
       + ' — đang hiện dữ liệu mẫu từ <code>interviews.json</code>.</div>';
   }
 
+  const breakdown = editable && nSeed
+    ? ' (' + nOwn + ' của mình · ' + nSeed + ' mẫu)'
+    : '';
+
   html += '<div class="toolbar">'
-    + '<span class="sectioncount">' + cos.length + ' công ty · ' + totalQ + ' câu hỏi'
+    + '<span class="sectioncount">' + cos.length + ' công ty' + breakdown + ' · ' + totalQ + ' câu hỏi'
     + (editable ? '' : ' · <span class="ro">chỉ xem</span>') + '</span>'
     // .tb-actions, not .legend: .legend is display:none below 760px.
     + '<div class="tb-actions">'
@@ -63,6 +70,10 @@ function paint(root, repaint) {
   }
 
   for (const c of cos) html += companyCard(c, editable);
+  if (editable && nSeed) {
+    html += '<p class="foot-note">Mục <b>Mẫu</b> đến từ <code>interviews.json</code> trong repo — ai cũng thấy '
+      + 'và không sửa được. Bấm <b>Lưu vào nhật ký</b> để chép sang nhật ký riêng của bạn rồi sửa thoải mái.</p>';
+  }
   html += formDialog();
 
   root.innerHTML = html;
@@ -76,11 +87,17 @@ function companyCard(c, editable) {
   const meta = [c.role, c.date].filter(Boolean).map(esc).join(' · ');
   const stack = (c.stack || []).map(t => '<span class="tag">' + esc(t) + '</span>').join('');
 
-  const actions = editable
-    ? '<div class="co-actions">'
+  // Seed rows live in the repo, not the Sheet: importing is the only write.
+  const seedBadge = c.own ? '' : '<span class="seed-badge">Mẫu</span>';
+  let actions = '';
+  if (editable && c.own) {
+    actions = '<div class="co-actions">'
       + '<button class="btn-ghost sm" data-edit="' + esc(c.id) + '">Sửa</button>'
-      + '<button class="btn-ghost sm danger" data-del="' + esc(c.id) + '">Xoá</button></div>'
-    : '';
+      + '<button class="btn-ghost sm danger" data-del="' + esc(c.id) + '">Xoá</button></div>';
+  } else if (editable) {
+    actions = '<div class="co-actions">'
+      + '<button class="btn-ghost sm" data-import="' + esc(c.id) + '">Lưu vào nhật ký</button></div>';
+  }
 
   const qs = (c.questions || []).map((it, idx) => {
     const round = it.round ? '<span class="qround">' + esc(it.round) + '</span>' : '';
@@ -94,8 +111,9 @@ function companyCard(c, editable) {
       + '</div></div></div></div></div>';
   }).join('');
 
-  return '<div class="company"><div class="company-head"><h3>' + esc(c.name) + '</h3>'
-    + res + actions + '</div>'
+  return '<div class="company' + (c.own ? '' : ' is-seed') + '">'
+    + '<div class="company-head"><h3>' + esc(c.name) + '</h3>'
+    + seedBadge + res + actions + '</div>'
     + (meta ? '<div class="company-meta">' + meta + '</div>' : '')
     + (stack ? '<div class="tags">' + stack + '</div>' : '')
     + (qs || '<p class="intro empty-q">Chưa có câu hỏi nào.</p>')
@@ -205,6 +223,21 @@ function wire(root, repaint) {
     b.disabled = true;
     try { await Interviews.remove(c.id); repaint(); }
     catch (e) { alert('Xoá không được: ' + (e.message || e)); b.disabled = false; }
+  }));
+
+  root.querySelectorAll('[data-import]').forEach(b => b.addEventListener('click', async () => {
+    const c = Interviews.find(b.dataset.import);
+    if (!c) return;
+    b.disabled = true;
+    b.textContent = 'Đang lưu…';
+    try {
+      await Interviews.importSeed(c.id);
+      repaint();          // the copy is now an own row; the seed card drops out
+    } catch (e) {
+      alert('Lưu không được: ' + (e.message || e));
+      b.disabled = false;
+      b.textContent = 'Lưu vào nhật ký';
+    }
   }));
 
   root.querySelector('#ivAddQ').addEventListener('click', () => addQ());

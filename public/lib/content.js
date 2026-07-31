@@ -32,6 +32,7 @@ export const Content = {
     return this.days.map(d => ({
       n: d.n,
       label: d.label,
+      group: d.group || '',
       ids: d.sections.flatMap(sec => sec.items.map(it => it.id))
     }));
   }
