@@ -15,14 +15,10 @@
    of a signed-out header, while `auto_select` fetches a real token in the
    background. Never put `token` in here.
 
-   Silent sign-in is best-effort and frequently impossible: FedCM can suppress
-   the prompt, third-party cookies may be blocked, or the reader may simply not
-   be signed into Google in this profile. So every silent attempt is BOUNDED —
-   `SILENT_MS` and the prompt notification both end it. Without that bound the
-   header sat in the "connecting" state spinning forever, which reads as "it is
-   working on it" when nothing is happening at all. When an attempt ends without
-   a token the state becomes `stale`: a still badge and a real sign-in button,
-   not an animation. */
+   Silent sign-in fails routinely — FedCM suppresses the prompt, third-party
+   cookies are blocked, no Google session in this profile. So every attempt is
+   BOUNDED: unbounded, the header spun forever and never offered a way in.
+   Ending empty means `stale`, which asks for a click. */
 import { GOOGLE_CLIENT_ID, SCRIPT_URL } from '../config.js';
 
 const GIS_SRC = 'https://accounts.google.com/gsi/client?hl=en';
@@ -74,11 +70,7 @@ export const Auth = {
   /** Signed in but the token lapsed — needs a fresh one. */
   get expired() { return Boolean(this.session) && !this.token; },
 
-  /**
-   * The one state the UI switches on. `stale` is the honest resting place for
-   * "we know who you are but silent sign-in did not work" — it asks for a
-   * click instead of pretending to still be trying.
-   */
+  /** The one value the UI switches on. */
   get state() {
     if (!this.enabled) return 'offline';
     if (!this.ready) return 'loading';
@@ -98,9 +90,8 @@ export const Auth = {
     this.session = null;
     if (!this.enabled) { this.ready = true; emit(); return; }
 
-    // Paint the returning reader's own avatar before GIS has even loaded, and
-    // mark the silent attempt as started so the header shows "connecting"
-    // rather than flashing "signed out" first.
+    // Marked as attempting before GIS loads, so a returning reader sees their
+    // own face instead of a flash of "signed out".
     this.hint = readHint();
     this.ready = true;
     if (this.hint) beginSilent();
@@ -170,7 +161,6 @@ function beginSilent() {
   silentPending = true;
   lastSilentAt = Date.now();
   clearTimeout(silentTimer);
-  // Nothing came back in time: stop animating and ask for a click.
   silentTimer = setTimeout(() => { if (silentPending) { endSilent(); emit(); } }, SILENT_MS);
 }
 
@@ -185,11 +175,8 @@ function promptSilently() {
   catch (e) { endSilent(); emit(); }
 }
 
-/**
- * GIS tells us the prompt is not going to produce anything. Under FedCM most
- * of these predicates are deprecated and some throw, so each one is probed
- * defensively — a missing predicate just leaves SILENT_MS to end the attempt.
- */
+/** Under FedCM these predicates are deprecated and some throw, so probe each
+    one; if none answers, SILENT_MS still ends the attempt. */
 function handlePromptMoment(notification) {
   if (!notification || !silentPending) return;
   const says = name => {
@@ -237,12 +224,8 @@ function scheduleRenew() {
   }, Math.max(5_000, wait));
 }
 
-/**
- * A silent attempt that failed while the tab was in the background is worth
- * one more try when the reader comes back — that is the moment Google is most
- * likely to have a usable session again. Rate-limited so returning to the tab
- * repeatedly cannot turn into a prompt loop.
- */
+/** Coming back to the tab is when Google is most likely to have a session
+    again. Rate-limited so tab-flicking cannot become a prompt loop. */
 function wakeOnFocus() {
   if (wiredWake) return;
   if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return;
@@ -316,11 +299,9 @@ function loadGis() {
 
 /* ---------- header avatar + account menu ----------
 
-   The avatar IS the affordance, but when nobody is signed in an avatar alone
-   is too quiet — so the signed-out and stale states carry a visible label
-   next to it. Clicking opens a popover that hosts Google's own rendered
-   button: One Tap by itself is not a reliable way in, because FedCM can
-   suppress it without telling the user anything. */
+   States needing a click carry a text label: an avatar alone is too quiet to
+   read as "signed out". The popover hosts Google's own rendered button,
+   because FedCM can suppress One Tap without telling the user anything. */
 
 export function mountAuthUI(el) {
   if (!el) return;
@@ -371,10 +352,8 @@ const STATE_LABEL = {
   anon: 'Sign in with Google'
 };
 
-/** Short text shown beside the avatar, only where an avatar alone is unclear. */
 const STATE_CHIP = { anon: 'Sign in', stale: 'Sign in', error: 'Retry' };
 
-/** One button, one state — the state lives in `data-state` for CSS. */
 function avatarHtml() {
   const state = Auth.state;
   const raw = STATE_LABEL[state] || STATE_LABEL.anon;
@@ -411,7 +390,6 @@ function menuHtml() {
       + '<p class="am-note">Trying to sign you back in without asking. This takes a moment — '
       + 'if nothing happens, a sign-in button will appear here.</p>';
   } else if (Auth.identity) {
-    // Known face, no token: the silent attempt is over and it did not work.
     body = '<div class="am-id">'
       + '<div class="am-name">' + esc(Auth.displayName) + '</div>'
       + (Auth.email ? '<div class="am-mail">' + esc(Auth.email) + '</div>' : '')

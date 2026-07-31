@@ -1,13 +1,8 @@
 /* content.json, loaded once and shared by app.js and the views.
 
-   Two languages, one source of truth. content.json is the Vietnamese
-   original and always loads; content.en.json is a partial *overlay* keyed by
-   topic `n` and item `id`. Anything the overlay omits falls back to the
-   Vietnamese text, which is why the English file can grow one item at a time
-   without ever leaving a hole in the page.
-
-   The chrome around the content is always English (see CLAUDE.md) — this
-   switch is only about the study material itself. */
+   content.en.json is a partial overlay, not a second copy: whatever it
+   omits falls back to Vietnamese, so English can grow one item at a time
+   without ever leaving a hole in the page. */
 
 const LANG_KEY = 'gazl.contentLang';
 const DEFAULT_LANG = 'en';
@@ -15,7 +10,7 @@ const LANGS = ['en', 'vi'];
 
 const listeners = new Set();
 
-/** Deep-ish clone: the overlay must not mutate the Vietnamese source. */
+/** Overlaying in place would destroy the source, so VI could never return. */
 function cloneDays(days) {
   return days.map(d => ({
     ...d,
@@ -24,7 +19,6 @@ function cloneDays(days) {
   }));
 }
 
-/** Applies whichever fields the overlay actually defines; the rest stays VI. */
 function overlayDays(days, over) {
   if (!over) return days;
   for (const d of days) {
@@ -78,13 +72,11 @@ export const Content = {
   loaded: false,
   error: null,
 
-  /** Language of the study material only — the UI chrome is always English. */
   lang: readLang(),
-  /** Set once an English overlay has been fetched (or found missing). */
   overlay: null,
   overlayTried: false,
 
-  /** Raw Vietnamese source, kept so switching back needs no refetch. */
+  /** Kept so switching language needs no refetch. */
   _base: null,
 
   async load() {
@@ -99,7 +91,7 @@ export const Content = {
     return this;
   },
 
-  /** A missing or broken content.en.json is not fatal — it just means no EN. */
+  /** Absent or broken overlay is not fatal — it just means no English. */
   async _loadOverlay() {
     if (this.overlayTried) return;
     this.overlayTried = true;
@@ -123,7 +115,6 @@ export const Content = {
     }
   },
 
-  /** True when the reader is in EN but this item's answer is still Vietnamese. */
   isFallback(item) {
     return this.lang === 'en' && !item.translated;
   },

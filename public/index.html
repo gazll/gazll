@@ -43,6 +43,11 @@
         <div class="progress-meta">Reviewed<br><b id="reviewedCount">0</b> / <span id="totalCount">0</span></div>
         <div class="ring" id="ring"></div>
       </div>
+      <!-- Switches the study material only; the interface is always English. -->
+      <div class="langswitch hdr-lang" role="group" aria-label="Content language">
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="vi" aria-pressed="false">VI</button>
+      </div>
       <span class="syncstate" id="syncState"></span>
       <div class="authbar" id="authbar"></div>
       <button class="hdrtoggle" id="hdrToggle" aria-label="Collapse header" aria-expanded="true" title="Collapse header (H)">
@@ -51,10 +56,9 @@
     </div>
   </div>
 
-  <!-- Topic picker. Was a horizontally scrolling strip of 24 buttons, which
-       meant hunting sideways for a topic you could not see; now one button
-       opens a filterable vertical list. -->
   <div class="topicbar track-only">
+    <!-- The menu sits inside .tb-inner because that is the centred column;
+         anchored to the full-bleed .topicbar it hangs off the window edge. -->
     <div class="tb-inner">
       <button class="topicpick" id="topicPick" aria-haspopup="true" aria-expanded="false" aria-controls="topicMenu">
         <span class="tp-n" id="tpNum">01</span>
@@ -73,16 +77,16 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
         </button>
       </div>
-    </div>
 
-    <div class="topicmenu" id="topicMenu" hidden>
-      <div class="tm-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
-        <input type="search" id="topicSearch" placeholder="Filter topics…" autocomplete="off" aria-label="Filter topics">
+      <div class="topicmenu" id="topicMenu" hidden>
+        <div class="tm-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
+          <input type="search" id="topicSearch" placeholder="Filter topics…" autocomplete="off" aria-label="Filter topics">
+        </div>
+        <div class="groupbar" id="groupbar" role="group" aria-label="Filter by group"></div>
+        <div class="tm-list" id="topicList" role="listbox" aria-label="Topics"></div>
+        <p class="tm-empty" id="tmEmpty" hidden>Nothing matches that filter.</p>
       </div>
-      <div class="groupbar" id="groupbar" role="group" aria-label="Filter by group"></div>
-      <div class="tm-list" id="topicList" role="listbox" aria-label="Topics"></div>
-      <p class="tm-empty" id="tmEmpty" hidden>Nothing matches that filter.</p>
     </div>
   </div>
 </header>
@@ -96,14 +100,6 @@
     <button class="np-close" id="navClose" aria-label="Close menu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
-  </div>
-  <!-- Content language only. The interface itself is always English. -->
-  <div class="np-lang">
-    <span class="npl-label">Study content</span>
-    <div class="langswitch" id="langSwitch" role="group" aria-label="Content language">
-      <button type="button" data-lang="en" aria-pressed="false">EN</button>
-      <button type="button" data-lang="vi" aria-pressed="false">VI</button>
-    </div>
   </div>
   <nav class="np-body" id="mainnav"></nav>
   <p class="np-foot">Everything works signed out — progress is saved on this device.</p>

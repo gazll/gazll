@@ -5,9 +5,8 @@
 
    Adding a menu = adding one entry to VIEWS below.
 
-   Every string in this file is English on purpose — the interface is English
-   and does not switch. Only the study material has a VI/EN toggle, and that
-   lives in lib/content.js. */
+   UI strings stay English even when the material is Vietnamese — see
+   CLAUDE.md. The VI/EN toggle switches content only. */
 import { renderMarkdown, escapeHtml } from './lib/markdown.js';
 import { chevSVG, BADGE, FALLBACK_BADGE, debounce } from './lib/ui.js';
 import { Content } from './lib/content.js';
@@ -59,7 +58,7 @@ const GUIDE_MD = [
   '',
   'The study material lives in `content.json` (JSON + Markdown). Supported syntax: **bold**, *italic*, `code`, `-` lists, and three callout blocks — `:::tip Label`, `:::warn Label`, `:::deep`.',
   '',
-  'The interface is always English. The **material** has a VI/EN switch at the top of the navigation panel. Vietnamese is the source of truth in `content.json`; `content.en.json` is a partial overlay keyed by topic number and item id, so English can be filled in one item at a time. Anything not translated yet falls back to Vietnamese and is tagged `VI` on the card.',
+  'The interface is always English. The **material** has an `EN`/`VI` switch in the header. Vietnamese is the source of truth in `content.json`; `content.en.json` is a partial overlay keyed by topic number and item id, so English can be filled in one item at a time. Anything not translated yet falls back to Vietnamese and is tagged `VI` on the card.',
   '',
   'Every topic carries a `group` field (`core` · `data` · `design` · `platform` · `algorithm`) — that is what drives the filter chips in the topic picker.',
   '',
@@ -184,8 +183,7 @@ function renderMicro() {
 /** Shared by the track view and the Microservices view. */
 function qcard(it) {
   const badge = BADGE[it.lvl] || '';
-  // Reading in English but this answer has no English text yet — say so rather
-  // than letting Vietnamese appear with no explanation.
+  // Silent language switches read as a bug; the badge says why.
   const fallback = Content.isFallback(it) ? FALLBACK_BADGE : '';
   const lvlClass = it.lvl ? (' lvl-' + it.lvl) : '';
   const done = Store.reviewed.has(it.id) ? ' done' : '';
@@ -333,21 +331,24 @@ function wireNavPanel() {
   });
 }
 
-/* ---------- content language switch (study material only) ---------- */
+/* ---------- content language switch ---------- */
 
 function wireLangSwitch() {
-  const box = document.getElementById('langSwitch');
+  const box = document.querySelector('.langswitch');
   if (!box) return;
+
   const paint = () => box.querySelectorAll('button').forEach(b => {
     b.setAttribute('aria-pressed', String(b.dataset.lang === Content.lang));
   });
+
   box.addEventListener('click', async e => {
     const b = e.target.closest('button[data-lang]');
     if (!b || b.dataset.lang === Content.lang) return;
-    box.classList.add('busy');
+    box.classList.add('busy');   // setLang may fetch the overlay
     await Content.setLang(b.dataset.lang);
     box.classList.remove('busy');
   });
+
   Content.onChange(paint);
   paint();
 }
@@ -405,8 +406,7 @@ function wireHeader() {
     if (d !== dir) { dir = d; anchorY = lastY; }   // turned around: re-anchor
     lastY = y;
 
-    // Never slide the header out from under an open menu. `nav-open` is set on
-    // <body>, not on the header — reading it off the header always said false.
+    // `nav-open` lives on <body>; reading it off the header always said false.
     if (document.body.classList.contains('topic-open')
       || document.body.classList.contains('nav-open') || y <= TOP_ZONE) {
       header.classList.remove('hidden');
@@ -462,11 +462,8 @@ function showView(id) {
 /* ---------------------------------------------------------------------
    Topic picker
 
-   24 topics used to sit in a horizontally scrolling strip: the one you
-   wanted was usually off-screen, and on a trackpad it fought the page
-   scroll. Now the header shows only where you are, and one click opens a
-   vertical list with a text filter and the group chips. The list carries
-   per-topic progress, which the strip had no room for.
+   Replaced a horizontally scrolling strip of 24 buttons: the topic you
+   wanted was usually off-screen, and the strip fought the page scroll.
 --------------------------------------------------------------------- */
 
 const pick = {};
@@ -485,7 +482,6 @@ function cacheTopicEls() {
 
 const pad2 = n => String(n).padStart(2, '0');
 
-/** Reviewed / total for one topic, straight off Store. */
 function topicProgress(d) {
   const ids = d.sections.flatMap(s => s.items.map(it => it.id));
   let done = 0;
@@ -527,7 +523,6 @@ function buildTopicList() {
   });
 }
 
-/** The collapsed state of the picker: which topic you are on right now. */
 function paintTopicButton() {
   const d = DAYS[current];
   if (!d || !pick.btn) return;
@@ -548,11 +543,9 @@ function openTopicMenu() {
   pick.menu.hidden = false;
   document.body.classList.add('topic-open');
   pick.btn.setAttribute('aria-expanded', 'true');
-  // Scroll the current topic into view inside the list, not the page.
   const cur = pick.list.querySelector('[aria-selected="true"]');
   if (cur) cur.scrollIntoView({ block: 'nearest' });
-  // Focusing the filter on a phone throws up the keyboard over the list you
-  // came here to read, so only take focus where there is room for both.
+  // On a phone the keyboard would cover the list you came here to read.
   if (window.matchMedia('(min-width: 761px)').matches) pick.search.focus();
 }
 
@@ -584,7 +577,6 @@ function wireTopicPicker() {
     buildTopicList();
   });
 
-  // Arrow keys walk the visible rows; Enter picks the focused one.
   pick.menu.addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.stopPropagation(); closeTopicMenu(); return; }
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -608,8 +600,8 @@ function wireTopicPicker() {
 
 /* ---------- topic track view ---------- */
 
-/* The filter only hides rows in the picker; DAYS and every index stay whole,
-   so `current`, the dots and the pager keep counting across the full track. */
+/* Filtering only hides rows: DAYS and every index stay whole, so `current`,
+   the dots and the pager keep counting across the full track. */
 function buildGroupBar() {
   const bar = document.getElementById('groupbar');
   if (!bar) return;
@@ -787,8 +779,6 @@ async function init() {
     if (e.key === 'ArrowLeft') goTo(current - 1);
   });
 
-  // Switching the content language rebuilds every string that came from
-  // content.json, so the whole active view is repainted.
   Content.onChange(() => {
     DAYS = Content.days;
     MICRO = Content.micro;

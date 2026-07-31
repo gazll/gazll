@@ -9,16 +9,19 @@ step, no package.json — vanilla ES modules served straight to the browser.
 **Two language layers, and they are not the same thing.**
 
 1. **The interface is always English and does not switch.** Every string in
-   `index.html`, `app.js`, `lib/` and `views/` is English: menus, buttons,
-   headings, badges, placeholders, `alert`/`confirm` text, `aria-label`s, and
-   the `DEEP DIVE · SENIOR` tag `lib/markdown.js` wraps around `:::deep`.
-   There is no UI string table and there should not be one. Code comments are
-   English too. (`lib/api.js` still matches Vietnamese *and* English in its
-   `authExpired` regex, because `apps-script/Code.gs` answers in Vietnamese.)
+   `index.html`, `app.js`, `lib/` and `views/`: menus, buttons, headings,
+   badges, placeholders, `alert`/`confirm`, `aria-label`s, and the
+   `DEEP DIVE · SENIOR` tag in `lib/markdown.js`. There is no UI string table
+   and there should not be one. (`lib/api.js` matches Vietnamese *and* English
+   in its `authExpired` regex — `apps-script/Code.gs` answers in Vietnamese.)
 
-2. **The study material has a VI/EN switch**, in the nav panel. `content.json`
-   is the Vietnamese source of truth; `content.en.json` is a partial overlay.
-   See "The English overlay" below.
+2. **The study material has an `EN`/`VI` switch in the header**, right of the
+   progress ring. It was in the nav panel first and nobody could find it.
+   `content.json` is the Vietnamese source of truth; `content.en.json` is a
+   partial overlay — see "The English overlay".
+
+Code comments are English, and they answer **why**, not what: the code already
+says what it does. Keep them short.
 
 ## Layout
 
@@ -128,6 +131,21 @@ secret/              GITIGNORED. Personal setup notes and credentials
   stay in the tab order — the drawer is moved by `transform`, not `display`.
   `close()` blurs first, because focus inside a subtree that then becomes
   inert is not moved out on its own.
+
+- **One shell width: `--shell` (+ `--gutter`).** `.top-inner`, `.tb-inner` and
+  `main` all read it, which is the only reason they line up. The topic
+  dropdown is positioned against `.tb-inner`, *not* `.topicbar` — the bar is
+  full-bleed, so anchoring there parks the panel on the window edge while the
+  rest of the page stays centred.
+
+- **`header.top` is a stacking context** (`position:sticky` + `z-index:50`),
+  so anything inside it is trapped below 50 no matter its own `z-index`. That
+  is why `.topic-scrim` is `z-index:40`: at 60 it covered the very dropdown it
+  was supposed to sit behind.
+
+- **Collapsing the header keeps the topic bar.** Only its second line and the
+  step buttons shrink. Collapsing is for reading, and jumping topics is what
+  you do while reading.
 
 - **A silent sign-in attempt must always end.** `Auth.connecting` is only true
   while an attempt is genuinely in flight; `SILENT_MS` and the

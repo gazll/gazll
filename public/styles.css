@@ -6,6 +6,10 @@
     --code-bg:#0F1D31; --code-bg-2:#16273F; --code-text:#E6ECF5; --code-dim:#8A9AB4;
     --code-green:#86D6AC; --code-blue:#8DBBEC; --code-amber:#E2B871; --code-clay:#E69185;
     --radius:14px; --shadow:0 1px 2px rgba(20,35,58,.05), 0 12px 30px -18px rgba(20,35,58,.28);
+    /* One knob for how wide the whole shell runs: header, topic bar and main
+       all use it, so they stay in one column. Change it here only. */
+    --shell:1400px;
+    --gutter:24px;
   }
   *{box-sizing:border-box}
   /* stable gutter so locking scroll for the drawer cannot shift the header */
@@ -21,7 +25,7 @@
   /* hides on scroll down, returns on scroll up */
   header.top.hidden{transform:translateY(-100%)}
   /* Nav lives in the drawer now, so the bar is just: menu · brand · account. */
-  .top-inner{max-width:1120px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px;
+  .top-inner{max-width:var(--shell);margin:0 auto;padding:12px var(--gutter);display:flex;align-items:center;gap:14px;
     transition:padding .2s ease;}
   .brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto}
   .brandtext{min-width:0}
@@ -41,12 +45,12 @@
     background:conic-gradient(var(--emerald) calc(var(--p)*1%), var(--line-strong) 0);display:grid;place-items:center;}
   .ring::after{content:"";width:30px;height:30px;border-radius:50%;background:var(--paper)}
 
-  /* ---------- topic picker ----------
-     One button showing where you are; the list of 24 topics lives in a
-     dropdown with a text filter. It replaced a horizontally scrolling strip
-     of buttons, where the topic you wanted was almost always off-screen. */
-  .topicbar{position:relative;border-bottom:1px solid var(--line);background:rgba(255,255,255,.4)}
-  .tb-inner{max-width:1120px;margin:0 auto;padding:9px 16px;display:flex;align-items:center;gap:10px}
+  /* ---------- topic picker ---------- */
+  .topicbar{border-bottom:1px solid var(--line);background:rgba(255,255,255,.4)}
+  /* relative here, not on .topicbar: the dropdown hangs off the centred
+     column, not off the full-bleed bar. */
+  .tb-inner{position:relative;max-width:var(--shell);margin:0 auto;padding:9px var(--gutter);
+    display:flex;align-items:center;gap:10px}
 
   .topicpick{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:11px;cursor:pointer;font:inherit;
     color:inherit;text-align:left;border:1px solid var(--line);background:var(--surface);
@@ -73,14 +77,14 @@
   .tb-count{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);padding:0 5px;white-space:nowrap}
   .tb-count b{color:var(--emerald-deep)}
 
-  /* Below header.top (z-index 50) on purpose: the header is a stacking context,
-     so a scrim above it would also cover the dropdown living inside it. */
+  /* Under header.top (z-index 50): the header is a stacking context, so a
+     scrim above it would cover the dropdown living inside it. */
   .topic-scrim{position:fixed;inset:0;z-index:40;background:rgba(20,35,58,.18);
     opacity:0;pointer-events:none;transition:opacity .18s ease}
   body.topic-open .topic-scrim{opacity:1;pointer-events:auto}
 
-  .topicmenu{position:absolute;z-index:70;left:16px;right:16px;top:calc(100% - 4px);
-    max-width:520px;background:var(--surface);border:1px solid var(--line-strong);
+  .topicmenu{position:absolute;z-index:70;left:var(--gutter);right:var(--gutter);top:calc(100% - 4px);
+    max-width:560px;background:var(--surface);border:1px solid var(--line-strong);
     border-radius:14px;box-shadow:0 22px 48px -20px rgba(20,35,58,.42);
     overflow:hidden;animation:menuIn .16s ease}
   .topicmenu[hidden]{display:none}
@@ -114,8 +118,7 @@
   .tm-empty{margin:0;padding:16px 14px 20px;text-align:center;font-size:13px;color:var(--muted)}
   .tm-empty[hidden]{display:none}
 
-  /* topic groups — one accent colour per group, reused by the picker,
-     the filter bar and the hero number */
+  /* one accent per group, reused by the picker, filter bar and hero number */
   [data-group="core"]     {--g:var(--indigo);      --g-soft:var(--indigo-soft);  --g-line:#cdd5ef}
   [data-group="data"]     {--g:var(--emerald-deep);--g-soft:var(--emerald-soft); --g-line:#cfe6da}
   [data-group="design"]   {--g:var(--brass);       --g-soft:#faf5e9;             --g-line:#e3d6b8}
@@ -199,14 +202,7 @@
   .np-foot{margin:0;padding:12px 18px 16px;border-top:1px solid var(--line);
     font-size:11.5px;line-height:1.5;color:var(--muted)}
 
-  /* ---------- content language switch ----------
-     Only the study material has two languages; the interface is always
-     English, so this control lives with the site settings rather than in the
-     reading surface. */
-  .np-lang{display:flex;align-items:center;justify-content:space-between;gap:10px;
-    padding:11px 16px;border-bottom:1px solid var(--line)}
-  .npl-label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.8px;
-    text-transform:uppercase;color:var(--muted)}
+  /* ---------- content language switch ---------- */
   .langswitch{display:inline-flex;border:1px solid var(--line);border-radius:999px;
     background:var(--paper);padding:2px;gap:2px}
   .langswitch.busy{opacity:.55;pointer-events:none}
@@ -216,6 +212,9 @@
   .langswitch button:hover{color:var(--ink)}
   .langswitch button[aria-pressed="true"]{background:var(--emerald);color:#fff}
   .langswitch button:focus-visible{outline:2px solid var(--emerald);outline-offset:1px}
+  .hdr-lang{flex:none;background:var(--surface)}
+  .hdr-lang button{padding:2px 9px;font-size:10.5px}
+  header.top.collapsed .hdr-lang button{padding:1px 8px}
 
   /* header collapse button */
   .hdrtoggle{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
@@ -225,12 +224,15 @@
   .hdrtoggle:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
   header.top.collapsed .hdrtoggle svg{transform:rotate(180deg)}
 
-  /* manually collapsed: a thin bar only. The view crumb survives — it is the
-     one line worth keeping when everything else is folded away. */
+  /* manually collapsed: a thin bar. The crumb and the topic picker survive —
+     collapsing is for reading, and you still jump topics while reading. */
   header.top.collapsed .top-inner{padding-top:5px;padding-bottom:5px}
   header.top.collapsed .brand h1{display:none}
   header.top.collapsed .seal{width:30px;height:30px;font-size:13px;border-radius:9px}
-  header.top.collapsed .topicbar{display:none}
+  header.top.collapsed .tb-inner{padding-top:5px;padding-bottom:5px}
+  header.top.collapsed .topicpick{padding-top:4px;padding-bottom:4px}
+  header.top.collapsed .tp-sub{display:none}
+  header.top.collapsed .tstep{width:28px;height:28px}
   header.top.collapsed .progress-meta{display:none}
   header.top.collapsed .ring{width:28px;height:28px}
   header.top.collapsed .ring::after{width:22px;height:22px}
@@ -238,7 +240,7 @@
   header.top.collapsed .authbtn{width:32px;height:32px}
   header.top.collapsed .avatar{width:24px;height:24px}
 
-  main{max-width:1120px;margin:0 auto;padding:30px 24px 90px}
+  main{max-width:var(--shell);margin:0 auto;padding:30px var(--gutter) 90px}
 
   /* markdown page view (menus other than the track) */
   .page{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
@@ -422,7 +424,8 @@
     .hdrtoggle{display:none}          /* collapse-on-scroll already does this job */
   }
   @media (max-width:760px){
-    .top-inner{padding:10px 14px;gap:10px}
+    :root{--gutter:14px}
+    .top-inner{padding:10px var(--gutter);gap:10px}
     .progress-meta{display:none}
     /* the long product title gives way to the current view — more useful here */
     .brand h1{display:none}
@@ -435,11 +438,10 @@
     .groupbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:9px 12px}
     .groupbar::-webkit-scrollbar{display:none}
     .gchip{flex:0 0 auto}
-    /* the dropdown goes full width and the prev/next pair drops away — the
-       pager at the foot of the page already does that job on a phone */
-    .tb-inner{padding:8px 12px}
+    /* prev/next drops away: the pager at the foot already does that job */
+    .tb-inner{padding:8px var(--gutter)}
     .tb-steps{display:none}
-    .topicmenu{left:8px;right:8px;max-width:none}
+    .topicmenu{max-width:none}
     .tm-list{max-height:min(62vh,400px)}
 
     main{padding:22px 14px 84px}
@@ -454,7 +456,7 @@
     .qhead{padding:13px 14px;gap:10px}
     .qtext{font-size:15px}
     .qmeta .qbadge{display:none}
-    /* the level badge is decoration; "this is still Vietnamese" is not */
+    /* the level badge is decoration; "still Vietnamese" is not */
     .qmeta .qbadge.vi{display:inline}
     .answer{padding:2px 14px 16px 14px}
     .legend{display:none}
@@ -508,9 +510,8 @@
   .authbtn:hover{border-color:var(--emerald);transform:translateY(-1px)}
   .authbtn:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
 
-  /* An avatar on its own is too quiet to read as "you are signed out", so the
-     states that need a click say so in words. Keyed off data-state rather
-     than :has(), so the pill shape does not depend on selector support. */
+  /* States needing a click get a text label — an avatar alone is too quiet to
+     read as "signed out". data-state, not :has(), for selector support. */
   .authbtn[data-state="anon"],
   .authbtn[data-state="stale"],
   .authbtn[data-state="error"]{width:auto;border-radius:999px;padding:0 12px 0 6px;gap:7px;
@@ -534,8 +535,7 @@
     border-right-color:transparent;animation:spin 1.1s linear infinite}
   .authbtn[data-state="error"]::after{border-color:var(--clay)}
   .authbtn[data-state="error"]{border-color:#e6c6c0;background:var(--clay-soft)}
-  /* `stale` is a resting state, not an activity: a still ring, never a spinner.
-     The spinner used to run forever whenever silent sign-in quietly failed. */
+  /* `stale` is a resting state: a still ring, never a spinner. */
   .authbtn[data-state="stale"]::after{border-color:var(--brass);border-style:dashed}
   .authbtn[data-state="offline"]{opacity:.7}
   .authbtn[data-state="anon"]:hover .avatar-anon{color:var(--emerald)}
