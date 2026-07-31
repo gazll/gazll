@@ -1,0 +1,105 @@
+{
+  "sections": [
+    {
+      "title": "Dòng thời gian các phiên bản",
+      "items": [
+        {
+          "id": "2.1",
+          "lvl": "core",
+          "q": "Java 8 đã thay đổi cách viết Java thế nào?",
+          "a": "Bước ngoặt lớn nhất của Java 8:\n- [[g:lambda]] + [[g:Stream API]] (functional, pipeline xử lý collection)\n- [[g:Optional]] (giảm NPE)\n- default method trên interface\n- [[g:java.time]] (immutable Date/Time API thay Date/Calendar cũ đầy bug)\n\nJava 8 là LTS được dùng lâu nhất; nhiều hệ thống legacy vẫn đứng ở đây.\n\n:::deep\n- Stream là [[b:lazy]] (chỉ execute khi có terminal op); `parallelStream()` dùng common ForkJoinPool — [[r:cẩn thận]] với I/O task hoặc khi chạy trong web container\n- `Optional` dùng cho *return type* để diễn đạt 'có thể vắng' — [[r:KHÔNG nên]] làm field/param (anti-pattern)\n- `java.time` immutable + rõ timezone (`Instant`/`ZonedDateTime`) — cực quan trọng cho OTA đa timezone (local departure time vs UTC)\n- default method: evolve interface mà không phá implementer\n\n[[r:Bẫy]]: lạm dụng nested stream làm code khó đọc/debug hơn loop thường.\n\nTrivia: lambda KHÔNG compile thành anonymous class mà thành `invokedynamic` + LambdaMetafactory (sinh class lúc runtime) &#8594; ít class sinh ra.\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.2",
+          "lvl": "core",
+          "q": "Java 11 mang lại gì đáng kể (so với 8)?",
+          "a": "- `var` cho local variable (type inference)\n- [[g:HttpClient]] chuẩn (HTTP/2, async) thay HttpURLConnection cũ\n- chạy file `.java` đơn lẻ không cần compile thủ công\n- remove module Java EE (JAXB, JAX-WS) khỏi JDK; G1 thành default; thêm ZGC/Epsilon (experimental)\n\nĐây là mốc nhiều enterprise nhảy từ 8 lên để thoát end-of-life.\n\n:::deep\n- `var` chỉ là [[b:compile-time type inference]] (không phải dynamic typing) — vẫn static, vẫn type-safe\n- `HttpClient` mới: HTTP/2, async (`sendAsync` trả CompletableFuture)\n- [[r:migrate 8→11 hay 'vỡ' ở đây]]: remove Java EE module (JAXB, JAX-WS, CORBA) → phải thêm dependency\n- cũng giới thiệu Epsilon GC (no-op, để benchmark) + ZGC experimental\n\nĐào sâu: đau chủ yếu ở removed module/API + reflection bị siết (illegal access), không phải syntax.\n\n- Con số để nhớ: 8 lên 11 là bước [[o:đau nhất]] (module Java EE bị gỡ, illegal-access bị siết); 11 lên 17 rồi 21 thì phần lớn chỉ là nâng dependency. Ai còn kẹt ở 8 nên nhắm thẳng 17 hoặc 21 chứ đừng dừng ở 11 (2.7).\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.3",
+          "lvl": "ext",
+          "q": "Java 13–16 chuẩn bị nền cho 17 thế nào (text blocks, switch, records)?",
+          "a": "Giai đoạn [[o:incubation]] — preview để lấy feedback rồi finalize ở 17:\n- [[g:text blocks]] (multi-line string)\n- [[g:switch expression]] (trả value, không fall-through)\n- preview của records, sealed classes, pattern matching for instanceof\n\n:::deep\n- [[g:switch expression]]: trả value, arrow syntax, không fall-through, exhaustive → giảm bug quên `break`\n- [[g:text block]] (3 dấu nháy kép): SQL/JSON/HTML multi-line sạch\n- records &amp; sealed &amp; pattern matching instanceof đi qua preview ở 14–16\n- Helpful NullPointerException (14) chỉ rõ variable nào null\n\nĐào sâu: cơ chế *preview feature* (`--enable-preview`) cho phép Java evolve nhanh mà không khoá cứng API chưa chín.\n\n- Cụ thể mỗi thứ: `switch` trả giá trị (`case A -> 1;`) nên không còn quên `break`; text block cho SQL nhiều dòng khỏi nối chuỗi; `if (o instanceof Booking b)` khỏi ép kiểu thủ công.\n- Đây cũng là lý do 17 (2.4) không có tính năng nào 'mới toanh': 13–16 đã chạy thử preview hết, 17 chỉ đóng dấu final.\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.4",
+          "lvl": "core",
+          "q": "Java 17 (LTS) — bộ tính năng then chốt?",
+          "a": "- [[g:Records]]: immutable data class, sinh sẵn constructor/equals/hashCode/toString\n- [[g:Sealed classes]]: giới hạn tập subclass — model hoá domain chặt, hỗ trợ exhaustive switch\n- [[g:Pattern matching for instanceof]]: bớt manual cast\n- strongly encapsulated JDK internals; nhiều cải tiến performance\n\nJava 17 là LTS được khuyến nghị suốt 2021–2023, vẫn rất phổ biến.\n\n:::deep\n[[g:sealed + record + pattern matching switch]] = *algebraic data type*:\n- liệt kê hết variant (compiler bắt thiếu nhánh)\n- immutable, xử lý exhaustive\n- rất hợp state machine (booking: `Held | Paid | Issued | Cancelled`)\n\n- Record sinh sẵn equals/hashCode/toString nhưng nhớ defensive-copy field mutable (List) trong compact constructor\n- Java 17 siết encapsulation JDK internals → reflection 'lậu' vào sun.* bị chặn, [[r:một số lib cũ vỡ]]\n- nền của Spring Boot 3 (yêu cầu tối thiểu Java 17)\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.5",
+          "lvl": "core",
+          "q": "Java 21 (LTS) — vì sao là bản 'đổi cuộc chơi' về concurrency?",
+          "a": "- [[g:Virtual Threads]] (final): lightweight concurrency kiểu thread-per-request, scale triệu I/O task\n- [[g:Pattern matching for switch]] + record deconstruction: viết logic rất expressive\n- Sequenced Collections: API thống nhất first/last/reversed\n- Structured concurrency (preview), Scoped Values (preview), Generational ZGC\n\n**Code cũ đặt cạnh code Java 21:**\n<pre><code><span class=\"c\">// Trước 21</span>\n<span class=\"k\">if</span> (e <span class=\"k\">instanceof</span> Refund) {\n    Refund r = (Refund) e;\n    <span class=\"k\">if</span> (r.<span class=\"f\">amount</span>() &gt; <span class=\"n\">0</span>) <span class=\"f\">refund</span>(r.<span class=\"f\">id</span>(), r.<span class=\"f\">amount</span>());\n} <span class=\"k\">else</span> <span class=\"k\">if</span> (e <span class=\"k\">instanceof</span> Charge) {\n    <span class=\"f\">charge</span>((Charge) e);\n}\n<span class=\"c\">    </span>\n<span class=\"c\">// Java 21: pattern matching for switch + tách record; sealed nên không cần default</span>\n<span class=\"k\">switch</span> (e) {\n    <span class=\"k\">case</span> Refund(<span class=\"k\">var</span> id, <span class=\"k\">var</span> amount) <span class=\"k\">when</span> amount &gt; <span class=\"n\">0</span> -&gt; <span class=\"f\">refund</span>(id, amount);\n    <span class=\"k\">case</span> Charge c                              -&gt; <span class=\"f\">charge</span>(c);\n    <span class=\"k\">case</span> <span class=\"k\">null</span>                                 -&gt; <span class=\"k\">throw</span> <span class=\"k\">new</span> IllegalArgumentException();\n}\n<span class=\"c\">    </span>\n<span class=\"c\">// Java 21: mỗi task một thread thật, không còn pool để mà chỉnh</span>\n<span class=\"k\">try</span> (<span class=\"k\">var</span> exec = Executors.<span class=\"f\">newVirtualThreadPerTaskExecutor</span>()) {\n    routes.<span class=\"f\">forEach</span>(r -&gt; exec.<span class=\"f\">submit</span>(() -&gt; gds.<span class=\"f\">search</span>(r)));\n}                                              <span class=\"c\">// close() chờ mọi task xong</span></code></pre>\n\n:::deep\n- pattern matching for switch + record deconstruction → xử lý data rất expressive\n- Sequenced Collections thống nhất `getFirst/getLast/reversed`\n- Generational ZGC (21) giảm CPU overhead so với ZGC non-gen\n\n**Migration virtual threads** — gần như [[g:'drop-in']] cho service blocking (Spring Boot 3.2+: `spring.threads.virtual.enabled=true`), nhưng:\n- [[r:audit `synchronized`]] ở hot path (pinning)\n- vẫn phải giới hạn downstream resource (VT không tự bảo vệ DB khỏi 10k concurrent query — cần pool/semaphore)\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.6",
+          "lvl": "hard",
+          "q": "Java 25 (LTS, 9/2025) — những gì mới và quan trọng nhất cho hệ tải cao?",
+          "a": "LTS đầu tiên sau Java 21, ~18 JEP, trọng tâm performance/runtime, long-term support (~8 năm). Đáng chú ý:\n- [[g:Scoped Values (final)]]: thay ThreadLocal, nhanh & an toàn hơn\n- [[g:Compact Object Headers (final)]]: header nhỏ hơn → tiết kiệm memory\n- [[g:Generational Shenandoah (final)]]: tăng throughput, giảm pause\n- Ahead-of-Time Profiling: reuse profile → startup/warmup nhanh hơn\n- Flexible Constructor Bodies: validate trước `super()`\n- Module Import Declarations + Compact Source Files & instance main\n- JFR CPU-time profiling, primitive trong pattern matching, KDF API\n\n:::tip Chốt định vị\nJava 25 đẩy mạnh memory efficiency + low-pause GC + fast warmup — trực tiếp thu hẹp khoảng cách với Go ở mảng resource/startup. FFM API (thay JNI) đã final từ Java 22.\n:::\n\n:::deep\n- [[g:Compact Object Headers]]: header 12→8 byte → tiết kiệm RAM &amp; tăng cache locality (đúng kiểu fintech domain nhiều object nhỏ)\n- [[g:Scoped Values]]: rẻ &amp; an toàn hơn ThreadLocal khi có triệu VT\n- Generational Shenandoah + ZGC chín muồi → low-pause không đánh đổi nhiều throughput\n- [[g:AOT Profiling]] (lưu profile lần chạy trước) rút ngắn warmup — thu hẹp điểm yếu startup so với Go\n- FFM (final 22) thay JNI cho native/AI integration\n\nĐào sâu: Java 25 vá có hệ thống các điểm yếu lịch sử (RAM, pause, warmup, native) trong khi giữ ecosystem.\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.7",
+          "lvl": "ext",
+          "q": "Vì sao enterprise bám LTS thay vì bản mới nhất mỗi 6 tháng?",
+          "a": "Java ra bản mỗi 6 tháng, nhưng chỉ [[g:LTS]] (8, 11, 17, 21, 25...) có long-term support (security patch nhiều năm).\n\nEnterprise ưu tiên:\n- stability + tương thích library/framework\n- chu kỳ testing/compliance\n\n→ thường nhảy giữa các LTS thay vì chạy theo feature release ngắn hạn.\n\n:::warn Bẫy phỏng vấn\nNói 'dùng LTS cho ổn định' mới là điểm sàn. Điểm cộng là nói được cái giá của việc *đứng yên*: nhảy một phát 8 lên 21 đau hơn nhiều so với 8 lên 11 lên 17 lên 21, vì gom hết breaking change vào một đợt QA duy nhất. Và LTS không tự nó an toàn — vẫn phải cập nhật bản vá nhỏ (25.0.1, 25.0.2...) vì lỗ hổng được vá ở đó, chứ không phải ở bản LTS kế tiếp.\n:::\n\n:::deep\n- feature release (6 tháng) chỉ được patch tới khi bản kế ra → chạy production trên non-LTS phải upgrade mỗi nửa năm ([[r:rủi ro, tốn QA]])\n- LTS support nhiều năm (Java 25 ~8 năm), có security patch, được framework/vendor certify\n- chu kỳ doanh nghiệp: nhảy giữa LTS (8→11→17→21→25), test kỹ một lần, đứng vài năm\n\nĐào sâu: [[o:không tụt quá 2 LTS]] (mất security + lib ngừng support), nhưng cũng không chạy bleeding edge ở core production.\n:::",
+          "translated": true
+        }
+      ]
+    },
+    {
+      "title": "Java vs Go (2025–2026)",
+      "items": [
+        {
+          "id": "2.8",
+          "lvl": "hard",
+          "q": "Virtual Threads vs Goroutines — mô hình khác nhau ra sao?",
+          "a": "Cả hai đều là [[g:M:N scheduler]] map nhiều lightweight thread lên ít OS thread, tự yield khi blocking I/O.\n\n<table class=\"cmp\"><thead><tr><th></th><th>Goroutine</th><th>Virtual Thread</th></tr></thead><tbody>\n<tr><td>Ra đời</td><td>2009, scheduler chín</td><td>Java 21 (Loom)</td></tr>\n<tr><td>Stack</td><td>~2KB growable</td><td>continuation trên heap</td></tr>\n<tr><td>Coordinate</td><td>channel (message passing)</td><td>shared memory + StructuredTaskScope</td></tr>\n<tr><td>Ecosystem</td><td>viết riêng cho Go</td><td>reuse JDBC/Hibernate/Kafka</td></tr>\n</tbody></table>\n\nChannel của Go ≈ data passing; StructuredTaskScope ≈ quản lý task lifecycle — bổ sung nhau, không thay thế trực tiếp.\n\n:::deep\n- goroutine có scheduler riêng tinh chỉnh ~15 năm (work-stealing, GOMAXPROCS, preemption từ Go 1.14)\n- VT mount/unmount trên carrier (ForkJoinPool); continuation lưu/restore stack khi block\n- coordination: Go ưa [[b:channel]] (CSP, 'share memory by communicating'); Java ưa shared memory + lock/concurrent collection + StructuredTaskScope\n\n[[g:Điểm Java thắng]]: reuse nguyên ecosystem blocking mà không viết lại.\n[[r:Cần cẩn thận]]: pinning (synchronized/native) và ThreadLocal nặng khi có triệu VT (→ ScopedValue).\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.9",
+          "lvl": "hard",
+          "q": "Hiệu năng thực tế: Go nhanh/nhẹ hơn Java bao nhiêu, và điều đó có quan trọng không?",
+          "a": "Benchmark I/O-bound gần đây (2025–2026), xu hướng nhất quán:\n- Go dùng [[g:~4–6× ít memory]], startup nhanh hơn\n- container density cao hơn (~3–4× instance trên cùng hardware)\n- throughput: gap tuỳ workload — có test chỉ [[o:~13%]] (Gin ~31k vs Spring Boot VT ~27k req/s), toy concurrency thì lên vài lần\n\nNhưng: phần lớn service chỉ vài nghìn RPS → gap đó 'không đổi được gì'. Chỉ thành [[o:business case]] ở scale rất lớn (50 service → chênh sáu chữ số/năm tiền hạ tầng).\n\n:::warn Lưu ý đọc benchmark\nsố Java thường gồm base footprint JVM (~50–70MB) và chưa warmup JIT. ZGC khử được pause spike mà không cần viết lại code.\n:::\n\n:::deep\nTách hai nhóm số:\n- [[b:memory/density/startup]]: Go thắng rõ (~4–6× RAM, density ~3–4×, startup mili-giây)\n- [[b:throughput]]: gap thu hẹp còn ~13% với VT ở workload thực; chỉ vài lần ở toy concurrency\n\nBiến thành business case: 50 service tải cao → chênh RAM/density → sáu chữ số/năm tiền cloud; nhưng service vài nghìn RPS thì 'không đổi được gì'.\n\nĐào sâu: quyết định theo *shape của workload + chi phí ở scale*, không theo một con số đơn lẻ.\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.10",
+          "lvl": "core",
+          "q": "Khi nào chọn Java, khi nào chọn Go? Mô hình polyglot là gì?",
+          "a": "<table class=\"cmp\"><thead><tr><th>Chọn Java khi</th><th>Chọn Go khi</th></tr></thead><tbody>\n<tr><td>domain phức tạp (nhiều entity/rule)</td><td>edge proxy, sidecar, CLI, infra tooling</td></tr>\n<tr><td>cần ORM/mature ecosystem (Hibernate, Spring Data)</td><td>high-throughput API đơn giản</td></tr>\n<tr><td>team mạnh Java</td><td>cost/container density quan trọng</td></tr>\n<tr><td>tích hợp AI/LLM/vector</td><td>cần single-binary + startup nhanh</td></tr>\n</tbody></table>\n\n[[g:Polyglot]] là pattern thắng thế 2025–2026: Java cho core nghiệp vụ & stateful domain, Go cho lớp biên/high-throughput; giao tiếp HTTP/gRPC (Google, Netflix, Cloudflare).\n\nCâu hỏi không phải 'ngôn ngữ nào thắng' mà [[g:'tool nào đúng cho từng tầng']].\n\n:::tip Chốt\ntrả lời 'tùy tầng' kèm con số cost/density — thể hiện tư duy kiến trúc & vận hành, không phải tín đồ ngôn ngữ.\n:::\n\n:::deep\n- [[b:Java]]: domain phức tạp, team Java-first (velocity &gt;&gt; gap 13%), tích hợp AI/vector\n- [[b:Go]]: HTTP+DB+cache đơn giản ở scale, single-binary (sidecar/CLI/proxy), cost/service &gt;$50k/năm\n- [[b:Native Java]]: scale-to-zero/fast startup (serverless)\n\n[[r:Cái giá của polyglot]]: vận hành nhiều stack (build, observability, tuyển dụng) — đừng đa ngôn ngữ chỉ vì thích.\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.11",
+          "lvl": "ext",
+          "q": "GraalVM Native Image — giải quyết điểm yếu nào của Java so với Go?",
+          "a": "[[g:Native Image]] compile AOT thành native binary:\n- startup ~mili-giây, footprint nhỏ, density cao\n- thu hẹp khoảng cách với Go cho serverless/scale-to-zero\n\nĐổi lại:\n- peak throughput thường [[r:thấp hơn JIT đã warm]]\n- build phức tạp hơn\n- reflection/dynamic cần config\n\n'Native Java' đứng giữa: tốt hơn JVM về density, kém JIT về peak.\n\n:::deep\n**Cơ chế & cái giá:** compile AOT với *closed-world assumption* (phải biết hết class lúc build) → reflection/dynamic proxy/resource cần khai báo (reachability metadata); Spring Boot 3 + GraalVM hỗ trợ qua AOT processing.\n\n- [[g:Lợi]]: startup ~mili-giây, RSS nhỏ, density cao → hợp serverless/scale-to-zero\n- [[r:Mất]]: peak throughput thấp hơn JIT warm (bù bằng PGO khi build), build lâu & phức tạp, một số lib chưa tương thích\n\nĐào sâu: Native khi *autoscaling/startup là SLO*; JVM+ZGC khi *p99.9 throughput* là SLO.\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.12",
+          "lvl": "ext",
+          "q": "Tương lai của Java: Project Loom, Valhalla, Panama là gì?",
+          "a": "- [[g:Loom]]: virtual threads + structured concurrency — lightweight concurrency\n- [[g:Valhalla]]: value/primitive class — object 'flat' như primitive trong memory, tăng cache performance (data-intensive/AI)\n- [[g:Panama (FFM API)]]: gọi native gọn thay JNI; nền cho tích hợp C/AI\n\nHướng đi: Java giữ ecosystem mạnh trong khi vá điểm yếu lịch sử (concurrency, memory layout, native interop).\n\n:::deep\n- [[g:Loom]] (đã final phần lớn): đổi cách viết I/O code\n- [[g:Valhalla]]: value/primitive class 'flat' (không header, không indirection) → tăng cache locality, giảm RAM (data-intensive/AI, large numeric collection); Java 25 đặt nền (Compact Headers)\n- [[g:Panama (FFM)]]: gọi native gọn, an toàn (final 22), nền cho C/AI/SIMD (Vector API)\n\nĐào sâu: ba dự án = Java 'tự sửa' ba điểm yếu so với Go/Rust (concurrency model, memory layout, native interop) mà vẫn giữ backward compatibility.\n:::",
+          "translated": true
+        },
+        {
+          "id": "2.13",
+          "lvl": "ext",
+          "q": "Records, sealed classes, pattern matching kết hợp tạo phong cách lập trình gì?",
+          "a": "Bộ ba mang phong cách [[g:algebraic data types]] (functional) vào Java:\n- [[g:sealed]]: liệt kê hết variant\n- [[g:record]]: immutable data\n- [[g:pattern matching switch]]: xử lý exhaustive (compiler bắt thiếu nhánh)\n\nRất hợp model hoá domain/state machine rõ ràng, ít boilerplate.\n\n:::deep\n**Áp dụng thực tế:** `sealed interface BookingState permits Held, Paid, Issued, Cancelled` + record cho từng state + `switch` pattern matching exhaustive:\n- compiler ép xử lý mọi state\n- thêm state mới mà quên nhánh → [[r:compile error]] (an toàn cho state machine tiền/vé)\n\n- khác enum: state mang data riêng (record field)\n- phong cách [[g:'make illegal states unrepresentable']]\n\nĐào sâu: kết hợp deconstruction (`case Paid(var amount, var ts)`) cho code vừa ngắn vừa type-safe — gần Rust/Scala mà vẫn Java thuần.\n:::",
+          "translated": true
+        }
+      ]
+    }
+  ]
+}

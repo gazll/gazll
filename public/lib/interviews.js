@@ -97,7 +97,7 @@ function requireToken() {
    which is what lets both lists share a single id space in the view. */
 async function loadSeed() {
   try {
-    const res = await fetch('interviews.json', { cache: 'no-cache' });
+    const res = await fetch('data/interviews.json', { cache: 'no-cache' });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.companies || []).map((c, i) => ({ ...c, id: 'seed-' + i, own: false }));

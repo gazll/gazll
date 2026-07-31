@@ -1,0 +1,138 @@
+{
+  "sections": [
+    {
+      "title": "Docker & Kubernetes",
+      "items": [
+        {
+          "id": "14.1",
+          "lvl": "core",
+          "q": "Docker: image layers, multi-stage build và lệnh thường dùng?",
+          "a": "Image gồm [[b:layer]] xếp chồng (mỗi lệnh Dockerfile = 1 layer, cache được).\n\n[[g:Multi-stage build]]: stage build (Maven/JDK) tạo artifact, stage runtime chỉ copy artifact vào base nhỏ (JRE/distroless) → image gọn, ít lỗ hổng.\n\n<pre><code><span class=\"k\">FROM</span> maven <span class=\"k\">AS</span> build\n<span class=\"k\">COPY</span> . . &amp;&amp; mvn package\n<span class=\"k\">FROM</span> eclipse-temurin:<span class=\"n\">21</span>-jre\n<span class=\"k\">COPY</span> --from=build /app/target/app.jar /app.jar\n<span class=\"k\">ENTRYPOINT</span> [<span class=\"s\">\"java\"</span>,<span class=\"s\">\"-jar\"</span>,<span class=\"s\">\"/app.jar\"</span>]</code></pre>\n\nLệnh: `docker build -t`, `run -d -p`, `ps`, `logs -f`, `exec -it`, `image prune`.\n\n[[o:Tối ưu cache]]: copy `pom.xml` + tải dependency trước khi copy source.\n\n:::deep\n- mỗi lệnh = một layer bất biến, cache theo nội dung → đặt phần ít đổi trước (copy `pom.xml`/lockfile + tải dependency) rồi mới copy source → đổi code không tải lại dependency\n- multi-stage: stage build (JDK+Maven nặng) → copy chỉ JAR sang runtime (JRE slim/distroless) → image nhỏ, ít CVE, không có build tool (giảm attack surface)\n- image nhỏ = pull nhanh (rollout nhanh), ít lỗ hổng; distroless/alpine bỏ shell (an toàn hơn, khó debug)\n\n[[r:Bẫy]]: secret trong layer (xoá ở layer sau vẫn còn trong lịch sử) → dùng build secret/multi-stage. Pin base image theo digest (reproducible). Java: layered JAR của Spring Boot để tách dependency layer.\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.2",
+          "lvl": "core",
+          "q": "Kiến trúc Kubernetes: control plane, node, pod?",
+          "a": "- [[b:Control plane]]: API server (cổng vào), etcd (state store), scheduler (xếp pod), controller manager (điều hoà desired vs actual)\n- [[b:Node]]: kubelet (chạy pod), kube-proxy (network), container runtime\n- [[b:Pod]]: đơn vị triển khai nhỏ nhất (1+ container chia network/volume)\n\nK8s vận hành theo [[g:declarative + reconciliation]]: khai báo desired state, controller liên tục đưa hệ về đó.\n\n:::deep\n- control plane: `api-server` (cổng duy nhất, auth/admission), `etcd` (KV Raft — nguồn sự thật), `scheduler` (gán pod theo resource/affinity), `controller-manager` (vòng lặp 'desired vs actual')\n- node: `kubelet` (chạy pod), `kube-proxy` (Service), containerd; pod = 1+ container chia network/volume (sidecar)\n- [[g:reconciliation loop]]: self-healing (pod chết → tạo lại); giải thích 'xoá pod nó mọc lại → phải sửa Deployment'\n\netcd là điểm sống còn (backup + HA quorum số lẻ). OTA: app stateless → Deployment; DB/Kafka → StatefulSet hoặc managed ngoài cluster.\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.3",
+          "lvl": "hard",
+          "q": "Deployment vs StatefulSet — khác nhau và khi nào dùng?",
+          "a": "<table class=\"cmp\"><thead><tr><th></th><th>Deployment</th><th>StatefulSet</th></tr></thead><tbody>\n<tr><td>Cho</td><td>stateless app</td><td>stateful (DB, Kafka, Zookeeper)</td></tr>\n<tr><td>Pod identity</td><td>ngẫu nhiên (cattle)</td><td>ổn định pod-0, pod-1 (pets)</td></tr>\n<tr><td>Storage</td><td>không gắn cố định</td><td>PVC riêng theo pod</td></tr>\n<tr><td>Scale/khởi động</td><td>thoải mái</td><td>theo thứ tự</td></tr>\n</tbody></table>\n\n:::tip Chốt\nstateless → Deployment; cần định danh + storage bền theo từng pod → StatefulSet. Web app thường stateless (đẩy state ra DB/cache).\n:::\n\n:::deep\n- StatefulSet: tên ổn định `name-0..N`, PVC riêng qua `volumeClaimTemplates` (giữ data khi re-schedule), headless Service cấp DNS `pod-0.svc`, scale/rolling theo thứ tự\n- [[r:Bẫy]]: app stateless vào StatefulSet 'cho chắc' → mất scale linh hoạt; DB trong Deployment → mất gắn kết pod↔volume\n\nCâu chốt: '[[g:cattle vs pets]]' — Deployment là gia súc, StatefulSet là thú cưng có tên.\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.4",
+          "lvl": "core",
+          "q": "kubectl thường dùng và cách 'deploy pod mới' / rolling update?",
+          "a": "Thông dụng: `kubectl get/describe`, `logs -f`, `exec -it`, `apply -f`, `rollout status/undo`, `scale`, `port-forward`.\n\n**Deploy phiên bản mới** (declarative): cập nhật image trong manifest → `kubectl apply -f` (hoặc `set image`) → Deployment [[g:rolling update]] (ReplicaSet mới, tăng pod mới/giảm pod cũ dần theo maxSurge/maxUnavailable).\n\nLỗi → `kubectl rollout undo`. [[r:Tránh `kubectl edit` tay trên prod]] (drift khỏi git).\n\n:::deep\n- [[r:KHÔNG `kubectl run` pod trần]] (không self-heal) — sửa Deployment (đổi image tag) → rolling update tự động\n- `set image` / `apply -f` (GitOps ưa apply); `rollout status`/`undo` (rollback về ReplicaSet cũ); rolling update điều khiển bằng `maxSurge`/`maxUnavailable` + readiness probe → zero-downtime\n\n[[r:Bẫy]]: thiếu readiness probe → traffic vào pod chưa sẵn sàng (5xx); thiếu `preStop` + graceful shutdown → cắt connection đang xử lý. PodDisruptionBudget bảo vệ tối thiểu pod khi drain node. Production: GitOps (ArgoCD) apply thay kubectl tay.\n\n- Pod chết mà không rõ vì sao: `OOMKilled` và exit code 137 truy nguyên thế nào (21.4).\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.5",
+          "lvl": "core",
+          "q": "Service, Ingress, ConfigMap, Secret — vai trò?",
+          "a": "- [[b:Service]]: địa chỉ ổn định + load balance tới tập pod (ClusterIP, NodePort, LoadBalancer)\n- [[b:Ingress]]: định tuyến HTTP(S) từ ngoài vào service theo host/path + TLS (qua ingress controller như Nginx)\n- [[b:ConfigMap]]: config không nhạy cảm\n- [[b:Secret]]: data nhạy cảm (nên mã hoá at-rest + KMS)\n\nCả hai inject qua env/volume.\n\n:::deep\n- Service qua label selector; ClusterIP (nội bộ), NodePort, LoadBalancer (cloud LB), Headless (DNS từng pod — StatefulSet)\n- Ingress = L7 routing + TLS termination (Nginx/Traefik); Gateway API là kế nhiệm hiện đại\n- [[r:Secret chỉ base64, KHÔNG mã hoá mặc định]] → bật encryption-at-rest cho etcd + RBAC + tránh log\n- Service tách 'địa chỉ' khỏi 'pod ephemeral' (pod đổi IP → Service DNS ổn định)\n\n[[r:Bẫy]]: Secret tưởng an toàn → cần KMS/Sealed Secrets/External Secrets (Vault) cho production; ConfigMap đổi không tự reload (cần restart/reloader). OTA: API key PSP/GDS qua External Secrets từ Vault.\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.6",
+          "lvl": "hard",
+          "q": "Liveness / readiness / startup probe — vì sao không gộp?",
+          "a": "<table class=\"cmp\"><thead><tr><th>Probe</th><th>Hỏi</th><th>Fail →</th></tr></thead><tbody>\n<tr><td>Liveness</td><td>'còn sống?'</td><td>restart container</td></tr>\n<tr><td>Readiness</td><td>'sẵn sàng nhận traffic?'</td><td>rút khỏi Service (không restart)</td></tr>\n<tr><td>Startup</td><td>'đã khởi động xong?'</td><td>hoãn liveness lúc warmup</td></tr>\n</tbody></table>\n\n:::warn Bẫy\ngộp liveness với phụ thuộc ngoài (DB) → DB chậm làm pod restart liên hồi (crash loop). Liveness chỉ nên kiểm 'process còn chạy', readiness mới phản ánh phụ thuộc.\n:::\n\n:::deep\n- [[b:Liveness]] = 'process còn lành?' → *restart* (chỉ check nội tại nhẹ, [[r:KHÔNG check DB]] — DB chậm mà liveness fail → restart loop vô ích)\n- [[b:Readiness]] = 'sẵn sàng?' → *gỡ khỏi Service* (không restart) — check dependency ở đây; DB chậm → gỡ khỏi LB cho tự hồi, không giết pod\n- [[b:Startup]] = 'khởi động xong?' cho app khởi động chậm (JVM warmup) → hoãn liveness/readiness (tránh bị giết oan lúc boot)\n\n[[r:Lỗi kinh điển]]: liveness check DB → DB sự cố → toàn bộ pod restart đồng loạt → cascading failure + mất warmup. Spring Boot: startup probe + actuator health groups (liveness vs readiness).\n\n- Restart loop không phải lúc nào cũng do probe: `OOMKilled` (exit code 137) là nhánh còn lại, xem `kubectl describe` trước khi chỉnh probe (21.4).\n:::",
+          "translated": true
+        }
+      ]
+    },
+    {
+      "title": "Web server, mạng & quan sát",
+      "items": [
+        {
+          "id": "14.7",
+          "lvl": "core",
+          "q": "Nginx làm reverse proxy / load balancer thế nào?",
+          "a": "Nginx (event-driven, non-blocking) đứng trước app:\n- [[b:reverse proxy]]: che backend, TLS termination, header, gzip\n- [[b:load balancing]]: round-robin/least_conn/ip_hash qua `upstream`\n- caching tĩnh, rate limit (`limit_req`), buffering\n\nHợp làm edge/ingress; phục vụ tĩnh & proxy cực hiệu quả với ít tài nguyên.\n\n:::deep\n- cấu hình quan trọng: `proxy_buffering off` cho SSE/streaming; `keepalive` tới upstream (tái dùng connection, giảm handshake); `proxy_read_timeout` hợp với backend chậm (GDS); `X-Forwarded-For`/`proto` để backend biết client thật\n- HTTP/2 ở client-side, có thể HTTP/1.1 tới upstream\n\nOTA: Nginx/Envoy ở biên làm TLS + rate-limit thô + route; gateway ứng dụng (Spring Cloud Gateway) làm auth/biz routing. [[g:Envoy]] nền của service mesh (hiểu HTTP/2/gRPC, retry/circuit-breaker config-driven) — xu hướng thay Nginx cho mesh.\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.8",
+          "lvl": "hard",
+          "q": "Quản lý log lượng lớn: structured logging và ELK/Loki?",
+          "a": "Ở quy mô nhiều service, [[r:không SSH đọc file]]. Thay vào đó:\n- [[g:structured logs]] (JSON) với field chuẩn (service, level, trace_id, request_id, user_id ẩn danh)\n- thu thập tập trung → [[b:ELK]] (Elasticsearch + Logstash/Fluentd + Kibana) hoặc [[b:Loki]] (rẻ hơn, index theo label, hợp Grafana)\n- retention/rotation, sampling cho log ồn\n- [[r:KHÔNG log data nhạy cảm]] (PII/PCI/token)\n\n:::tip Chốt\ngắn trace_id/request_id vào mọi log để ghép lại hành trình một request xuyên service — nền của debug phân tán.\n:::\n\n:::deep\n- structured JSON với trường bắt buộc (timestamp, level, service, trace_id, span_id, request_id); đẩy qua agent (Fluent Bit/Vector) → Kafka đệm → ELK/Loki\n- kiểm soát chi phí: sampling log ồn, tách log nghiệp vụ vs debug, retention theo tier (hot 7 ngày, cold archive S3)\n- [[r:Tuyệt đối KHÔNG log PII/PCI]] (số thẻ, token, mật khẩu) — vi phạm compliance phổ biến; dùng masking\n\nOTA: log mọi tương tác GDS/PSP kèm correlation id để đối soát và điều tra giao dịch treo.\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.9",
+          "lvl": "hard",
+          "q": "Distributed tracing trong K8s: OpenTelemetry + Jaeger hoạt động ra sao?",
+          "a": "- mỗi request có [[b:trace id]]; mỗi chặng là một [[b:span]] (có parent), truyền context qua header HTTP/gRPC + message header\n- [[g:OpenTelemetry]] chuẩn hoá instrument (vendor-agnostic), xuất sang [[b:Jaeger]]/Tempo/Datadog\n- xem 'request đi qua service nào, chậm ở đâu' (vd 'checkout chậm vì gọi fraud-check đồng bộ +600ms')\n- K8s: chạy OTel Collector dạng DaemonSet/sidecar\n\n:::deep\n- OTel chuẩn hoá tạo &amp; propagate *trace context* (`traceparent` header W3C) → mỗi hop tạo span (con của span cha) cùng trace_id; auto-instrument (HTTP/gRPC/JDBC/Kafka) + manual span; export OTLP → collector → backend\n- một request thành *cây span* → thấy thời gian từng hop; [[b:sampling]] (head/tail) kiểm soát chi phí (tail giữ trace lỗi/chậm)\n- giá trị thật là [[g:correlation]]: gắn trace_id vào log + metric exemplar; propagate qua Kafka header để trace luồng async\n\nOTA: trace 'đặt vé' xuyên booking→payment→gds→ticketing cho thấy GDS +600ms là nghẽn; [[r:thiếu trace = mò kim đáy bể]].\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.10",
+          "lvl": "core",
+          "q": "Ba trụ cột observability và metrics RED/USE?",
+          "a": "Ba trụ cột:\n- [[b:Logs]] (structured + trace id)\n- [[b:Metrics]] (Prometheus + Grafana)\n- [[b:Traces]] (OpenTelemetry→Jaeger)\n\nFramework:\n- [[g:RED]] (service): Rate, Errors, Duration\n- [[g:USE]] (tài nguyên): Utilization, Saturation, Errors\n\nAlert theo SLO/SLI, không alert vào mọi spike.\n\n:::deep\n- metric báo 'có vấn đề' → trace định vị 'ở đâu' → log giải thích 'tại sao'\n- [[o:alert theo SLO/symptom]] (p99 latency, error rate user thấy) không theo cause (CPU 80% chưa chắc là vấn đề) → giảm alert fatigue\n- saturation (queue/pool pending) là leading indicator; business metric (`booking_failed_total`, `payment_pending`) quan trọng ngang metric hạ tầng\n\nOTA: dashboard RED cho từng service + business funnel (search→hold→pay→issue) để thấy nghiệp vụ gãy ở bước nào.\n\n- Chủ đề 20 là bản đầy đủ: chọn metric nào cho service và cho tài nguyên (20.3), vì sao một label sai làm sập cả hệ metric (20.4), SLO cùng error budget dùng để quyết định điều gì (20.5), và log thế nào để tra ra được (20.8).\n:::",
+          "translated": true
+        }
+      ]
+    },
+    {
+      "title": "CI/CD & best practices 2026",
+      "items": [
+        {
+          "id": "14.11",
+          "lvl": "core",
+          "q": "Pipeline CI/CD điển hình và deployment strategy (blue-green vs canary)?",
+          "a": "Stage: source → build → unit test → SAST/SCA scan → image (immutable, versioned) → deploy staging → integration test → deploy prod (gate) → smoke test → rollback sẵn sàng.\n\n<table class=\"cmp\"><thead><tr><th></th><th>Blue-green</th><th>Canary</th></tr></thead><tbody>\n<tr><td>Cách</td><td>hai môi trường, switch toàn bộ</td><td>đẩy dần % traffic</td></tr>\n<tr><td>Rollback</td><td>tức thì (switch lại)</td><td>dừng/giảm %</td></tr>\n<tr><td>Chi phí</td><td>gấp đôi tài nguyên</td><td>cần observability tốt</td></tr>\n<tr><td>Blast radius</td><td>toàn bộ nếu lỗi qua smoke</td><td>nhỏ</td></tr>\n</tbody></table>\n\n:::tip Fintech\nưu tiên canary + feature flag + migration DB backward-compatible để rollback an toàn.\n:::\n\n:::deep\n- pipeline: commit → build + unit test → SAST + SCA (CVE) + secret scan → build image (pin digest) + sign (cosign) → push registry → staging + integration/contract test → (approval) → prod\n- [[r:DB migration là phần khó nhất]] — dùng *expand-contract* (thêm cột tương thích ngược trước, deploy code, rồi xoá cũ) để không khoá rollback\n\nOTA/fintech: canary cho thay đổi luồng payment (rủi ro cao), feature flag tách 'deploy' khỏi 'release' (Argo Rollouts + mesh cho traffic splitting).\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.12",
+          "lvl": "ext",
+          "q": "Service mesh (Istio/Linkerd) giải quyết gì — best practice 2026?",
+          "a": "Service mesh đưa cross-cutting concern mạng (retry, circuit breaker, [[g:mTLS]], traffic splitting/canary, observability) xuống tầng hạ tầng qua [[b:sidecar proxy]] — không phải code trong app.\n\n- 2026: Istio/Linkerd production-ready (Linkerd nhẹ/'just works', Istio nhiều tính năng)\n- lời khuyên: bắt đầu một capability (mTLS hoặc canary), giám sát tài nguyên sidecar & control plane\n\n:::deep\n- tách logic giao tiếp service (mTLS, retry, timeout, circuit breaker, traffic split, observability) ra sidecar proxy (Envoy) → app không code resilience/security mạng, cấu hình bằng policy declarative\n- [[g:lợi]]: mTLS tự động + xoay cert (zero-trust), traffic management cho canary/A-B, telemetry đồng nhất (RED tự động)\n- [[r:cái giá]]: thêm latency/tài nguyên sidecar, phức tạp vận hành; xu hướng 2026 *ambient mesh* (Istio) bỏ sidecar per-pod\n\n[[r:Đừng thêm mesh sớm]] (vài service thì resilience4j + OTel SDK đủ); mesh đáng khi nhiều service/đa ngôn ngữ cần mTLS + traffic policy thống nhất.\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.13",
+          "lvl": "ext",
+          "q": "Các best practice kiến trúc backend nổi bật 2025–2026 (mở rộng)?",
+          "a": "- [[g:Database-per-service]]: service KHÔNG share DB (chống distributed monolith)\n- [[g:API Gateway]]: tập trung OAuth/JWT validation + protocol translation (REST→gRPC) + aggregation\n- [[g:OpenTelemetry]] chuẩn tracing vendor-agnostic; ELK/Loki + Prometheus/Grafana\n- [[g:AIOps]]: anomaly detection, predictive alerting, auto-remediation\n- [[g:Platform engineering / IDP]]: chuẩn hoá CI/CD, observability, template — dev provision service bằng một lệnh\n- [[g:Serverless containers]] cho workload biến động; GraalVM native/ZGC cho scale-to-zero\n- [[g:Polyglot]]: Java lõi nghiệp vụ, Go cho edge/throughput — interop qua gRPC\n\n:::tip Chốt\nxu hướng chung: 'đẩy độ phức tạp xuống hạ tầng/platform' (mesh, gateway, IDP, AIOps) để service tập trung vào business logic.\n:::\n\n:::deep\n- *platform engineering* (IDP — golden path, self-service) thay 'DevOps làm tất'; *database-per-service* + event-driven (Kafka/Outbox/CDC); *API gateway* auth/rate-limit + REST↔gRPC; *OTel* chuẩn observability; *AIOps* (RCA bằng ML); *GitOps* (ArgoCD/Flux) + IaC (Terraform); *mesh* + zero-trust + mTLS; serverless containers; *supply-chain security* (SBOM, sign image, SLSA)\n- chủ đề xuyên suốt: [[g:giảm coupling + tự động hoá + quan sát được + bảo mật mặc định]]; cảnh báo lặp: [[r:distributed monolith là anti-pattern số một]]\n- senior 2026 cân nhắc cả chi phí vận hành/cloud (FinOps), không chỉ 'tech cho cool'\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.14",
+          "lvl": "ext",
+          "q": "GitOps và Infrastructure as Code — vì sao quan trọng?",
+          "a": "- [[b:IaC]] (Terraform): hạ tầng khai báo bằng code, versioned, reproducible — không 'click tay'\n- [[b:GitOps]] (ArgoCD/Flux): Git là nguồn sự thật của trạng thái cluster; agent đồng bộ cluster về khớp Git → audit, rollback bằng git revert, không drift\n\nHợp môi trường compliance như fintech (mọi thay đổi có vết).\n\n:::deep\n- IaC (Terraform/Pulumi): reproducible, versioned, review được, tránh 'snowflake server'; plan/apply để thấy thay đổi trước\n- GitOps: Git là *nguồn sự thật duy nhất*; controller đồng bộ cluster về Git (reconciliation), mọi thay đổi qua PR (audit + review + rollback = git revert), drift detection\n- lợi ích: [[g:declarative + auditable + tự hồi]] — deploy = merge PR; tách secret khỏi Git (Sealed/External Secrets)\n\nFintech/OTA: audit trail mọi thay đổi hạ tầng/deploy là yêu cầu compliance. [[r:Bẫy]]: state file Terraform (chứa nhạy cảm) phải lưu an toàn + lock.\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.15",
+          "lvl": "ext",
+          "q": "Zero-trust security trong micro-services nghĩa là gì?",
+          "a": "Bỏ giả định 'mạng nội bộ đáng tin'. Mọi request — kể cả service-to-service — phải xác thực & uỷ quyền (mTLS + token), least-privilege, mã hoá in-transit, phân đoạn mạng (network policy).\n\n- monolith: bảo vệ vành đai\n- micro-services: [[g:'không có bên trong']] → mỗi service tự xác minh mọi request\n\nService mesh giúp hiện thực mTLS zero-trust mà không sửa code.\n\n:::deep\n- [[g:'never trust, always verify']] — mọi request (kể cả service↔service trong cluster) phải xác thực + uỷ quyền + mã hoá\n- triển khai: mTLS giữa mọi service (mesh cấp identity SPIFFE + xoay tự động), least-privilege (NetworkPolicy, RBAC tối thiểu, service account riêng), token/JWT cho ngữ cảnh user xuyên hop\n- vì sao: một pod bị xâm nhập (lateral movement) → zero-trust giới hạn [[g:blast radius]]; khác 'castle-and-moat' (vỡ biên là vỡ hết)\n\nOTA/fintech (PII, PCI-DSS): zero-trust + mã hoá + audit là bắt buộc; NetworkPolicy + mesh mTLS + secret management + RBAC + step-up auth là bộ tối thiểu.\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.16",
+          "lvl": "hard",
+          "q": "Graceful shutdown & connection draining: rolling update K8s không rớt request đang xử lý thế nào?",
+          "a": "Khi pod bị thay, K8s gửi [[b:SIGTERM]] rồi chờ `terminationGracePeriodSeconds` mới [[b:SIGKILL]].\n\nApp phải:\n- ngừng nhận request mới\n- xử lý nốt [[o:in-flight]]\n- đóng pool DB/MQ rồi mới thoát\n\nSpring Boot: `server.shutdown=graceful` + `spring.lifecycle.timeout-per-shutdown-phase`.\n\n[[g:Quan trọng]]: cho readiness fail ngay khi nhận SIGTERM (rút pod khỏi Service endpoints) + thêm `preStop` hook (sleep vài giây) để LB ngừng route trước khi tiến trình tắt.\n\n:::deep\n[[r:Race kinh điển]]: SIGTERM tới app *trước* khi kube-proxy/Ingress kịp cập nhật endpoint &#8594; traffic vẫn đổ vào pod đang chết &#8594; 502/connection reset.\n\nCách chuẩn: `preStop` sleep 5–15s (chờ endpoint propagate) + đặt readiness=false ngay, rồi mới đóng server; `terminationGracePeriodSeconds` &gt; request dài nhất (gọi PSP 30s). Consumer Kafka/Rabbit: ngừng poll, commit offset/ack nốt, rời group sạch.\n\nFintech/OTA: [[r:tuyệt đối không SIGKILL giữa 'đã trừ tiền chưa issue vé']] — drain + Saga/outbox để bước dở tiếp tục sau restart. Graceful shutdown là điều kiện để rolling update/autoscale/spot-instance không rơi giao dịch.\n:::",
+          "translated": true
+        },
+        {
+          "id": "14.17",
+          "lvl": "hard",
+          "q": "Migration schema zero-downtime: versioned migration (Flyway/Liquibase) & expand-contract đổi DB khi đang chạy?",
+          "a": "Dùng [[g:versioned migration]] (Flyway/Liquibase): mỗi thay đổi là một file bất biến, có checksum, chạy tự động &amp; đúng thứ tự khi deploy.\n\n[[g:Expand-contract]] (parallel change) qua nhiều release để zero-downtime:\n- [[b:expand]]: thêm cột/bảng mới (nullable), backfill, code ghi cả cũ lẫn mới\n- [[b:migrate]]: chuyển đọc sang cấu trúc mới\n- [[b:contract]]: bỏ cái cũ ở release sau\n\nMỗi bước tương thích ngược để pod cũ & mới chạy song song lúc rolling update.\n\n:::deep\n[[r:Vì sao không 'ALTER xong deploy']]: trong rolling update có lúc *cả* pod cũ và mới cùng chạy &#8594; schema phải tương thích cả hai; rename/drop cột hay thêm `NOT NULL` đột ngột làm pod cũ lỗi. Thêm NOT NULL đúng: thêm nullable &#8594; backfill theo lô &#8594; set NOT NULL sau.\n\n[[r:Bẫy bảng lớn]]: ALTER MySQL có thể khoá/đội DDL &amp; gây replication lag → dùng online DDL (`ALGORITHM=INPLACE`) hoặc gh-ost/pt-online-schema-change, backfill batch nhỏ. Migration tương thích ngược chạy *trước*, code đọc cấu trúc mới deploy sau.\n\nFintech: [[r:không drop cột tiền/ledger khi chưa chắc hết người đọc]]; mọi migration cần kế hoạch rollback. Kỷ luật expand-contract cho phép deploy nhiều lần/ngày không cần maintenance window.\n:::",
+          "translated": true
+        }
+      ]
+    }
+  ]
+}

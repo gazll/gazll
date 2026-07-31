@@ -25,7 +25,7 @@ let groupFilter = 'all';
 let topicQuery = '';
 
 /* Topic groups. Order here is the order of the filter bar; `key` matches the
-   `group` field of every topic in content.json. */
+   `group` field of every topic in data/manifest.json. */
 const GROUPS = [
   { key: 'core', label: 'Core' },
   { key: 'data', label: 'Data' },
@@ -56,13 +56,13 @@ const GUIDE_MD = [
   ':::deep Storage and languages',
   'Progress, notes and the interview journal are written to `localStorage` immediately, then synced to a **Google Sheet** through Apps Script once you are signed in with Google. Losing the network or closing the tab mid-save costs nothing — the queue lives in `localStorage` and is resent on the next visit.',
   '',
-  'The study material lives in `content.json` (JSON + Markdown). Supported syntax: **bold**, *italic*, `code`, `-` lists, and three callout blocks — `:::tip Label`, `:::warn Label`, `:::deep`.',
+  'The study material lives under `data/` (JSON + Markdown): `data/manifest.json` lists every topic and points at its `data/topics/N.json` file; `data/meta.json` holds each topic\'s label/title/intro/tags. Supported syntax: **bold**, *italic*, `code`, `-` lists, and three callout blocks — `:::tip Label`, `:::warn Label`, `:::deep`.',
   '',
-  'The interface is always English. The **material** has an `EN`/`VI` switch in the header. Vietnamese is the source of truth in `content.json`; `content.en.json` is a partial overlay keyed by topic number and item id, so English can be filled in one item at a time. Anything not translated yet falls back to Vietnamese and is tagged `VI` on the card.',
+  'The interface is always English. The **material** has an `EN`/`VI` switch in the header. Vietnamese is the source of truth; `data/meta.json`\'s `en` block and an optional `data/topics/N.en.json` per topic are partial overlays keyed by topic number and item id, so English can be filled in one item at a time. Anything not translated yet falls back to Vietnamese and is tagged `VI` on the card.',
   '',
   'Every topic carries a `group` field (`core` · `data` · `design` · `platform` · `algorithm`) — that is what drives the filter chips in the topic picker.',
   '',
-  'Raw HTML (SVG diagrams, tables) can be embedded straight into the Markdown. To update content: edit `content.json`, then `git push` — GitHub Actions deploys it.',
+  'Raw HTML (SVG diagrams, tables) can be embedded straight into the Markdown. To update content: edit the topic\'s file under `data/topics/`, then `git push` — GitHub Actions deploys it.',
   ':::'
 ].join('\n');
 
@@ -154,8 +154,9 @@ function wireNotes(root) {
 function renderMicro() {
   const m = MICRO;
   if (!m || !m.chapters) {
-    return '<div class="page"><p>No data yet. Add a <code>micro</code> key to <code>content.json</code> '
-      + '(<code>{ title, intro, tags, chapters:[{ title, items:[{id,lvl,q,a}] }] }</code>).</p></div>';
+    return '<div class="page"><p>No data yet. Add <code>data/microservices.json</code> '
+      + '(<code>{ chapters:[{ title, items:[{id,lvl,q,a}] }] }</code>) and a <code>microservices</code> entry '
+      + 'in <code>data/meta.json</code>.</p></div>';
   }
   const count = m.chapters.reduce((s, c) => s + ((c.items || []).length), 0);
   let html = '<section class="hero"><div class="hero-head"><div>'
@@ -737,7 +738,7 @@ async function init() {
   } catch (e) {
     panel.innerHTML = '<section class="hero"><div style="padding:8px 4px">'
       + '<h2>Could not load the content</h2>'
-      + '<p class="intro">The page reads <code>content.json</code> over <code>fetch</code>, so it has to run on '
+      + '<p class="intro">The page reads <code>data/manifest.json</code> over <code>fetch</code>, so it has to run on '
       + 'a web server (HTTP) — opening the file directly with <code>file://</code> will not work.</p>'
       + '<p class="intro">To view it locally: open a terminal in <code>public/</code>, run '
       + '<code>python -m http.server 8080</code> and go to <code>http://localhost:8080</code>.</p>'

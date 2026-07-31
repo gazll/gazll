@@ -1,0 +1,794 @@
+{
+  "topics": {
+    "1": {
+      "group": "core",
+      "vi": {
+        "label": "Java Core & JVM",
+        "title": "Java Core & JVM internals",
+        "intro": "Nền tảng của mọi backend Java senior: memory model, GC, concurrency và cách JVM thực thi. Đây là phần khai thác chiều sâu của bạn — tận dụng đợt deep-dive concurrency gần đây.",
+        "tags": [
+          "JMM",
+          "GC: G1/ZGC",
+          "Virtual threads",
+          "ConcurrentHashMap",
+          "JIT",
+          "Escape analysis"
+        ]
+      },
+      "en": {
+        "label": "Java Core & JVM",
+        "title": "Java Core & JVM internals",
+        "intro": "The ground every senior Java backend stands on: memory model, GC, concurrency, and how the JVM actually executes code. This is where your depth shows — build on the recent concurrency deep-dive.",
+        "tags": [
+          "JMM",
+          "GC: G1/ZGC",
+          "Virtual threads",
+          "ConcurrentHashMap",
+          "JIT",
+          "Escape analysis"
+        ]
+      }
+    },
+    "2": {
+      "group": "core",
+      "vi": {
+        "label": "Java 8→25 & Java vs Go",
+        "title": "Tiến hoá Java 8 → 25 (LTS) & so kè với Go",
+        "intro": "Một senior cần kể được câu chuyện ngôn ngữ đã đi đâu trong 10 năm, và định vị Java so với Go ở thời điểm 2025–2026 khi cả hai hội tụ về concurrency nhẹ. Phần này được cập nhật theo dữ liệu mới nhất.",
+        "tags": [
+          "LTS cadence",
+          "Records/Sealed",
+          "Pattern matching",
+          "Virtual threads",
+          "Java 25",
+          "Java vs Go",
+          "GraalVM"
+        ]
+      },
+      "en": {
+        "label": "Java 8→25 & Java vs Go",
+        "title": "Java 8 → 25 (LTS) evolution & Java vs Go",
+        "intro": "A senior should be able to tell the story of where the language went over ten years, and place Java against Go as of 2025–2026, now that both have converged on lightweight concurrency.",
+        "tags": [
+          "LTS cadence",
+          "Records/Sealed",
+          "Pattern matching",
+          "Virtual threads",
+          "Java 25",
+          "Java vs Go",
+          "GraalVM"
+        ]
+      }
+    },
+    "3": {
+      "group": "core",
+      "vi": {
+        "label": "Spring Boot deep + build",
+        "title": "Spring & Spring Boot chuyên sâu + Maven/Gradle",
+        "intro": "Phần 'cơm áo' hàng ngày của bạn nhưng ở mức cơ chế: IoC, transaction, auto-configuration, và quản lý dependency đúng cách trong pom/gradle — chỗ phân biệt người dùng framework vs người hiểu framework.",
+        "tags": [
+          "IoC/DI",
+          "@Transactional",
+          "Auto-configuration",
+          "POM/BOM",
+          "Maven vs Gradle",
+          "Actuator",
+          "AOP",
+          "Bean lifecycle",
+          "DispatcherServlet"
+        ]
+      },
+      "en": {
+        "label": "Spring Boot deep dive + build",
+        "title": "Spring & Spring Boot in depth + Maven/Gradle",
+        "intro": "Your daily bread, but at the mechanism level: IoC, transactions, auto-configuration, and managing dependencies properly in the pom/gradle — where framework users part ways with people who understand the framework.",
+        "tags": [
+          "IoC/DI",
+          "@Transactional",
+          "Auto-configuration",
+          "POM/BOM",
+          "Maven vs Gradle",
+          "Actuator",
+          "AOP",
+          "Bean lifecycle",
+          "DispatcherServlet"
+        ]
+      }
+    },
+    "4": {
+      "group": "design",
+      "vi": {
+        "label": "REST/gRPC & WebFlux",
+        "title": "API protocols (REST/gRPC) & lập trình reactive (WebFlux)",
+        "intro": "Cách các service nói chuyện và xử lý I/O ở mức cao. Trọng tâm: chọn đúng protocol, hiểu reactive vs virtual threads, và thiết kế API sạch.",
+        "tags": [
+          "REST idempotency",
+          "gRPC/Protobuf",
+          "HTTP/2",
+          "Mono/Flux",
+          "Backpressure",
+          "Reactive vs VT",
+          "Versioning"
+        ]
+      },
+      "en": {
+        "label": "REST/gRPC & WebFlux",
+        "title": "API protocols (REST/gRPC) & reactive programming (WebFlux)",
+        "intro": "How services talk to each other and handle I/O at a high level. The focus: picking the right protocol, reactive versus virtual threads, and designing a clean API.",
+        "tags": [
+          "REST idempotency",
+          "gRPC/Protobuf",
+          "HTTP/2",
+          "Mono/Flux",
+          "Backpressure",
+          "Reactive vs VT",
+          "Versioning"
+        ]
+      }
+    },
+    "5": {
+      "group": "data",
+      "vi": {
+        "label": "DB core: index & lock",
+        "title": "Database core — index internals, transaction, locking",
+        "intro": "Ngày DB trọng tâm 1. Đào tới thuật toán của index và cơ chế InnoDB. Mục tiêu: giải thích 'index là gì, vì sao nhanh' tới tận cấu trúc dữ liệu, và đọc execution plan thành thạo.",
+        "tags": [
+          "B+Tree algorithm",
+          "Clustered index",
+          "MVCC",
+          "Next-key lock",
+          "Deadlock",
+          "EXPLAIN",
+          "LSM-tree"
+        ]
+      },
+      "en": {
+        "label": "DB core: indexes & locking",
+        "title": "Database core — index internals, transactions, locking",
+        "intro": "Database day one. Down to the algorithm behind an index and the mechanics of InnoDB. The goal: explain what an index is and why it is fast all the way down to the data structure, and read an execution plan fluently.",
+        "tags": [
+          "B+Tree algorithm",
+          "Clustered index",
+          "MVCC",
+          "Next-key lock",
+          "Deadlock",
+          "EXPLAIN",
+          "LSM-tree"
+        ]
+      }
+    },
+    "6": {
+      "group": "data",
+      "vi": {
+        "label": "DB scaling",
+        "title": "Database scaling — replication, sharding, partitioning",
+        "intro": "Ngày DB trọng tâm 2. Từ một node lên nhiều node: nhân bản để đọc, chia mảnh để ghi, và các đánh đổi nhất quán. Tận dụng kinh nghiệm AWS RDS của bạn.",
+        "tags": [
+          "Replication lag",
+          "Read-after-write",
+          "Sharding",
+          "Consistent hashing",
+          "Snowflake ID",
+          "CAP/PACELC",
+          "CDC"
+        ]
+      },
+      "en": {
+        "label": "DB scaling",
+        "title": "Database scaling — replication, sharding, partitioning",
+        "intro": "Database day two. From one node to many: replicate for reads, shard for writes, and the consistency trade-offs in between. Builds on your AWS RDS experience.",
+        "tags": [
+          "Replication lag",
+          "Read-after-write",
+          "Sharding",
+          "Consistent hashing",
+          "Snowflake ID",
+          "CAP/PACELC",
+          "CDC"
+        ]
+      }
+    },
+    "7": {
+      "group": "data",
+      "vi": {
+        "label": "SQL/NoSQL & DB engines",
+        "title": "SQL vs NoSQL — Oracle / MySQL / PostgreSQL / MongoDB",
+        "intro": "Bức tranh toàn cảnh các hệ CSDL: khi nào SQL/NoSQL, vì sao doanh nghiệp chuộng Oracle, MySQL/Postgres đứng đâu, và vì sao MongoDB đọc nhanh — so sánh từ tầng phần mềm tới vật lý.",
+        "tags": [
+          "SQL vs NoSQL",
+          "Oracle RAC/PLSQL",
+          "PostgreSQL",
+          "MongoDB/WiredTiger",
+          "ACID vs BASE",
+          "Redis"
+        ]
+      },
+      "en": {
+        "label": "SQL/NoSQL & DB engines",
+        "title": "SQL vs NoSQL — Oracle / MySQL / PostgreSQL / MongoDB",
+        "intro": "The whole database landscape: when SQL and when NoSQL, why enterprises stay on Oracle, where MySQL and Postgres sit, and why MongoDB reads fast — compared from the software layer down to the physical one.",
+        "tags": [
+          "SQL vs NoSQL",
+          "Oracle RAC/PLSQL",
+          "PostgreSQL",
+          "MongoDB/WiredTiger",
+          "ACID vs BASE",
+          "Redis"
+        ]
+      }
+    },
+    "8": {
+      "group": "data",
+      "vi": {
+        "label": "Message queue",
+        "title": "Message queue — RabbitMQ vs Kafka",
+        "intro": "Xương sống của hệ event-driven. Tận dụng nền RabbitMQ Publisher Confirms của bạn, và mở rộng sang Kafka để nắm cả hai trường phái: broker queue vs log phân tán.",
+        "tags": [
+          "RabbitMQ exchange",
+          "Kafka partition",
+          "Delivery semantics",
+          "Publisher confirms",
+          "DLQ",
+          "Exactly-once",
+          "Event sourcing"
+        ]
+      },
+      "en": {
+        "label": "Message queue",
+        "title": "Message queue — RabbitMQ vs Kafka",
+        "intro": "The backbone of an event-driven system. Builds on your RabbitMQ Publisher Confirms background and extends into Kafka, so you hold both schools: broker queue versus distributed log.",
+        "tags": [
+          "RabbitMQ exchange",
+          "Kafka partition",
+          "Delivery semantics",
+          "Publisher confirms",
+          "DLQ",
+          "Exactly-once",
+          "Event sourcing"
+        ]
+      }
+    },
+    "9": {
+      "group": "design",
+      "vi": {
+        "label": "Distributed tx (fintech)",
+        "title": "Transaction giữa các service (fintech)",
+        "intro": "Phần JD nhấn mạnh nhất: 'integration between systems'. Đảm bảo correctness khi tiền đi qua nhiều service mà không có transaction toàn cục — nơi phân biệt senior thật trong fintech.",
+        "tags": [
+          "Saga",
+          "2PC",
+          "Outbox",
+          "TCC",
+          "Idempotency",
+          "Reconciliation",
+          "Double-entry",
+          "BigDecimal"
+        ]
+      },
+      "en": {
+        "label": "Distributed tx (fintech)",
+        "title": "Transactions across services (fintech)",
+        "intro": "What the job description leans on hardest: integration between systems. Keeping money correct as it crosses several services with no global transaction — where real seniority shows in fintech.",
+        "tags": [
+          "Saga",
+          "2PC",
+          "Outbox",
+          "TCC",
+          "Idempotency",
+          "Reconciliation",
+          "Double-entry",
+          "BigDecimal"
+        ]
+      }
+    },
+    "10": {
+      "group": "design",
+      "vi": {
+        "label": "System design + rate limit",
+        "title": "System design nền tảng, xử lý tải cao & rate limiting",
+        "intro": "Khung tư duy thiết kế và các 'viên gạch' để lắp ráp hệ thống chịu tải. Đào sâu các thuật toán rate limit như JD yêu cầu, và cách chịu high-load.",
+        "tags": [
+          "Khung 7 bước",
+          "Capacity",
+          "Caching",
+          "Token/Leaky bucket",
+          "Sliding window",
+          "Backpressure",
+          "Load shedding"
+        ]
+      },
+      "en": {
+        "label": "System design + rate limit",
+        "title": "System design foundations, high load & rate limiting",
+        "intro": "The thinking framework, plus the building blocks you assemble a load-bearing system from. Goes deep on the rate-limiting algorithms the job description asks for, and on what it takes to survive high load.",
+        "tags": [
+          "7-step framework",
+          "Capacity",
+          "Caching",
+          "Token/Leaky bucket",
+          "Sliding window",
+          "Backpressure",
+          "Load shedding"
+        ]
+      }
+    },
+    "11": {
+      "group": "design",
+      "vi": {
+        "label": "System design cases",
+        "title": "System design — các đề thực chiến",
+        "intro": "Áp dụng khung và building blocks vào các đề điển hình. Mỗi đề nêu yêu cầu, thành phần, điểm consistency và trade-off cần trình bày. Luyện bấm giờ 40–45 phút mỗi đề lớn.",
+        "tags": [
+          "Payment",
+          "Notification",
+          "URL shortener",
+          "News feed",
+          "Rate limiter",
+          "Leaderboard",
+          "Chat"
+        ]
+      },
+      "en": {
+        "label": "System design cases",
+        "title": "System design — real interview prompts",
+        "intro": "The framework and the building blocks applied to the classic prompts. Each one lists the requirements, the components, the consistency points and the trade-offs worth saying out loud. Practise the big ones on a 40–45 minute timer.",
+        "tags": [
+          "Payment",
+          "Notification",
+          "URL shortener",
+          "News feed",
+          "Rate limiter",
+          "Leaderboard",
+          "Chat"
+        ]
+      }
+    },
+    "12": {
+      "group": "design",
+      "vi": {
+        "label": "Architecture & patterns",
+        "title": "Software architecture: DDD, Clean, Hexagonal & design patterns",
+        "intro": "Ở mốc 8 năm, kiến trúc là giá trị cốt lõi. Nắm vững DDD và các kiến trúc 'dependency hướng vào trong', so sánh với layered, và dùng pattern đúng chỗ thay vì học thuộc.",
+        "tags": [
+          "Layered",
+          "Hexagonal",
+          "Clean",
+          "DDD chiến lược/tactical",
+          "CQRS",
+          "SOLID",
+          "Anti-patterns",
+          "Clean Architecture",
+          "Dependency Rule",
+          "ArchUnit",
+          "Spring Modulith"
+        ]
+      },
+      "en": {
+        "label": "Architecture & patterns",
+        "title": "Software architecture: DDD, Clean, Hexagonal & design patterns",
+        "intro": "At the eight-year mark, architecture is the core of what you sell. Know DDD and the dependencies-point-inward architectures, compare them honestly against layered, and reach for patterns where they fit rather than reciting them.",
+        "tags": [
+          "Layered",
+          "Hexagonal",
+          "Clean",
+          "DDD strategic & tactical",
+          "CQRS",
+          "SOLID",
+          "Anti-patterns",
+          "Clean Architecture",
+          "Dependency Rule",
+          "ArchUnit",
+          "Spring Modulith"
+        ]
+      }
+    },
+    "13": {
+      "group": "platform",
+      "vi": {
+        "label": "Security & OAuth2",
+        "title": "Security: OAuth2, OIDC, JWT & thiết kế hệ auth",
+        "intro": "Auth là phần không thể sai trong fintech. Nắm vững OAuth2/OIDC, cấu trúc & xác thực JWT, và cách thiết kế một hệ thống xác thực/uỷ quyền cho micro-services.",
+        "tags": [
+          "OAuth2 grant",
+          "PKCE",
+          "OIDC",
+          "JWT",
+          "Access/Refresh",
+          "mTLS",
+          "OWASP",
+          "Secrets"
+        ]
+      },
+      "en": {
+        "label": "Security & OAuth2",
+        "title": "Security: OAuth2, OIDC, JWT & designing an auth system",
+        "intro": "Auth is the part you cannot get wrong in fintech. Know OAuth2/OIDC, how a JWT is built and verified, and how to design authentication and authorisation across micro-services.",
+        "tags": [
+          "OAuth2 grant",
+          "PKCE",
+          "OIDC",
+          "JWT",
+          "Access/Refresh",
+          "mTLS",
+          "OWASP",
+          "Secrets"
+        ]
+      }
+    },
+    "14": {
+      "group": "platform",
+      "vi": {
+        "label": "DevOps · K8s · best practices",
+        "title": "DevOps & hạ tầng: Docker, K8s, Nginx, logging + best practices 2026",
+        "intro": "Khép lại lộ trình bằng vận hành production: container, orchestration, web server, quan sát ở quy mô lớn, và các best practice mới nhất của ngành (đã nghiên cứu, đưa vào dạng mở rộng).",
+        "tags": [
+          "Docker layers",
+          "Deployment vs StatefulSet",
+          "kubectl",
+          "Nginx LB",
+          "ELK/Loki",
+          "OpenTelemetry",
+          "Service mesh",
+          "CI/CD"
+        ]
+      },
+      "en": {
+        "label": "DevOps · K8s · best practices",
+        "title": "DevOps & infrastructure: Docker, K8s, Nginx, logging + 2026 best practices",
+        "intro": "Closing the track with production operations: containers, orchestration, web servers, observability at scale, and the industry practices that actually changed recently.",
+        "tags": [
+          "Docker layers",
+          "Deployment vs StatefulSet",
+          "kubectl",
+          "Nginx LB",
+          "ELK/Loki",
+          "OpenTelemetry",
+          "Service mesh",
+          "CI/CD"
+        ]
+      }
+    },
+    "15": {
+      "group": "core",
+      "vi": {
+        "label": "Network & I/O models",
+        "title": "Network, giao thức & mô hình xử lý I/O",
+        "intro": "Tầng mạng và cách server xử lý đồng thời — phần thường bị xem nhẹ nhưng được dùng để kiểm tra chiều sâu thật. Nắm HTTP/1→3, TLS, REST, realtime, và đặc biệt: Spring Boot tạo/điều phối thread thế nào, và event-driven khác lập trình thường ra sao.",
+        "tags": [
+          "HTTP/1·2·3",
+          "HTTPS/TLS",
+          "REST",
+          "WebSocket vs event-driven",
+          "Thread-per-request",
+          "Event loop",
+          "TCP/UDP/NIO",
+          "HTTP request lifecycle"
+        ]
+      },
+      "en": {
+        "label": "Network & I/O models",
+        "title": "Networking, protocols & I/O models",
+        "intro": "The network layer and how a server handles concurrency — routinely underrated, and routinely used to test real depth. HTTP/1 through 3, TLS, REST, realtime, and especially how Spring Boot creates and schedules threads, and how event-driven differs from ordinary sequential code.",
+        "tags": [
+          "HTTP/1·2·3",
+          "HTTPS/TLS",
+          "REST",
+          "WebSocket vs event-driven",
+          "Thread-per-request",
+          "Event loop",
+          "TCP/UDP/NIO",
+          "HTTP request lifecycle"
+        ]
+      }
+    },
+    "16": {
+      "group": "algorithm",
+      "vi": {
+        "label": "Project · concurrency · whiteboard",
+        "title": "Dự án OTA/booking, bài toán concurrency–realtime & whiteboard",
+        "intro": "Khép lại bằng phần thực chiến nhất: trình bày & vẽ hệ thống dự án OTA/đặt vé máy bay, các bài toán concurrency và realtime đặc thù, cách kể 'dự án thử thách nhất', và luyện whiteboard (design rate limiter + DSA kèm edge cases).",
+        "tags": [
+          "OTA architecture",
+          "Seat concurrency",
+          "Overbooking",
+          "Realtime pricing",
+          "Saga booking",
+          "Whiteboard",
+          "DSA edge cases"
+        ]
+      },
+      "en": {
+        "label": "Project · concurrency · whiteboard",
+        "title": "The OTA/booking project, concurrency–realtime problems & whiteboard",
+        "intro": "The most hands-on part: presenting and drawing the OTA flight-booking system, the concurrency and realtime problems specific to it, how to tell the most-challenging-project story, and whiteboard practice (design a rate limiter, plus DSA with edge cases).",
+        "tags": [
+          "OTA architecture",
+          "Seat concurrency",
+          "Overbooking",
+          "Realtime pricing",
+          "Saga booking",
+          "Whiteboard",
+          "DSA edge cases"
+        ]
+      }
+    },
+    "17": {
+      "group": "design",
+      "vi": {
+        "label": "Thiết kế REST API",
+        "title": "Thiết kế REST API — resource, hợp đồng và vòng đời",
+        "intro": "Ngày 4 nói REST *là gì*; chủ đề này nói *thiết kế thế nào*. Từ mô hình hoá resource, ánh xạ hành động nghiệp vụ, tới idempotency, chuẩn lỗi và cách khai tử một version mà không gãy client — đúng những gì interviewer đào khi bạn nói 'em thiết kế API'.",
+        "tags": [
+          "Resource modeling",
+          "Idempotency-Key",
+          "RFC 9457",
+          "PATCH",
+          "Async 202",
+          "Sunset header",
+          "Bulk API"
+        ]
+      },
+      "en": {
+        "label": "REST API design",
+        "title": "REST API design — resources, contracts and lifecycle",
+        "intro": "Topic 4 covers what REST is; this one covers how you design it. From modelling resources and mapping business actions, through idempotency and error standards, to retiring a version without breaking clients — exactly what an interviewer digs into once you say you design APIs.",
+        "tags": [
+          "Resource modeling",
+          "Idempotency-Key",
+          "RFC 9457",
+          "PATCH",
+          "Async 202",
+          "Sunset header",
+          "Bulk API"
+        ]
+      }
+    },
+    "18": {
+      "group": "data",
+      "vi": {
+        "label": "Tối ưu query",
+        "title": "Tối ưu query — đọc plan, viết lại, và giữ cho nó không chậm lại",
+        "intro": "Ngày 5 dừng ở 'đọc EXPLAIN và vài kỹ thuật'. Chủ đề này đi hết quy trình: đo cái gì, đọc plan ra sao, optimizer chọn join thế nào và chọn sai khi nào, viết predicate cho index dùng được, và vì sao một query đang nhanh bỗng chậm lúc 2 giờ sáng.",
+        "tags": [
+          "EXPLAIN ANALYZE",
+          "Join algorithm",
+          "Sargable",
+          "Plan regression",
+          "Materialized view",
+          "Keyset",
+          "pg_stat_statements"
+        ]
+      },
+      "en": {
+        "label": "Query optimisation",
+        "title": "Query optimisation — read the plan, rewrite it, keep it fast",
+        "intro": "Topic 5 stops at reading EXPLAIN and a handful of techniques. This one walks the whole process: what to measure, how to read a plan, how the optimiser picks a join and when it picks wrong, how to write predicates an index can actually use, and why a fast query suddenly crawls at 2am.",
+        "tags": [
+          "EXPLAIN ANALYZE",
+          "Join algorithm",
+          "Sargable",
+          "Plan regression",
+          "Materialized view",
+          "Keyset",
+          "pg_stat_statements"
+        ]
+      }
+    },
+    "19": {
+      "group": "algorithm",
+      "vi": {
+        "label": "DSA & LeetCode",
+        "title": "DSA & LeetCode — dạng bài và khung trình bày",
+        "intro": "Vòng coding của backend senior hiếm khi hỏi bài lạ; nó hỏi bài quen và xem bạn *trình bày* thế nào. Chủ đề này gom các dạng hay gặp, kèm khung nói ra thành tiếng khi làm bài — trong đó có bài Rakuten đã hỏi (LC 30).",
+        "tags": [
+          "Sliding window",
+          "Two pointers",
+          "Hash + prefix sum",
+          "Heap / top-K",
+          "Binary search on answer",
+          "BFS/DFS",
+          "LC 30"
+        ]
+      },
+      "en": {
+        "label": "DSA & LeetCode",
+        "title": "DSA & LeetCode — the patterns and how to present them",
+        "intro": "A senior backend coding round rarely asks something exotic; it asks something familiar and watches how you present it. This collects the recurring patterns plus the script for thinking out loud — including the one Rakuten actually asked (LC 30).",
+        "tags": [
+          "Sliding window",
+          "Two pointers",
+          "Hash + prefix sum",
+          "Heap / top-K",
+          "Binary search on answer",
+          "BFS/DFS",
+          "LC 30"
+        ]
+      }
+    },
+    "20": {
+      "group": "platform",
+      "vi": {
+        "label": "Observability & SRE",
+        "title": "Observability & SRE — đo, cảnh báo và xử lý sự cố",
+        "intro": "Ngày 14 dừng ở 'có log, có metric'. Chủ đề này là phần senior bị đào: ba trụ cột khác nhau ra sao, trace đi xuyên service và xuyên queue thế nào, SLO/error budget dùng để quyết định gì, và làm sao để cảnh báo không biến thành tiếng ồn ai cũng tắt.",
+        "tags": [
+          "OpenTelemetry",
+          "RED / USE",
+          "SLI/SLO",
+          "Error budget",
+          "Cardinality",
+          "Alert fatigue",
+          "Postmortem"
+        ]
+      },
+      "en": {
+        "label": "Observability & SRE",
+        "title": "Observability & SRE — measuring, alerting and handling incidents",
+        "intro": "Topic 14 stops at having logs and metrics. This is the part seniors get dug into: how the three pillars actually differ, how a trace crosses services and queues, what SLOs and error budgets are for, and how to keep alerting from becoming noise everyone mutes.",
+        "tags": [
+          "OpenTelemetry",
+          "RED / USE",
+          "SLI/SLO",
+          "Error budget",
+          "Cardinality",
+          "Alert fatigue",
+          "Postmortem"
+        ]
+      }
+    },
+    "21": {
+      "group": "platform",
+      "vi": {
+        "label": "Linux & production debug",
+        "title": "Linux & production troubleshooting — chẩn đoán khi đang cháy",
+        "intro": "Thứ phân biệt người đọc tài liệu với người từng trực sự cố. Server chậm thì gõ lệnh gì trước, load average nói lên điều gì, hết file descriptor trông ra sao, và cách đọc thread dump / heap dump / profile của một JVM đang chạy trên production mà không làm nó tệ thêm.",
+        "tags": [
+          "load average",
+          "iowait / steal",
+          "file descriptor",
+          "OOM killer",
+          "thread dump",
+          "heap dump",
+          "async-profiler",
+          "tcpdump"
+        ]
+      },
+      "en": {
+        "label": "Linux & production debug",
+        "title": "Linux & production troubleshooting — diagnosing while it burns",
+        "intro": "What separates someone who read the docs from someone who has been on call. Which command you type first when a server crawls, what load average is really telling you, what running out of file descriptors looks like, and how to read a thread dump, heap dump or profile of a live production JVM without making things worse.",
+        "tags": [
+          "load average",
+          "iowait / steal",
+          "file descriptor",
+          "OOM killer",
+          "thread dump",
+          "heap dump",
+          "async-profiler",
+          "tcpdump"
+        ]
+      }
+    },
+    "22": {
+      "group": "algorithm",
+      "vi": {
+        "label": "Low-level design / OOD",
+        "title": "Low-level design — thiết kế class và viết ra code",
+        "intro": "Vòng LLD nằm giữa DSA và system design: không hỏi thuật toán khó, cũng không vẽ kiến trúc trên mây, mà bắt bạn chia class và viết code chạy được trong 45 phút. Rakuten, Grab, Agoda và phần lớn công ty Nhật/global đều có vòng này.",
+        "tags": [
+          "LRU cache",
+          "Rate limiter",
+          "SOLID",
+          "Strategy / State",
+          "Thread-safety",
+          "TTL store",
+          "Class diagram"
+        ]
+      },
+      "en": {
+        "label": "Low-level design / OOD",
+        "title": "Low-level design — designing the classes and writing the code",
+        "intro": "The LLD round sits between DSA and system design: no hard algorithms, no architecture in the clouds — just split the classes and write working code in 45 minutes. Rakuten, Grab, Agoda and most Japanese and global companies run this round.",
+        "tags": [
+          "LRU cache",
+          "Rate limiter",
+          "SOLID",
+          "Strategy / State",
+          "Thread-safety",
+          "TTL store",
+          "Class diagram"
+        ]
+      }
+    },
+    "23": {
+      "group": "algorithm",
+      "vi": {
+        "label": "Java concurrency coding",
+        "title": "Java concurrency coding — bài đồng bộ viết ra code",
+        "intro": "Chủ đề 1 nói lý thuyết JMM và 16.8 nêu tên các bài; đây là phần phải gõ ra được trên bảng. Bounded queue, in xen kẽ, triết gia ăn tối, CAS, CompletableFuture và virtual threads — đúng những gì hỏi khi CV của bạn ghi 'mạnh về concurrency'.",
+        "tags": [
+          "wait/notify",
+          "Lock/Condition",
+          "Semaphore",
+          "CompletableFuture",
+          "CAS / ABA",
+          "ReadWriteLock",
+          "Virtual threads"
+        ]
+      },
+      "en": {
+        "label": "Java concurrency coding",
+        "title": "Java concurrency coding — synchronisation problems, written out",
+        "intro": "Topic 1 covers JMM theory and 16.8 names the problems; this is the part you have to type on the board. Bounded queue, interleaved printing, dining philosophers, CAS, CompletableFuture and virtual threads — exactly what gets asked once your CV says strong on concurrency.",
+        "tags": [
+          "wait/notify",
+          "Lock/Condition",
+          "Semaphore",
+          "CompletableFuture",
+          "CAS / ABA",
+          "ReadWriteLock",
+          "Virtual threads"
+        ]
+      }
+    },
+    "24": {
+      "group": "design",
+      "vi": {
+        "label": "Domain-Driven Design",
+        "title": "Domain-Driven Design — chia miền và mô hình hoá",
+        "intro": "Chủ đề 12 nêu DDD trong bốn mục; đây là phần bị đào sâu khi bạn nói 'em làm theo DDD'. Ranh giới context tìm bằng cách nào, aggregate to nhỏ ra sao, domain event khác integration event chỗ nào — và quan trọng nhất: khi nào KHÔNG nên dùng.",
+        "tags": [
+          "Bounded context",
+          "Ubiquitous language",
+          "Aggregate",
+          "Domain event",
+          "Context mapping",
+          "Event storming",
+          "ACL"
+        ]
+      },
+      "en": {
+        "label": "Domain-Driven Design",
+        "title": "Domain-Driven Design — splitting the domain and modelling it",
+        "intro": "Topic 12 introduces DDD in four items; this is what gets dug into once you say you follow DDD. How to find context boundaries, how big an aggregate should be, how a domain event differs from an integration event — and most importantly, when not to use any of it.",
+        "tags": [
+          "Bounded context",
+          "Ubiquitous language",
+          "Aggregate",
+          "Domain event",
+          "Context mapping",
+          "Event storming",
+          "ACL"
+        ]
+      }
+    }
+  },
+  "microservices": {
+    "vi": {
+      "title": "Microservices at Scale — Technical Mastery Track",
+      "intro": "Mười nhóm vấn đề hay \"cắn\" nhất khi hệ thống lên hàng triệu request, tailored cho fintech / airline booking. Mỗi câu có phần trả lời chính và khối Đào sâu senior.",
+      "tags": [
+        "Cascading failure",
+        "Connection pool",
+        "Outbox / Saga",
+        "Kafka / RabbitMQ",
+        "Caching",
+        "Idempotency",
+        "System design"
+      ]
+    },
+    "en": {
+      "title": "Microservices at Scale — Technical Mastery Track",
+      "intro": "The ten problem areas that bite hardest once a system reaches millions of requests, tailored to fintech and airline booking. Every question has a main answer plus a senior deep-dive block.",
+      "tags": [
+        "Cascading failure",
+        "Connection pool",
+        "Outbox / Saga",
+        "Kafka / RabbitMQ",
+        "Caching",
+        "Idempotency",
+        "System design"
+      ]
+    }
+  }
+}

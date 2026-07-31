@@ -1,0 +1,87 @@
+{
+  "n": 11,
+  "sections": [
+    {
+      "title": "The big prompts",
+      "items": [
+        {
+          "id": "11.1",
+          "lvl": "hard",
+          "q": "Thiết kế hệ thống thanh toán/chuyển tiền đảm bảo correctness.",
+          "a": "<figure class='dgm'><svg viewBox='0 0 700 430' xmlns='http://www.w3.org/2000/svg' font-family='IBM Plex Mono, monospace' font-size='10.5' text-anchor='middle'>\n<rect x='270' y='12' width='160' height='34' rx='6' fill='#14233A'/><text x='350' y='33' fill='#fff'>Web / Mobile / B2B agent</text>\n<rect x='250' y='62' width='200' height='34' rx='6' fill='#E7EAF6' stroke='#3D4E8F'/><text x='350' y='83' fill='#3D4E8F' font-weight='600'>API Gateway (auth / rate-limit)</text>\n<g stroke='#C6CFDC' stroke-width='1.4'><line x1='350' y1='46' x2='350' y2='62'/><line x1='350' y1='96' x2='350' y2='112'/></g>\n<g>\n<rect x='20' y='112' width='120' height='46' rx='6' fill='#E4F1EB' stroke='#0B6E4F'/><text x='80' y='132' fill='#085239' font-weight='600'>Search /</text><text x='80' y='148' fill='#42536C'>Pricing Svc</text>\n<rect x='160' y='112' width='120' height='46' rx='6' fill='#E4F1EB' stroke='#0B6E4F'/><text x='220' y='132' fill='#085239' font-weight='600'>Inventory /</text><text x='220' y='148' fill='#42536C'>Seat Hold Svc</text>\n<rect x='300' y='112' width='110' height='46' rx='6' fill='#E4F1EB' stroke='#0B6E4F'/><text x='355' y='132' fill='#085239' font-weight='600'>Booking</text><text x='355' y='148' fill='#42536C'>Orchestrator</text>\n<rect x='430' y='112' width='110' height='46' rx='6' fill='#E4F1EB' stroke='#0B6E4F'/><text x='485' y='132' fill='#085239' font-weight='600'>Payment</text><text x='485' y='148' fill='#42536C'>Svc + ledger</text>\n<rect x='560' y='112' width='120' height='46' rx='6' fill='#E4F1EB' stroke='#0B6E4F'/><text x='620' y='132' fill='#085239' font-weight='600'>Ticketing /</text><text x='620' y='148' fill='#42536C'>PNR Svc</text>\n</g>\n<rect x='250' y='185' width='200' height='34' rx='6' fill='#fff' stroke='#AE4536'/><text x='350' y='206' fill='#7d2f24'>Kafka (event bus) + Outbox</text>\n<g stroke='#C6CFDC' stroke-width='1.2'><line x1='80' y1='158' x2='300' y2='185'/><line x1='220' y1='158' x2='330' y2='185'/><line x1='355' y1='158' x2='350' y2='185'/><line x1='485' y1='158' x2='400' y2='185'/><line x1='620' y1='158' x2='420' y2='185'/></g>\n<g>\n<rect x='40' y='250' width='130' height='40' rx='6' fill='#F6E8E5' stroke='#AE4536'/><text x='105' y='268' fill='#7d2f24'>Redis cache</text><text x='105' y='282' fill='#AE4536'>giá &amp; availability</text>\n<rect x='200' y='250' width='150' height='40' rx='6' fill='#F6E8E5' stroke='#AE4536'/><text x='275' y='268' fill='#7d2f24'>GDS / Airline</text><text x='275' y='282' fill='#AE4536'>Amadeus·Sabre·NDC</text>\n<rect x='380' y='250' width='120' height='40' rx='6' fill='#F6E8E5' stroke='#AE4536'/><text x='440' y='268' fill='#7d2f24'>PSP / Bank</text><text x='440' y='282' fill='#AE4536'>3DS · webhook</text>\n<rect x='530' y='250' width='150' height='40' rx='6' fill='#F6E8E5' stroke='#AE4536'/><text x='605' y='268' fill='#7d2f24'>Notification</text><text x='605' y='282' fill='#AE4536'>email/SMS/push</text>\n</g>\n<g stroke='#C6CFDC' stroke-width='1.2' stroke-dasharray='4 3'><line x1='350' y1='219' x2='105' y2='250'/><line x1='350' y1='219' x2='275' y2='250'/><line x1='350' y1='219' x2='440' y2='250'/><line x1='350' y1='219' x2='605' y2='250'/></g>\n<rect x='160' y='330' width='380' height='34' rx='6' fill='#fff' stroke='#42536C'/><text x='350' y='351' fill='#14233A'>DB-per-service (Postgres/MySQL) · Reconciliation jobs</text>\n<text x='350' y='392' fill='#085239' font-weight='600'>Đường tiền/ghế: strong consistency · phần search/availability: cache + eventual</text>\n<text x='350' y='412' fill='#42536C'>Seat hold (TTL) &#8594; payment &#8594; confirm/issue ticket &#8594; nếu timeout: release ghế + đối soát PSP</text>\n</svg></figure>\n\n**Yêu cầu:** chuyển tiền giữa ví, không double-charge, không mất/sinh tiền, audit đầy đủ, chịu lỗi PSP.\nNFR: strong consistency cho ledger, availability cao.\n\n**Thành phần:**\n- API Gateway + Idempotency layer\n- [[b:Payment Orchestrator]] (Saga: debit→PSP→credit; state PENDING/SUCCESS/FAILED/REVERSED)\n- [[b:Ledger Service]] (nguồn sự thật, double-entry append-only, ACID)\n- [[b:PSP Adapter]] (circuit breaker + retry + idempotency, xử lý unknown state)\n- Outbox + Broker (phát event)\n- [[b:Reconciliation]] (đối soát settlement)\n\n**Consistency:**\n- hai chân bút toán trong cùng ledger transaction (ACID)\n- liên service dùng Saga + Outbox + idempotency\n- số dư đọc primary, [[r:không cache để ra quyết định]]\n\n:::tip Điểm nhấn\n'ledger CP + immutable; giao tiếp ngoài at-least-once nên consumer idempotent; reconciliation là lưới an toàn cuối'. Bộ ba = câu trả lời senior fintech.\n:::\n\n:::deep\nBất biến khi trình bày OTA booking:\n- [[g:seat/inventory]] hữu hạn cần chống double-book → hold có TTL + xác nhận lại lúc issue\n- [[g:tiền]] = ledger ACID double-entry + idempotency\n- [[g:tích hợp GDS/PSP]] = biên không tin cậy → idempotency + status query + reconciliation\n- [[g:giá & availability]] dễ stale → cache TTL ngắn, xác nhận lại ở bước cuối\n\nSaga: hold ghế → charge → issue vé (PNR), compensation refund/void; bước issue đặt sau cùng (khó hoàn tác). Điểm cộng: overbooking policy, fare rules, idempotent retry khi GDS chập chờn.\n\n- Vòng LLD hỏi khác hẳn vòng này: cùng một đề nhưng chấm class, interface và thread-safety thay vì hộp với mũi tên (22.1).\n:::",
+          "translated": false
+        },
+        {
+          "id": "11.2",
+          "lvl": "hard",
+          "q": "Thiết kế Notification Service (email/SMS/push) quy mô lớn.",
+          "a": "**Yêu cầu:** đa kênh, tin cậy cao, không spam (dedup + rate limit/user), tôn trọng preference, theo dõi trạng thái. Đa phần async.\n\n**Luồng:**\nproducer → queue ingestion → router (theo loại & preference) → queue theo kênh → worker pool mỗi kênh → provider adapter (retry + circuit breaker) → DLQ → tracking store.\n\nKèm: template service + i18n, dedup key, [[g:priority queue]] (OTP > marketing), fan-out + backpressure, webhook trạng thái.\n\n:::tip Trade-off\nưu tiên tin cậy & throughput hơn latency tuyệt đối; OTP đi luồng priority SLA chặt hơn.\n:::\n\n:::deep\n- tách [[b:ingestion]] (nhận yêu cầu, nhanh, async) khỏi [[b:delivery]] (worker theo kênh)\n- router theo loại + user preference + quiet hours; provider adapter có failover provider\n- dedup key chống gửi trùng; priority queue (OTP/giao dịch > marketing); rate-limit per-user chống spam; webhook trạng thái (delivered/bounced)\n\nOTA: 'vé điện tử/xác nhận booking' = [[g:transactional]] (must-deliver, retry mạnh, DLQ + alert); marketing = [[o:best-effort]] (drop được khi quá tải — load shedding). Idempotent theo (notification_id) tránh gửi đôi khi retry.\n:::",
+          "translated": false
+        },
+        {
+          "id": "11.3",
+          "lvl": "core",
+          "q": "Thiết kế URL shortener — các quyết định chính?",
+          "a": "- sinh short code: [[g:base62 từ ID tuần tự]] (counter/Snowflake) hoặc hash + xử lý collision\n- lưu mapping ở [[b:KV store]] (đọc cực nhiều) + cache nóng\n- redirect 301 (cache) / 302 (nếu cần đếm click)\n- [[g:đọc ≫ ghi]] → cache + read replica\n\nCapacity: 7 ký tự base62 ≈ 3.5 nghìn tỷ URL.\n\n**Ước lượng nhanh:** 100M link mới/tháng ≈ 40 ghi/giây; đọc gấp khoảng 100 lần ≈ 4.000 đọc/giây → [[g:đọc mới là bài toán]], không phải ghi. Mỗi bản ghi ~500B → ~50GB/tháng, ~600GB/năm: vẫn vừa một cụm KV, nên đừng vẽ sharding phức tạp khi chưa cần.\n\n:::deep\n- base62 từ ID tuần tự (counter/Snowflake → encode): duy nhất, không collision, ngắn; hoặc hash + xử lý collision (phức tạp hơn)\n- 301 (cache vĩnh viễn, không đếm click chính xác) vs 302 (đếm click/analytics); đọc ≫ ghi → cache + read replica + CDN\n- custom alias (kiểm trùng), expiry, analytics async qua queue\n\n[[r:Bẫy bảo mật]]: open redirect (validate domain đích), đoán tuần tự (thêm random/hashids nếu cần riêng tư). Rate-limit tạo link chống abuse.\n:::",
+          "translated": false
+        },
+        {
+          "id": "11.4",
+          "lvl": "hard",
+          "q": "Thiết kế News Feed / timeline — fan-out on write vs read?",
+          "a": "<table class=\"cmp\"><thead><tr><th></th><th>Fan-out on write (push)</th><th>Fan-out on read (pull)</th></tr></thead><tbody>\n<tr><td>Khi A đăng</td><td>đẩy vào feed cache mọi follower</td><td>không làm gì</td></tr>\n<tr><td>Đọc feed</td><td>O(1) cực nhanh</td><td>merge timeline lúc đọc (đắt)</td></tr>\n<tr><td>Ghi</td><td>tốn (celebrity = triệu ghi)</td><td>rẻ</td></tr>\n</tbody></table>\n\nThực tế [[g:hybrid]]: push cho user thường, pull cho celebrity. Feed cache = Redis sorted set theo thời gian; ranking; pagination keyset.\n\n:::deep\n- [[r:celebrity problem]]: 10M follower = 10M ghi khi push → pull cho celebrity (đọc thì merge feed precomputed + fetch live của celebrity)\n- ranking (chronological vs ML-ranked) đổi kiến trúc; feed consistency eventual (chấp nhận trễ vài giây)\n\nOTA: ít cần feed, nhưng fan-out áp dụng cho 'thông báo thay đổi chuyến/giá tới nhiều khách theo dõi tuyến' — push cho ít người theo dõi, pull/batch cho tuyến hot.\n:::",
+          "translated": false
+        },
+        {
+          "id": "11.5",
+          "lvl": "core",
+          "q": "Thiết kế distributed rate limiter dịch vụ dùng chung?",
+          "a": "Service nhận (key, limit, window) → trả allow/deny.\n\n- lõi: token bucket/sliding window trên Redis với [[g:Lua atomic]]\n- phân vùng theo key\n- quy mô cực lớn: local cache + đồng bộ định kỳ (đánh đổi chính xác lấy latency)\n- trả 429 + Retry-After; HA cho Redis (cluster) + fail-open/closed\n\n:::deep\n- lõi token bucket/sliding-window-counter trên Redis bằng Lua atomic (tính refill + trừ trong một lệnh, tránh race GET-rồi-SET giữa instance)\n- quy mô cực lớn: token bucket *cục bộ tại edge* (hạn mức = tổng/N + đồng bộ định kỳ)\n- HA: Redis Cluster + replica; [[b:fail-open]] (API, ưu availability) vs [[b:fail-closed]] (auth/payment, ưu bảo vệ)\n\nOTA: rate-limit dùng chung cho gateway (per API key đối tác B2B), search (per IP chống bot cào giá), bảo vệ GDS (leaky để không vượt quota).\n\n- Một lời gọi Redis thêm ~0,3–1ms vào *mọi* request. Ở 50k QPS thì đó là 50k lệnh/giây chỉ để đếm — tới lúc đó mới đáng chuyển sang bucket cục bộ cộng đồng bộ định kỳ, chứ không phải làm ngay từ đầu (22.3 có code của cả hai cách).\n:::",
+          "translated": false
+        },
+        {
+          "id": "11.6",
+          "lvl": "core",
+          "q": "Thiết kế Leaderboard real-time?",
+          "a": "Redis [[g:sorted set]] (ZADD/ZRANGE/ZREVRANK) cho ranking O(log n): top-N và rank của user tức thì.\n\n- phân mảnh theo region/leaderboard\n- snapshot định kỳ xuống DB bền (sorted set là in-memory)\n- tie-break bằng score phụ (timestamp)\n- hàng triệu user → shard theo bucket + merge top-N\n\n:::deep\n- `ZADD` cập nhật điểm, `ZREVRANK` lấy hạng user, `ZREVRANGE` top-N tức thì (skip list + hash)\n- tie-break bằng score kết hợp (score×10^k + timestamp đảo); quy mô lớn: shard theo bucket/region rồi merge top-N (scatter-gather)\n- 'rank chính xác của user thứ 1 triệu' đắt nếu real-time tuyệt đối → chấp nhận rank xấp xỉ/percentile cho đuôi, chính xác cho top\n\nOTA: sorted set dùng cho 'tuyến hot/đếm tồn ghế', 'top điểm đến tìm nhiều', rate-limit sliding window. ZSET = cấu trúc 'ranking + range theo score' tổng quát.\n:::",
+          "translated": false
+        },
+        {
+          "id": "11.7",
+          "lvl": "ext",
+          "q": "Thiết kế distributed cache (kiểu Redis/Memcached)?",
+          "a": "- phân mảnh bằng [[g:consistent hashing]]; replication cho HA\n- eviction (LRU/LFU); TTL\n- hot key (replica/local cache); stampede (single-flight)\n- nhất quán cache↔DB (cache-aside + invalidation)\n- theo dõi hit ratio; client-side vs proxy-based sharding\n\n:::deep\n- consistent hashing (thêm/bớt node remap ít key); replication (primary-replica per shard); eviction (LRU/LFU/allkeys-lru); TTL\n- [[r:hot key]]: nhân bản key#1..N + chọn ngẫu nhiên, hoặc local cache tại client; [[r:stampede]]: single-flight + jitter TTL + refresh-ahead\n- nhất quán cache↔DB: cache-aside + invalidate (xóa) khi ghi (không update để tránh race)\n- sharding client-side (smart client) vs proxy-based (twemproxy/Redis Cluster)\n\nTheo dõi hit ratio (thấp → cache vô dụng/sai key design); phân biệt cache (mất được) vs store (nguồn sự thật). OTA: cache giá/availability TTL ngắn + invalidate theo event GDS.\n\n- Vòng LLD hỏi đúng phần lõi của hệ này: cài LRU cache get/put O(1) bằng HashMap cộng doubly-linked list (22.2); bản có thêm TTL là một đề riêng (22.8).\n:::",
+          "translated": false
+        },
+        {
+          "id": "11.8",
+          "lvl": "ext",
+          "q": "Thiết kế hệ chat/messaging (sơ lược)?",
+          "a": "- WebSocket gateway giữ kết nối; message qua queue\n- lưu store (Cassandra theo `conversation_id + time` — ghi lớn)\n- online presence (Redis), delivery/read receipt, fan-out tới thiết bị, push khi offline\n- đảm bảo thứ tự trong hội thoại (sequence/partition key), idempotency tránh trùng\n\n:::deep\n- WebSocket gateway (Netty NIO, nhiều conn/thread); message qua queue; store tối ưu ghi &amp; đọc theo hội thoại (Cassandra `(conversation_id, time)`)\n- presence (Redis TTL heartbeat), delivery/read receipt, fan-out các thiết bị, push khi offline\n- [[g:thứ tự trong hội thoại]] (sequence number/partition key theo conversation_id) &amp; idempotency (client message id chống gửi đôi)\n\nScale connection = tách gateway khỏi logic + pub/sub (Redis/Kafka) để mọi gateway node fan-out tới client (xem 16.9); registry user→node để route. Group chat lớn dùng fan-out hybrid như news feed. E2E encryption đổi kiến trúc (server không đọc nội dung).\n:::",
+          "translated": false
+        },
+        {
+          "id": "11.9",
+          "lvl": "ext",
+          "q": "Thiết kế autocomplete/typeahead (sơ lược)?",
+          "a": "- [[b:Trie/prefix tree]] (hoặc Elasticsearch completion suggester) cho gợi ý theo prefix\n- precompute top-K theo node; cache nóng\n- cập nhật tần suất async\n- latency cực thấp → phục vụ từ cache/in-memory ở edge\n- cá nhân hoá & xếp hạng theo popularity\n\n:::deep\n- Trie/prefix tree (hoặc ES completion suggester / FST); *precompute top-K* tại mỗi node trie (theo popularity) → O(prefix length) cực nhanh\n- cache nóng + phục vụ in-memory/edge (latency &lt; 100ms); cập nhật popularity async (không chặn đọc); cá nhân hoá theo lịch sử/địa lý\n- đánh đổi freshness vs precompute; fuzzy matching (typo) tốn hơn (edit distance/n-gram)\n\nOTA: autocomplete sân bay/thành phố (tập hữu hạn → trie + alias/IATA code + đa ngôn ngữ + ưu tiên sân bay lớn/gần user). Tập tĩnh → precompute hết + cache; debounce ở client giảm request.\n:::",
+          "translated": false
+        },
+        {
+          "id": "11.10",
+          "lvl": "ext",
+          "q": "Thiết kế object storage / upload file lớn (sơ lược)?",
+          "a": "- object store (S3-like) + metadata DB\n- upload trực tiếp tới store bằng [[g:presigned URL]] (không qua app server)\n- multipart upload cho file lớn; CDN cho đọc\n- dedup (content hash), virus scan async, lifecycle/expiry\n- [[r:tránh đẩy byte qua service tier]]\n\n:::deep\n- object store cho byte + metadata DB cho thông tin; upload client→store qua presigned URL (KHÔNG đẩy byte qua app server → tiết kiệm băng thông/thread)\n- multipart upload (chia phần, resume, song song); CDN cho đọc; dedup theo *content hash*; async: virus scan, transcode, thumbnail qua queue; lifecycle/tiering (hot→cold→archive)\n- [[r:bảo mật]]: presigned URL TTL ngắn + scope; validate content-type/size; chống path traversal\n\nOTA: upload hộ chiếu/visa (PII nhạy cảm → mã hoá at-rest + access control + audit + retention theo compliance); e-ticket PDF lưu store + CDN.\n:::",
+          "translated": false
+        },
+        {
+          "id": "11.11",
+          "lvl": "core",
+          "q": "Thiết kế Idempotent Payment API (chi tiết hợp đồng)?",
+          "a": "`POST /payments` với header `Idempotency-Key`.\n\nServer trong một tx:\n- INSERT key (unique) status IN_PROGRESS\n- nếu trùng đang xử lý → 409/poll; trùng đã xong → trả kết quả cũ\n- thực hiện nghiệp vụ + ghi response gắn key\n- trả 201 + resource\n\nKey có TTL hợp lý. Đây là [[g:'hello world' của API tài chính an toàn]].\n\n:::deep\n- INSERT key (unique, IN_PROGRESS) cùng tx; lưu response gắn key (hoặc outbox); trả 201 + resource + Location; key TTL scope theo (user, endpoint)\n- phân biệt [[b:idempotency-key]] (client cung cấp, chống double-submit) với [[b:request-id]] (trace)\n\nOTA: mọi lệnh ra PSP mang key (hoặc order_id) → PSP cũng idempotent → retry mạng không double-charge. Webhook PSP idempotent (event_id unique). Trạng thái PENDING khi PSP chưa xác nhận; reconciliation chốt giao dịch treo. [[o:Nắm chắc luồng IN_PROGRESS/race là điểm phân biệt.]]\n:::",
+          "translated": false
+        }
+      ]
+    }
+  ]
+}

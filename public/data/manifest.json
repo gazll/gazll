@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "topics": [
+    {
+      "n": 1,
+      "type": "track",
+      "group": "core",
+      "file": "topics/01-java-core-jvm.json"
+    },
+    {
+      "n": 2,
+      "type": "track",
+      "group": "core",
+      "file": "topics/02-java-8-25-java-vs-go.json"
+    },
+    {
+      "n": 3,
+      "type": "track",
+      "group": "core",
+      "file": "topics/03-spring-boot-deep-build.json"
+    },
+    {
+      "n": 4,
+      "type": "track",
+      "group": "design",
+      "file": "topics/04-rest-grpc-webflux.json"
+    },
+    {
+      "n": 5,
+      "type": "track",
+      "group": "data",
+      "file": "topics/05-db-core-index-lock.json"
+    },
+    {
+      "n": 6,
+      "type": "track",
+      "group": "data",
+      "file": "topics/06-db-scaling.json"
+    },
+    {
+      "n": 7,
+      "type": "track",
+      "group": "data",
+      "file": "topics/07-sql-nosql-db-engines.json"
+    },
+    {
+      "n": 8,
+      "type": "track",
+      "group": "data",
+      "file": "topics/08-message-queue.json"
+    },
+    {
+      "n": 9,
+      "type": "track",
+      "group": "design",
+      "file": "topics/09-distributed-tx-fintech.json"
+    },
+    {
+      "n": 10,
+      "type": "track",
+      "group": "design",
+      "file": "topics/10-system-design-rate-limit.json"
+    },
+    {
+      "n": 11,
+      "type": "track",
+      "group": "design",
+      "file": "topics/11-system-design-cases.json"
+    },
+    {
+      "n": 12,
+      "type": "track",
+      "group": "design",
+      "file": "topics/12-architecture-patterns.json"
+    },
+    {
+      "n": 13,
+      "type": "track",
+      "group": "platform",
+      "file": "topics/13-security-oauth2.json"
+    },
+    {
+      "n": 14,
+      "type": "track",
+      "group": "platform",
+      "file": "topics/14-devops-k8s-best-practices.json"
+    },
+    {
+      "n": 15,
+      "type": "track",
+      "group": "core",
+      "file": "topics/15-network-i-o-models.json"
+    },
+    {
+      "n": 16,
+      "type": "track",
+      "group": "algorithm",
+      "file": "topics/16-project-concurrency-whiteboard.json"
+    },
+    {
+      "n": 17,
+      "type": "track",
+      "group": "design",
+      "file": "topics/17-rest-api-design.json"
+    },
+    {
+      "n": 18,
+      "type": "track",
+      "group": "data",
+      "file": "topics/18-query-optimization.json"
+    },
+    {
+      "n": 19,
+      "type": "track",
+      "group": "algorithm",
+      "file": "topics/19-dsa-leetcode.json"
+    },
+    {
+      "n": 20,
+      "type": "track",
+      "group": "platform",
+      "file": "topics/20-observability-sre.json"
+    },
+    {
+      "n": 21,
+      "type": "track",
+      "group": "platform",
+      "file": "topics/21-linux-production-debug.json"
+    },
+    {
+      "n": 22,
+      "type": "track",
+      "group": "algorithm",
+      "file": "topics/22-low-level-design-ood.json"
+    },
+    {
+      "n": 23,
+      "type": "track",
+      "group": "algorithm",
+      "file": "topics/23-java-concurrency-coding.json"
+    },
+    {
+      "n": 24,
+      "type": "track",
+      "group": "design",
+      "file": "topics/24-domain-driven-design.json"
+    }
+  ],
+  "microservices": {
+    "type": "microservices",
+    "file": "microservices.json"
+  }
+}

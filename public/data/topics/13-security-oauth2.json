@@ -1,0 +1,111 @@
+{
+  "n": 13,
+  "sections": [
+    {
+      "title": "OAuth2 & OIDC",
+      "items": [
+        {
+          "id": "13.1",
+          "lvl": "core",
+          "q": "OAuth2: các vai trò và grant type chính?",
+          "a": "**Vai trò:**\n- [[b:Resource Owner]] (user)\n- [[b:Client]] (app)\n- [[b:Authorization Server]] (cấp token)\n- [[b:Resource Server]] (API được bảo vệ)\n\nOAuth2 là về [[g:uỷ quyền (authorization)]], không phải xác thực danh tính.\n\n**Grant type:**\n- [[b:Authorization Code]] (+PKCE): chuẩn cho web/mobile/SPA\n- [[b:Client Credentials]]: machine-to-machine (service↔service)\n- [[b:Refresh Token]]: lấy access token mới\n- [[r:Tránh]]: Implicit và Password grant (kém an toàn, deprecated)\n\n:::deep\n- OAuth2 là *authorization framework*, KHÔNG phải authentication (đó là OIDC)\n- Auth Code + PKCE (web/mobile/SPA — chuẩn nhất), Client Credentials (không có user), Refresh Token\n- [[r:TRÁNH]]: Implicit (lộ token qua URL), Resource Owner Password (app cầm mật khẩu user)\n\nOTA: B2C dùng Auth Code+PKCE; đối tác B2B server-to-server dùng Client Credentials với scope hạn chế; nội bộ dùng client-credentials/mTLS. Token audience (`aud`) phải đúng resource server.\n:::",
+          "translated": false
+        },
+        {
+          "id": "13.2",
+          "lvl": "hard",
+          "q": "Authorization Code + PKCE hoạt động ra sao và vì sao cần PKCE?",
+          "a": "Luồng: client chuyển user tới Authorization Server để login & consent → AS trả *authorization code* về redirect URI → client đổi code lấy token (back-channel). Code one-time, ngắn hạn.\n\n[[g:PKCE]]:\n- client tạo `code_verifier` ngẫu nhiên, gửi `code_challenge` = hash(verifier) khi xin code\n- khi đổi token phải xuất trình verifier\n\n→ ngăn [[r:authorization code interception]] trên client công khai (mobile/SPA không giữ được client secret).\n\n:::deep\n- client công khai (mobile/SPA) không giữ được client_secret an toàn → chỉ dùng auth code thì kẻ tấn công chặn code (qua redirect/deep link độc hại) đổi lấy token\n- PKCE: `code_challenge = SHA256(verifier)`; khi đổi token xuất trình verifier → AS so khớp → code bị chặn cũng vô dụng\n\n[[o:PKCE nay khuyến nghị cho CẢ client web]] (defense in depth, OAuth 2.1 yêu cầu). Kiểm `state` chống CSRF, `redirect_uri` khớp chính xác (chống open redirect), code dùng một lần.\n:::",
+          "translated": false
+        },
+        {
+          "id": "13.3",
+          "lvl": "core",
+          "q": "OAuth2 vs OIDC khác gì?",
+          "a": "<table class=\"cmp\"><thead><tr><th></th><th>OAuth2</th><th>OIDC</th></tr></thead><tbody>\n<tr><td>Trả lời</td><td>'app được phép làm gì'</td><td>'user là ai'</td></tr>\n<tr><td>Token</td><td>Access Token</td><td>+ ID Token (JWT, `sub`, claims)</td></tr>\n<tr><td>Mục đích</td><td>authorization</td><td>authentication (+ authorization)</td></tr>\n</tbody></table>\n\nOIDC xây trên OAuth2, thêm ID Token + endpoint `/userinfo`. SSO hiện đại dùng OIDC.\n\n:::deep\n- OAuth2 trả *access token* (app được phép làm gì) — KHÔNG nói user là ai chuẩn hoá\n- OIDC thêm ID Token (JWT: `sub`, `iss`, `aud`, `email`, `auth_time`), `/userinfo`, discovery `/.well-known/openid-configuration`, JWKS\n\n[[r:Lỗi phổ biến]]: dùng *access token* để xác định danh tính user (sai — access token cho resource server); dùng ID token để gọi API (sai — ID token cho client biết user là ai).\n\nOTA: OIDC cho login B2C (qua Google/social IdP), access token gọi service nội bộ với scope phù hợp.\n:::",
+          "translated": false
+        }
+      ]
+    },
+    {
+      "title": "JWT & tokens",
+      "items": [
+        {
+          "id": "13.4",
+          "lvl": "core",
+          "q": "Cấu trúc JWT, cách ký và xác thực?",
+          "a": "JWT = `header.payload.signature` (base64url).\n- [[b:Header]]: alg (RS256/ES256)\n- [[b:Payload]]: claims (`sub`, `exp`, `iat`, `iss`, `aud`, scope...)\n- [[b:Signature]]: ký header+payload\n\n**Xác thực:**\n- kiểm chữ ký (public key của AS qua JWKS endpoint)\n- `exp` chưa hết hạn\n- `iss`/`aud` đúng\n\nƯu tiên [[g:asymmetric (RS256/ES256)]] → resource server chỉ cần public key.\n\n:::warn Bẫy nghiêm trọng\nkhông chấp nhận `alg: none`; không tự ý tin `alg` từ header (algorithm confusion); luôn validate chữ ký trước khi đọc claim.\n:::\n\n:::deep\nCác lỗ hổng JWT phải nêu được:\n- [[r:alg=none]] — server phải whitelist thuật toán\n- [[r:algorithm confusion]] RS256→HS256: ký HMAC bằng public key nếu server dùng 'verify' chung → luôn ràng buộc alg kỳ vọng\n- không kiểm `aud`/`iss` → token dịch vụ khác dùng lọt\n- clock skew với `exp` — cho phép lệch nhỏ\n\nLấy khóa qua [[g:JWKS]] + `kid` để xoay khóa không downtime. Payload nhỏ, [[r:không để data nhạy cảm]] (chỉ base64, ai cũng đọc). Access token JWT ngắn hạn (vài phút) bù cho việc khó thu hồi.\n:::",
+          "translated": false
+        },
+        {
+          "id": "13.5",
+          "lvl": "hard",
+          "q": "JWT (stateless) vs opaque token / session — đánh đổi?",
+          "a": "<table class=\"cmp\"><thead><tr><th></th><th>JWT</th><th>Opaque + introspection</th><th>Session</th></tr></thead><tbody>\n<tr><td>Validate</td><td>cục bộ (không gọi AS)</td><td>hỏi AS mỗi lần</td><td>server-side state</td></tr>\n<tr><td>Revoke</td><td>khó (còn hạn vẫn valid)</td><td>tức thì</td><td>dễ</td></tr>\n<tr><td>Scale</td><td>tốt, latency thấp</td><td>thêm round-trip</td><td>cần sticky/shared store</td></tr>\n</tbody></table>\n\n:::tip Chốt\nJWT đổi khả năng revoke lấy scale. Fintech thường: access token JWT ngắn hạn + refresh token có thể revoke + blacklist/rotation.\n:::\n\n:::deep\n- cần revoke tức thì (khóa tài khoản gian lận) → access token ngắn hạn + introspection cho thao tác nhạy cảm, hoặc opaque token\n- [[g:mẫu lai phổ biến]]: access token JWT 5–15 phút (validate cục bộ) + refresh token *rotation* server-side (revoke được, phát hiện reuse → thu hồi cả họ) + denylist `jti` cho khẩn\n\n'JWT đổi khả năng revoke lấy tính phi trạng thái/scale; ta bù bằng TTL ngắn + revoke ở tầng refresh' — [[r:tránh nói 'JWT luôn tốt hơn session']].\n:::",
+          "translated": false
+        },
+        {
+          "id": "13.6",
+          "lvl": "core",
+          "q": "Access token vs refresh token và chiến lược thu hồi?",
+          "a": "- [[b:Access token]]: ngắn hạn (vài phút), gửi mỗi request\n- [[b:Refresh token]]: dài hạn, chỉ để lấy access token mới, lưu an toàn (HttpOnly cookie / secure storage)\n\n**Thu hồi:** access token JWT khó revoke → giữ ngắn hạn + revoke ở tầng refresh.\n\n[[g:Refresh token rotation]]: mỗi lần refresh cấp token mới, vô hiệu cái cũ; phát hiện reuse → thu hồi cả họ.\n\n:::deep\n- refresh token lưu HttpOnly+Secure cookie / secure storage — [[r:KHÔNG localStorage vì XSS]]\n- rotation: phát hiện *reuse* (token cũ dùng lại = bị đánh cắp) → thu hồi cả họ token (revoke family)\n- thao tác nhạy cảm (đổi mật khẩu, rút tiền, đổi vé giá trị lớn) yêu cầu [[o:re-auth/step-up (MFA)]] dù còn token\n- denylist `jti` cho revoke khẩn; TTL access ngắn = an toàn hơn nhưng nhiều lần refresh (tải AS)\n- [[r:Đừng log token]]: một access token lọt vào log là credential nằm sẵn trong ELK cho mọi người có quyền đọc log, và log thường được giữ lâu hơn tuổi thọ token nhiều lần. Che ở chỗ *ghi* log chứ không phải ở chỗ xem (20.8).\n:::",
+          "translated": false
+        }
+      ]
+    },
+    {
+      "title": "Designing the auth system",
+      "items": [
+        {
+          "id": "13.7",
+          "lvl": "hard",
+          "q": "Thiết kế hệ xác thực/uỷ quyền cho micro-services (SSO + gateway)?",
+          "a": "Mô hình phổ biến:\n- [[b:Authorization Server]] trung tâm (OIDC) cấp token\n- [[b:API Gateway]] xác thực token ở biên (chữ ký/introspection), gắn identity vào request nội bộ\n- service nội bộ [[o:vẫn nên kiểm token]] (defense in depth, zero-trust)\n\nPhân quyền: RBAC/ABAC; scope/claim mang quyền; service-to-service bằng mTLS hoặc client credentials.\n\n:::tip Chốt\ngateway tập trung validate OAuth/JWT + protocol translation; nhưng zero-trust nói 'không có bên trong tin tuyệt đối' — mỗi service vẫn xác minh danh tính request.\n:::\n\n:::deep\n- AS trung tâm (Keycloak/Auth0/Cognito) cấp token; gateway validate token ở biên (chữ ký JWT qua JWKS, hoặc introspection), gắn identity (user id, scope, roles) vào request nội bộ\n- service nội bộ *vẫn nên* kiểm token (tối thiểu validate signature + scope); service↔service: mTLS (ai gọi) + client-credentials token (thay mặt ai)\n\nOTA: gateway tập trung auth + rate-limit + dịch REST→gRPC; nhưng payment/ledger service tự kiểm token + step-up cho thao tác tiền. Token propagation qua các hop (deadline + identity) cần nhất quán.\n:::",
+          "translated": false
+        },
+        {
+          "id": "13.8",
+          "lvl": "hard",
+          "q": "mTLS và xác thực service-to-service?",
+          "a": "[[g:mTLS]] (mutual TLS): cả hai phía trình certificate → xác thực lẫn nhau + mã hoá.\n\n- micro-services: service mesh (Istio/Linkerd) cấp & xoay cert tự động, bật mTLS giữa mọi service mà không sửa code\n- đảm bảo chỉ service hợp lệ gọi được nhau, chống man-in-the-middle nội bộ\n- bổ sung cho token-level auth: [[b:mTLS = ai gọi]]; [[b:token = thay mặt user nào]]\n\n:::deep\n- mTLS trả lời 'ai đang gọi' ở tầng transport (khác token trả lời 'thay mặt user nào' ở tầng app)\n- service mesh cấp &amp; xoay cert tự động (SPIFFE/SVID identity) → zero-trust mạng nội bộ, chống MITM &amp; service giả mạo\n- hai tầng: mTLS = danh tính service, token/JWT = ngữ cảnh user/scope\n\nQuản lý PKI nội bộ (CA, rotation, revocation) là phần khó — mesh giải quyết phần lớn. Đối tác B2B ngoài cũng thường mTLS + IP allowlist. [[r:Đừng tự build mTLS bằng tay nếu có mesh]] (dễ sai cert/rotation).\n:::",
+          "translated": false
+        },
+        {
+          "id": "13.9",
+          "lvl": "core",
+          "q": "OWASP Top 10 thực dụng: injection, XSS, CSRF — phòng thế nào?",
+          "a": "- [[b:SQL injection]] → prepared statement/parameterized query (không nối chuỗi); ORM giúp nhưng cẩn thận native query\n- [[b:XSS]] → escape output, Content-Security-Policy, không render HTML từ input thô\n- [[b:CSRF]] → token chống CSRF, SameSite cookie; API dùng Bearer token ít bị hơn cookie-session\n- khác: [[b:broken access control]] (kiểm quyền ở server), SSRF, insecure deserialization, dependency có CVE (SCA scan)\n\n:::deep\n- SQL injection → prepared statement (KHÔNG nối chuỗi); native query vẫn phải bind\n- XSS → escape output theo context (HTML/JS/URL), CSP, framework auto-escape (đừng tắt)\n- CSRF → token + `SameSite`; API Bearer token (không cookie) ít bị hơn\n- [[r:Broken access control (OWASP #1)]] → kiểm quyền server mọi request (IDOR: đừng tin id từ client — kiểm user sở hữu resource)\n\nFintech/OTA: [[r:IDOR cực nguy hiểm]] (xem/sửa booking/payment của người khác qua đổi id) → luôn kiểm ownership; mass assignment (đừng bind thẳng request vào entity); rate-limit + WAF. Defense in depth: validate input, least-privilege, encrypt, audit.\n:::",
+          "translated": false
+        },
+        {
+          "id": "13.10",
+          "lvl": "core",
+          "q": "Quản lý secrets đúng cách?",
+          "a": "[[r:Không hardcode secret]] trong repo hay image.\n\n- dùng secret manager (Vault, AWS Secrets Manager, K8s Secret + KMS) — inject runtime qua env/volume\n- rotate định kỳ, least-privilege, mã hoá at-rest & in-transit, audit truy cập\n- tách secret theo môi trường\n- quét repo phát hiện secret rò (git-secrets/trufflehog)\n\n:::deep\n- KHÔNG hardcode trong code/repo/Docker image ([[r:image layer giữ lịch sử → leak]])\n- secret manager → inject runtime; rotate định kỳ + tự động; least-privilege (mỗi service chỉ đọc secret của nó); audit; mã hoá at-rest &amp; in-transit\n- [[g:dynamic secrets]] (Vault cấp DB credential ngắn hạn theo request → giảm blast radius); envelope encryption (DEK mã hoá bởi KEK ở KMS)\n\nOTA/fintech: secret gồm DB password, API key PSP/GDS, JWT signing key → rotation key ký JWT cần JWKS + `kid` để không downtime. [[r:Bẫy]]: secret trong ConfigMap (không mã hoá) thay vì Secret; secret trong log.\n:::",
+          "translated": false
+        },
+        {
+          "id": "13.11",
+          "lvl": "hard",
+          "q": "Bảo vệ endpoint auth khỏi brute-force/credential stuffing?",
+          "a": "- rate limit theo IP + theo tài khoản\n- exponential backoff/lockout tạm thời; CAPTCHA sau N lần fail\n- phát hiện bất thường (đăng nhập từ vị trí lạ)\n- lưu mật khẩu bằng hàm băm chậm có salt ([[g:bcrypt/argon2/scrypt]]), [[r:không MD5/SHA thường]]\n- MFA cho thao tác nhạy cảm\n- [[o:không tiết lộ 'user tồn tại hay không']] qua thông báo lỗi\n\n:::deep\n- rate limit + lockout theo IP *và* theo account (chống credential stuffing nhiều IP một account, &amp; brute-force một account một IP); exponential backoff; CAPTCHA sau ngưỡng; phát hiện bất thường (vị trí/thiết bị lạ → step-up MFA)\n- [[g:argon2id]] (khuyến nghị) / bcrypt / scrypt — KHÔNG MD5/SHA thường (nhanh, dễ brute-force GPU); không lộ 'user tồn tại' qua lỗi/timing (timing-safe)\n\nFintech/OTA: MFA bắt buộc cho thao tác nhạy cảm; device fingerprinting + risk-based auth; theo dõi 'impossible travel'. [[r:Bẫy]]: lockout quá gắt → DoS chính user thật (kẻ tấn công khoá account nạn nhân) → CAPTCHA thay khoá cứng, hoặc khoá theo IP+account.\n:::",
+          "translated": false
+        },
+        {
+          "id": "13.12",
+          "lvl": "ext",
+          "q": "RBAC vs ABAC — chọn mô hình phân quyền nào?",
+          "a": "<table class=\"cmp\"><thead><tr><th></th><th>RBAC</th><th>ABAC</th></tr></thead><tbody>\n<tr><td>Cơ sở</td><td>vai trò (admin, teller)</td><td>thuộc tính (user, resource, ngữ cảnh, thời gian)</td></tr>\n<tr><td>Ưu</td><td>đơn giản, dễ quản/audit</td><td>linh hoạt cho rule phức tạp</td></tr>\n<tr><td>Nhược</td><td>role explosion khi rule phức tạp</td><td>khó debug/audit</td></tr>\n</tbody></table>\n\nNhiều hệ kết hợp: RBAC nền + ABAC cho rule tinh.\n\n:::deep\n- ABAC ví dụ: 'agent chỉ duyệt booking &lt; hạn mức của chi nhánh mình trong giờ làm việc'\n- engine: OPA/Rego, Cedar cho policy-as-code tách khỏi business logic\n\nOTA: RBAC cho customer/agent/admin; ABAC cho 'agent hãng X chỉ thấy booking hãng X', 'refund &gt; ngưỡng cần cấp duyệt cao hơn'. [[o:Kiểm quyền ở server]] (gateway + service), không tin client; log mọi quyết định authorization nhạy cảm (audit).\n:::",
+          "translated": false
+        },
+        {
+          "id": "13.13",
+          "lvl": "ext",
+          "q": "API key vs OAuth token — khi nào dùng cái nào?",
+          "a": "<table class=\"cmp\"><thead><tr><th></th><th>API key</th><th>OAuth token</th></tr></thead><tbody>\n<tr><td>Định danh</td><td>ứng dụng/đối tác</td><td>user/scope</td></tr>\n<tr><td>Granularity</td><td>thấp</td><td>cao (scope)</td></tr>\n<tr><td>Thời hạn</td><td>tĩnh, dài hạn</td><td>ngắn hạn, revoke được</td></tr>\n<tr><td>Hợp cho</td><td>server-to-server đối tác</td><td>hành động thay mặt user</td></tr>\n</tbody></table>\n\n:::deep\n- [[b:API key]]: chuỗi bí mật định danh ứng dụng/đối tác (không phải user), dùng kèm IP allowlist + rate limit/quota. [[r:Rủi ro]]: tĩnh, dài hạn, lộ là dùng mãi → cần rotation + scope hạn chế\n- [[b:OAuth token]]: uỷ quyền theo user/scope, ngắn hạn, revoke được\n\nOTA/fintech: B2C → OAuth/OIDC; service nội bộ → mTLS + client-credentials; đối tác B2B → API key + mTLS + quota, hoặc client-credentials với scope.\n\nQuản API key: [[g:hash khi lưu]] (như mật khẩu), prefix để nhận diện, rotation không downtime (2 key cùng lúc khi xoay), audit. [[r:Không nhúng API key trong client/mobile]] (dễ trích xuất).\n:::",
+          "translated": false
+        }
+      ]
+    }
+  ]
+}

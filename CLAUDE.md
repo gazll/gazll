@@ -17,8 +17,9 @@ step, no package.json — vanilla ES modules served straight to the browser.
 
 2. **The study material has an `EN`/`VI` switch in the header**, right of the
    progress ring. It was in the nav panel first and nobody could find it.
-   `content.json` is the Vietnamese source of truth; `content.en.json` is a
-   partial overlay — see "The English overlay".
+   The `data/` tree (Vietnamese) is the source of truth; `meta.json`'s `en`
+   blocks and `topics/N.en.json` files are partial overlays — see "The
+   English overlay".
 
 Code comments are English, and they answer **why**, not what: the code already
 says what it does. Keep them short.
@@ -34,7 +35,7 @@ public/
   lib/
     markdown.js      renderMarkdown + renderUser (escaping variant)
     ui.js            chevSVG, BADGE, FALLBACK_BADGE, debounce, localDay
-    content.js       loads content.json + the EN overlay; owns the language
+    content.js       loads data/manifest.json + meta.json + per-topic files; owns the language
     api.js           transport to Apps Script
     auth.js          Google Identity Services + header avatar/state machine
     store.js         offline-first progress, notes, study log
@@ -43,9 +44,13 @@ public/
     interviews.js    interview journal CRUD (<dialog>)
     stats.js         streak + heatmap + per-topic progress
     admin.js         all-user overview (admin role only)
-  content.json       282 track items + 42 microservices items (Vietnamese)
-  content.en.json    partial English overlay; anything absent falls back
-  interviews.json    seed entries, merged under everyone's own Sheet rows
+  data/
+    manifest.json    ordered list of topics + the microservices entry, each pointing at its file
+    meta.json        label/title/intro/tags per topic + microservices, VI + EN in one file
+    topics/N.json    one file per topic — sections/items only (282 items total across 24 files)
+    topics/N.en.json optional per-topic EN item overlay; anything absent falls back to VI
+    microservices.json / microservices.en.json   same pattern, 42 items
+    interviews.json  seed entries, merged under everyone's own Sheet rows
 apps-script/Code.gs  the entire backend (Google Sheet as database)
 tests/               security · interviews.merge · auth.state · content.i18n
 tools/               validate-content.mjs
@@ -78,13 +83,13 @@ secret/              GITIGNORED. Personal setup notes and credentials
   `[data-group="…"]` custom-property blocks in `styles.css`. A topic with an
   unknown group renders with no accent colour and drops out of the filter bar.
 
-- **Raw HTML blocks in `content.json` end at the first blank line.**
-  `renderMarkdown` collects lines starting with `<` until a blank one, so a
-  blank line inside a `<pre>` or `<table>` truncates it and dumps the rest as
-  literal text. Use a comment-only line as a separator instead.
+- **Raw HTML blocks in a topic's `data/topics/N.json` end at the first blank
+  line.** `renderMarkdown` collects lines starting with `<` until a blank one,
+  so a blank line inside a `<pre>` or `<table>` truncates it and dumps the
+  rest as literal text. Use a comment-only line as a separator instead.
 
 - **`renderMarkdown` never escapes, so `<` must be written `&lt;` everywhere
-  in `content.json`** — including inside inline code spans. `` `jcmd <pid>` ``
+  in `data/topics/*.json`** — including inside inline code spans. `` `jcmd <pid>` ``
   emits a real `<pid>` element that the browser swallows, and the reader sees
   `jcmd  Thread.print`. Only `<` followed by a space survives as text. (The
   interview journal is the opposite: `renderUser` escapes first, so write a
@@ -158,27 +163,41 @@ secret/              GITIGNORED. Personal setup notes and credentials
 
 ## The English overlay
 
-`content.json` (Vietnamese) always loads. `content.en.json` is fetched only
-when the reader is in EN, and it is a **partial overlay** — topics keyed by
-`n`, sections by index, items by id:
+The `data/` tree (Vietnamese) always loads: `manifest.json` lists every topic
+and the microservices entry, `meta.json` holds each one's label/title/intro/
+tags, and each topic's `topics/N.json` holds its sections/items. There are
+**two independent overlays**, both optional and both fetched only when the
+reader is in EN:
 
-```json
-{ "days": { "1": { "label": "…", "sections": ["…"],
-                   "items": { "1.1": { "q": "…", "a": "…" } } } } }
-```
+- **Metadata** — `meta.json`'s own `topics["N"].en` / `microservices.en`
+  block, sitting right next to the `vi` block in the same file:
+  ```json
+  { "topics": { "1": { "group": "core",
+                        "vi": { "label": "…", "title": "…", "intro": "…", "tags": ["…"] },
+                        "en": { "label": "…" } } } }
+  ```
+  Any field the `en` block omits falls back to the matching `vi` field.
+- **Item content** — an optional `topics/N.en.json` (or
+  `microservices.en.json`) next to the topic's content file, sections by
+  index and items by id:
+  ```json
+  { "sections": ["…"], "items": { "1.1": { "q": "…", "a": "…" } } }
+  ```
+  A missing file just means "no translation yet for this topic" — `fetch`
+  404s are swallowed the same way a missing field is.
 
 - **Anything absent falls back to Vietnamese.** That is what lets English be
-  filled in one item at a time. An item whose `a` has no translation renders
-  the Vietnamese text with a `VI` badge (`FALLBACK_BADGE`) so the reader knows
-  why it switched language mid-page.
+  filled in one item, or one topic, at a time. An item whose `a` has no
+  translation renders the Vietnamese text with a `VI` badge
+  (`FALLBACK_BADGE`) so the reader knows why it switched language mid-page.
 - **`_apply()` must keep cloning the source.** Overlaying in place would
   overwrite the Vietnamese strings, and switching back to VI would then show
   English.
 - **The overlay is validated, not trusted.** `validate-content.mjs` fails on a
   topic `n` or item id that does not exist — otherwise a typo silently means
   the translation you wrote never appears.
-- Current state: all 24 topics have English metadata; no item answers are
-  translated yet.
+- Current state: all 24 topics have English metadata (`meta.json`); no
+  `topics/N.en.json` item overlays exist yet.
 
 ## Security model
 
@@ -212,7 +231,7 @@ Three tests in `tests/security.test.mjs` pin this.
 ## Before pushing
 
 ```bash
-# structure of content.json + the English overlay, and a content report
+# structure of the data/ tree + the English overlay, and a content report
 node tools/validate-content.mjs --stats
 
 # same check the CI runs

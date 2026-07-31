@@ -1,7 +1,7 @@
-/* content.json, loaded once and shared by app.js and the views.
-
-   content.en.json is a partial overlay, not a second copy: whatever it
-   omits falls back to Vietnamese, so English can grow one item at a time
+/* data/manifest.json lists topics + the microservices entry and points at
+   their content files; data/meta.json holds label/title/intro/tags for both
+   languages. Per-topic *.en.json overlays are optional and partial: whatever
+   they omit falls back to Vietnamese, so English can grow one item at a time
    without ever leaving a hole in the page. */
 
 const LANG_KEY = 'gazl.contentLang';
@@ -10,52 +10,49 @@ const LANGS = ['en', 'vi'];
 
 const listeners = new Set();
 
-/** Overlaying in place would destroy the source, so VI could never return. */
-function cloneDays(days) {
-  return days.map(d => ({
-    ...d,
-    tags: [...(d.tags || [])],
-    sections: (d.sections || []).map(s => ({ ...s, items: (s.items || []).map(it => ({ ...it })) }))
-  }));
+async function fetchJson(path) {
+  const res = await fetch(path, { cache: 'no-cache' });
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + path);
+  return res.json();
 }
 
-function overlayDays(days, over) {
-  if (!over) return days;
-  for (const d of days) {
-    const o = over[String(d.n)];
-    if (!o) continue;
-    for (const k of ['label', 'title', 'intro']) if (o[k]) d[k] = o[k];
-    if (Array.isArray(o.tags) && o.tags.length) d.tags = [...o.tags];
-    (d.sections || []).forEach((sec, i) => {
-      const t = Array.isArray(o.sections) ? o.sections[i] : null;
-      if (t) sec.title = t;
-      for (const it of sec.items || []) {
-        const oi = o.items && o.items[it.id];
-        if (!oi) continue;
-        if (oi.q) it.q = oi.q;
-        if (oi.a) { it.a = oi.a; it.translated = true; }
-      }
-    });
+/** Absent file (no translation yet) is not fatal — it just means no English. */
+async function fetchOptionalJson(path) {
+  try {
+    const res = await fetch(path, { cache: 'no-cache' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    return null;
   }
-  return days;
 }
 
-function overlayMicro(micro, over) {
-  if (!micro || !over) return micro;
-  const m = { ...micro, tags: [...(micro.tags || [])], chapters: (micro.chapters || []).map(c => ({ ...c, items: (c.items || []).map(it => ({ ...it })) })) };
-  for (const k of ['title', 'intro']) if (over[k]) m[k] = over[k];
-  if (Array.isArray(over.tags) && over.tags.length) m.tags = [...over.tags];
-  m.chapters.forEach((ch, i) => {
-    const t = Array.isArray(over.chapters) ? over.chapters[i] : null;
-    if (t) ch.title = t;
-    for (const it of ch.items || []) {
-      const oi = over.items && over.items[it.id];
+/** Overlaying in place would destroy the source, so VI could never return. */
+function cloneGroups(groups) {
+  return (groups || []).map(s => ({ ...s, items: (s.items || []).map(it => ({ ...it })) }));
+}
+
+function applyMeta(target, metaEntry, lang) {
+  if (!metaEntry) return;
+  const vi = metaEntry.vi || {};
+  const en = lang !== 'vi' ? metaEntry.en : null;
+  const src = { ...vi, ...(en || {}) };
+  for (const k of ['label', 'title', 'intro']) if (src[k]) target[k] = src[k];
+  if (Array.isArray(src.tags) && src.tags.length) target.tags = [...src.tags];
+}
+
+/** groups = a day's `sections` or micro's `chapters` — same shape either way. */
+function overlayGroups(groups, overlayGroupTitles, overlayItems) {
+  groups.forEach((grp, i) => {
+    const t = Array.isArray(overlayGroupTitles) ? overlayGroupTitles[i] : null;
+    if (t) grp.title = t;
+    for (const it of grp.items || []) {
+      const oi = overlayItems && overlayItems[it.id];
       if (!oi) continue;
       if (oi.q) it.q = oi.q;
       if (oi.a) { it.a = oi.a; it.translated = true; }
     }
   });
-  return m;
 }
 
 function readLang() {
@@ -73,46 +70,63 @@ export const Content = {
   error: null,
 
   lang: readLang(),
-  overlay: null,
-  overlayTried: false,
 
-  /** Kept so switching language needs no refetch. */
-  _base: null,
+  /** Manifest + meta + raw per-topic content, kept so switching language needs no refetch. */
+  _manifest: null,
+  _meta: null,
+  _topicContent: null,
+  _microContent: null,
+  _enOverlaysTried: false,
+  _topicEnOverlays: null,
+  _microEnOverlay: null,
 
   async load() {
     if (this.loaded) return this;
-    const res = await fetch('content.json', { cache: 'no-cache' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    this._base = { days: data.days || data, micro: data.micro || null };
-    if (this.lang !== 'vi') await this._loadOverlay();
+    this._manifest = await fetchJson('data/manifest.json');
+    this._meta = await fetchJson('data/meta.json');
+    const topicRows = this._manifest.topics || [];
+    const contents = await Promise.all(topicRows.map(row => fetchJson('data/' + row.file)));
+    this._topicContent = new Map(topicRows.map((row, i) => [row.n, { row, content: contents[i] }]));
+    this._microContent = await fetchJson('data/' + this._manifest.microservices.file);
+    if (this.lang !== 'vi') await this._loadEnOverlays();
     this._apply();
     this.loaded = true;
     return this;
   },
 
-  /** Absent or broken overlay is not fatal — it just means no English. */
-  async _loadOverlay() {
-    if (this.overlayTried) return;
-    this.overlayTried = true;
-    try {
-      const res = await fetch('content.en.json', { cache: 'no-cache' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      this.overlay = await res.json();
-    } catch (e) {
-      this.overlay = null;
-    }
+  async _loadEnOverlays() {
+    if (this._enOverlaysTried) return;
+    this._enOverlaysTried = true;
+    const topicRows = this._manifest.topics || [];
+    const overlays = await Promise.all(topicRows.map(row => {
+      const enFile = row.file.replace(/\.json$/, '.en.json');
+      return fetchOptionalJson('data/' + enFile);
+    }));
+    this._topicEnOverlays = new Map(topicRows.map((row, i) => [row.n, overlays[i]]));
+    const microEnFile = this._manifest.microservices.file.replace(/\.json$/, '.en.json');
+    this._microEnOverlay = await fetchOptionalJson('data/' + microEnFile);
   },
 
   _apply() {
-    const days = cloneDays(this._base.days);
-    if (this.lang === 'vi' || !this.overlay) {
-      this.days = days;
-      this.micro = this._base.micro;
-    } else {
-      this.days = overlayDays(days, this.overlay.days);
-      this.micro = overlayMicro(this._base.micro, this.overlay.micro);
+    const days = [];
+    for (const [n, { row, content }] of this._topicContent) {
+      const day = { n, group: row.group, tags: [...(content.tags || [])], sections: cloneGroups(content.sections) };
+      applyMeta(day, this._meta.topics[String(n)], this.lang);
+      if (this.lang !== 'vi' && this._topicEnOverlays) {
+        const overlay = this._topicEnOverlays.get(n);
+        if (overlay) overlayGroups(day.sections, overlay.sections, overlay.items);
+      }
+      days.push(day);
     }
+    days.sort((a, b) => a.n - b.n);
+    this.days = days;
+
+    const micro = { tags: [...(this._microContent.tags || [])], chapters: cloneGroups(this._microContent.chapters) };
+    applyMeta(micro, this._meta.microservices, this.lang);
+    if (this.lang !== 'vi' && this._microEnOverlay) {
+      overlayGroups(micro.chapters, this._microEnOverlay.chapters, this._microEnOverlay.items);
+    }
+    this.micro = micro;
   },
 
   isFallback(item) {
@@ -125,7 +139,7 @@ export const Content = {
     if (!LANGS.includes(lang) || lang === this.lang) return;
     this.lang = lang;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
-    if (lang !== 'vi') await this._loadOverlay();
+    if (lang !== 'vi') await this._loadEnOverlays();
     this._apply();
     for (const fn of listeners) { try { fn(this); } catch (e) {} }
   },
