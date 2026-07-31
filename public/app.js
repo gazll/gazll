@@ -37,16 +37,17 @@ const dots = document.getElementById('dots');
 
 /* ---------- Views / navigation ---------- */
 const GUIDE_MD = [
-  'Đây là một site **all-in-one**. Thanh điều hướng trên cùng chuyển giữa các *view*; lộ trình theo chủ đề chỉ là view đầu tiên. Mỗi view có URL riêng (vd `#/guide`) nên chia sẻ/bookmark được.',
+  'Đây là một site **all-in-one**. Nút ☰ mở **navigation panel** chia theo nhóm — `Technical` (học & luyện), `Tools` (công cụ rời), `Other`. Nhãn trong menu để tiếng Anh; phần nội dung vẫn tiếng Việt. Mỗi view có URL riêng (vd `#/guide`) nên chia sẻ/bookmark được.',
   '',
   ':::tip Thêm một menu mới',
-  'Mở `app.js`, thêm một phần tử vào mảng `VIEWS` — không cần sửa chỗ khác.',
+  'Mở `app.js`, thêm một phần tử vào mảng `VIEWS` — không cần sửa chỗ khác. Trường `sec` quyết định nó nằm ở nhóm nào trong panel.',
   ':::',
   '',
-  'Ba kiểu view:',
+  'Bốn kiểu entry:',
   '',
-  '- View Markdown: `{ id: "snippets", label: "Snippets", md: "...markdown..." }`',
-  '- View HTML tự do: `{ id: "tools", label: "Tools", render: () => "&lt;div&gt;...&lt;/div&gt;" }`',
+  '- View Markdown: `{ id: "snippets", sec: "about", label: "Snippets", md: "..." }`',
+  '- View HTML tự do: `{ id: "x", sec: "technical", render: () => "&lt;div&gt;...&lt;/div&gt;" }`',
+  '- **Link sang tool khác**: `{ id: "abc", sec: "tool", label: "ABC", href: "abc-tool/" }` — có `href` thì entry mở tab mới và router bỏ qua nó, nên thêm tool mới chỉ tốn một dòng',
   '- View chỉ hiện với một số user: thêm `when: () => Auth.isAdmin`',
   '',
   ':::deep Lưu trữ',
@@ -60,14 +61,52 @@ const GUIDE_MD = [
   ':::'
 ].join('\n');
 
-const VIEWS = [
-  { id: 'track', label: 'Lộ trình chủ đề' },
-  { id: 'gazl', label: 'Gazl Try', render: renderInterviews, mount: mountInterviews },
-  { id: 'micro', label: 'Microservices', render: renderMicro, mount: wireMicro },
-  { id: 'stats', label: 'Thống kê', render: renderStats, mount: mountStats },
-  { id: 'admin', label: 'Admin', render: renderAdmin, mount: mountAdmin, when: () => Auth.isAdmin },
-  { id: 'guide', label: 'Hướng dẫn', md: GUIDE_MD }
+/* Nav panel sections, in display order. `key` matches the `sec` of a view.
+   The nav panel is the one English surface in an otherwise Vietnamese UI —
+   deliberate, so keep new menu labels English too. */
+const NAV_SECTIONS = [
+  { key: 'technical', label: 'Technical' },
+  { key: 'tool', label: 'Tools' },
+  { key: 'about', label: 'Other' }
 ];
+
+/* One entry per menu row.
+
+   An entry with `href` is an external destination (another app under
+   public/, or any URL) — it renders as a link and is never routed to.
+   Everything else is an in-page view: `md`, or `render` (+ optional `mount`).
+   `when` hides the row; `desc` is the second line in the panel. */
+const VIEWS = [
+  { id: 'track', sec: 'technical', label: 'Study Track', desc: 'Topic-based learning path', icon: 'track' },
+  { id: 'gazl', sec: 'technical', label: 'Gazl Try', desc: 'Companies interviewed', icon: 'journal',
+    render: renderInterviews, mount: mountInterviews },
+  { id: 'micro', sec: 'technical', label: 'Microservices', desc: 'Standalone mastery track', icon: 'micro',
+    render: renderMicro, mount: wireMicro },
+  { id: 'stats', sec: 'technical', label: 'Stats', desc: 'Streak, heatmap, progress', icon: 'stats',
+    render: renderStats, mount: mountStats },
+  { id: 'admin', sec: 'technical', label: 'Admin', desc: 'All-user overview', icon: 'admin',
+    render: renderAdmin, mount: mountAdmin, when: () => Auth.isAdmin },
+
+  { id: 'fshare', sec: 'tool', label: 'Fshare Bulk Copy', desc: 'Collect download links in bulk',
+    icon: 'tool', href: 'fshare-tool/' },
+
+  { id: 'guide', sec: 'about', label: 'Guide', desc: 'Site structure & syntax', icon: 'guide',
+    md: GUIDE_MD }
+];
+
+/* Inline so the panel needs no network and no icon font. */
+const ICONS = {
+  track: '<path d="M4 6h16M4 12h16M4 18h10"/>',
+  journal: '<path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h5"/>',
+  micro: '<circle cx="12" cy="12" r="2.6"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M6.7 7.4 10 10.4M17.3 7.4 14 10.4M6.7 16.6 10 13.6M17.3 16.6 14 13.6"/>',
+  stats: '<path d="M5 19V10M12 19V5M19 19v-6"/>',
+  admin: '<path d="M12 3l7 3v5c0 4.2-2.8 7.6-7 10-4.2-2.4-7-5.8-7-10V6z"/>',
+  tool: '<path d="M14.5 3.5a5 5 0 0 0-6.1 6.7L3.5 15v5.5H9l4.8-4.9a5 5 0 0 0 6.7-6.1L17 12l-2.5-.5L14 9z"/>',
+  guide: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.2 3.1c-.6.3-.8.7-.8 1.4"/><path d="M12 17h.01"/>'
+};
+const iconSVG = name => '<svg class="nv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+  + ' stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+  + (ICONS[name] || ICONS.guide) + '</svg>';
 
 /* ---------- personal notes, appended to every question card ---------- */
 
@@ -207,31 +246,84 @@ function syncMicroToggleLabel(root) {
 --------------------------------------------------------------------- */
 
 function visibleViews() { return VIEWS.filter(v => !v.when || v.when()); }
+/** Views the hash router can actually show — external links are not routable. */
+function routableViews() { return visibleViews().filter(v => !v.href); }
 
 function buildNav() {
   const active = currentViewId();
-  document.getElementById('mainnav').innerHTML = visibleViews().map(v =>
-    '<a class="navlink" data-view="' + v.id + '" href="#/' + v.id + '"'
-    + ' aria-current="' + (v.id === active) + '">' + v.label + '</a>').join('');
+  const nav = document.getElementById('mainnav');
+  if (!nav) return;
+
+  const row = v => {
+    const external = Boolean(v.href);
+    const attrs = external
+      ? 'href="' + v.href + '" target="_blank" rel="noopener noreferrer"'
+      : 'href="#/' + v.id + '" aria-current="' + (v.id === active) + '"';
+    return '<a class="navlink' + (external ? ' is-external' : '') + '" data-view="' + v.id + '" ' + attrs + '>'
+      + iconSVG(v.icon)
+      + '<span class="nv-text"><span class="nv-label">' + v.label + '</span>'
+      + (v.desc ? '<span class="nv-desc">' + v.desc + '</span>' : '') + '</span>'
+      + (external ? '<span class="nv-ext" aria-hidden="true">↗</span>' : '')
+      + '</a>';
+  };
+
+  const shown = visibleViews();
+  nav.innerHTML = NAV_SECTIONS.map(sec => {
+    const items = shown.filter(v => v.sec === sec.key);
+    if (!items.length) return '';
+    return '<div class="nv-sec"><h3 class="nv-sectitle">' + sec.label + '</h3>'
+      + items.map(row).join('') + '</div>';
+  }).join('');
 }
 
-function wireNavToggle() {
+/* The panel is a focus-trapped drawer: it takes over the tab order while open
+   and hands focus back to the toggle on close, so keyboard users are not
+   dropped at the top of the document. */
+function wireNavPanel() {
   const toggle = document.getElementById('navToggle');
-  const header = document.querySelector('header.top');
-  if (!toggle || !header) return;
-  const close = () => { header.classList.remove('nav-open'); toggle.setAttribute('aria-expanded', 'false'); };
-  toggle.addEventListener('click', e => {
-    e.stopPropagation();
-    const open = header.classList.toggle('nav-open');
-    toggle.setAttribute('aria-expanded', open);
+  const panel = document.getElementById('navPanel');
+  const scrim = document.getElementById('navScrim');
+  const nav = document.getElementById('mainnav');
+  if (!toggle || !panel || !scrim || !nav) return;
+
+  const isOpen = () => document.body.classList.contains('nav-open');
+
+  const open = () => {
+    document.body.classList.add('nav-open');
+    toggle.setAttribute('aria-expanded', 'true');
+    panel.removeAttribute('inert');
+    (panel.querySelector('.navlink[aria-current="true"]') || panel.querySelector('.navlink'))?.focus();
+  };
+  const close = ({ refocus = true } = {}) => {
+    if (!isOpen()) return;
+    // Blur before `inert`: a focused element inside an inert subtree keeps focus.
+    if (panel.contains(document.activeElement)) document.activeElement.blur();
+    document.body.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    panel.setAttribute('inert', '');
+    if (refocus) toggle.focus();
+  };
+
+  panel.setAttribute('inert', '');
+  toggle.addEventListener('click', e => { e.stopPropagation(); isOpen() ? close() : open(); });
+  scrim.addEventListener('click', () => close());
+  document.getElementById('navClose')?.addEventListener('click', () => close());
+
+  // Follow the link first, then close — closing on an external link would
+  // otherwise blur the anchor before the browser opens the new tab.
+  nav.addEventListener('click', e => {
+    if (e.target.closest('.navlink')) close({ refocus: false });
   });
-  document.getElementById('mainnav').addEventListener('click', e => {
-    if (e.target.closest('.navlink')) close();
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && isOpen()) { close(); return; }
+    if (e.key !== 'Tab' || !isOpen()) return;
+    const f = [...panel.querySelectorAll('a[href], button:not([disabled])')].filter(el => el.offsetParent !== null);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
-  document.addEventListener('click', e => {
-    if (header.classList.contains('nav-open') && !e.target.closest('header.top')) close();
-  });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 }
 
 /* ---- Header: collapse toggle (remembered) + hide-on-scroll-down ---- */
@@ -307,13 +399,21 @@ function wireHeader() {
 function isTrackActive() { return document.body.classList.contains('view-track'); }
 function currentViewId() {
   const id = location.hash.replace(/^#\/?/, '');
-  return VIEWS.some(v => v.id === id) ? id : 'track';
+  return routableViews().some(v => v.id === id) ? id : 'track';
 }
 function route() { showView(currentViewId()); }
 
 function showView(id) {
-  document.body.className = 'view-' + id;
-  document.querySelectorAll('#mainnav .navlink').forEach(a => a.setAttribute('aria-current', a.dataset.view === id));
+  // Swap only the view-* class; `nav-open` and anything else stays put.
+  document.body.classList.forEach(c => { if (c.startsWith('view-')) document.body.classList.remove(c); });
+  document.body.classList.add('view-' + id);
+
+  document.querySelectorAll('#mainnav .navlink:not(.is-external)')
+    .forEach(a => a.setAttribute('aria-current', a.dataset.view === id));
+
+  const v0 = VIEWS.find(x => x.id === id);
+  const crumb = document.getElementById('viewCrumb');
+  if (crumb && v0) crumb.textContent = v0.label;
   const track = document.getElementById('view-track');
   const host = document.getElementById('view-host');
   if (id === 'track') {
@@ -509,7 +609,7 @@ async function init() {
   updateProgress();
 
   buildNav();
-  wireNavToggle();
+  wireNavPanel();
   wireHeader();
   mountAuthUI(document.getElementById('authbar'));
   mountSyncState(document.getElementById('syncState'));

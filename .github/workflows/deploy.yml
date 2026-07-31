@@ -87,6 +87,9 @@ jobs:
           done
           [ "$fail" -eq 0 ] || exit 1
 
+      - name: Validate content.json
+        run: node tools/validate-content.mjs
+
       - name: Run regression tests
         env:
           NODE_NO_WARNINGS: '1'

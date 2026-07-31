@@ -6,11 +6,19 @@
    The token lives one hour and GIS does not refresh it. We schedule a silent
    renewal before expiry; if that cannot happen quietly the sign-in button
    comes back. The credential exists in JavaScript memory only — never in
-   localStorage/sessionStorage — while study data keeps its own offline queue. */
+   localStorage/sessionStorage — while study data keeps its own offline queue.
+
+   What IS persisted is the profile *hint*: display name, email and avatar URL.
+   That is not a credential — it cannot authenticate anything, and the backend
+   ignores it entirely (user_id always comes from the verified token's `sub`).
+   It exists so a returning reader sees their own avatar on first paint instead
+   of a signed-out header, while `auto_select` fetches a real token in the
+   background. Never put `token` in here. */
 import { GOOGLE_CLIENT_ID, SCRIPT_URL } from '../config.js';
 
 const GIS_SRC = 'https://accounts.google.com/gsi/client?hl=en';
 const LEGACY_SESSION_KEY = 'gazl.session';
+const HINT_KEY = 'gazl.profile';
 const SKEW_MS = 90_000;   // expire early so an in-flight request cannot die mid-way
 
 const listeners = new Set();
@@ -22,6 +30,8 @@ let renewTimer = null;
 export const Auth = {
   /** { sub, email, name, picture, role, token, exp } or null. */
   session: null,
+  /** { sub, email, name, picture } from localStorage — display only, no token. */
+  hint: null,
   /** Set once startup has discarded any legacy persisted credential. */
   ready: false,
   error: null,
@@ -29,8 +39,15 @@ export const Auth = {
   get enabled() { return Boolean(GOOGLE_CLIENT_ID && SCRIPT_URL); },
   get user() { return this.session; },
   get isAdmin() { return this.session?.role === 'admin'; },
-  get displayName() { return this.session?.name || this.session?.email || 'You'; },
-  get avatar() { return this.session?.picture || ''; },
+
+  /** Whoever we can show in the header: a live session, else the stored hint. */
+  get identity() { return this.session || this.hint; },
+  get displayName() { return this.identity?.name || this.identity?.email || 'Bạn'; },
+  get avatar() { return this.identity?.picture || ''; },
+  get email() { return this.identity?.email || ''; },
+
+  /** Known face, no usable token yet — auto_select is still in flight. */
+  get connecting() { return Boolean(this.hint) && !this.token; },
 
   /** A usable token, or null. Checked before every request. */
   get token() {
@@ -51,6 +68,8 @@ export const Auth = {
     this.session = null;
     if (!this.enabled) { this.ready = true; emit(); return; }
 
+    // Paint the returning reader's own avatar before GIS has even loaded.
+    this.hint = readHint();
     this.ready = true;
     emit();
 
@@ -80,7 +99,9 @@ export const Auth = {
   signOut() {
     clearTimeout(renewTimer);
     this.session = null;
+    this.hint = null;
     clearLegacySession();
+    clearHint();
     // Without this, auto_select signs straight back in.
     try { google.accounts.id.disableAutoSelect(); } catch (e) {}
     emit();
@@ -92,6 +113,7 @@ export const Auth = {
     this.session.role = profile.role || 'user';
     if (profile.name) this.session.name = profile.name;
     if (profile.picture) this.session.picture = profile.picture;
+    writeHint(this.session);
     emit();
   }
 };
@@ -114,6 +136,8 @@ function onCredential(response) {
     token,
     exp: Number(claims.exp) * 1000
   };
+  Auth.hint = writeHint(Auth.session);
+  Auth.error = null;
   scheduleRenew();
   emit();
 }
@@ -130,6 +154,30 @@ function scheduleRenew() {
 
 function clearLegacySession() {
   try { localStorage.removeItem(LEGACY_SESSION_KEY); } catch (e) {}
+}
+
+/* ---------- profile hint (display only — never the token) ---------- */
+
+function writeHint(s) {
+  const hint = { sub: s.sub, email: s.email || '', name: s.name || '', picture: s.picture || '' };
+  try { localStorage.setItem(HINT_KEY, JSON.stringify(hint)); } catch (e) {}
+  return hint;
+}
+
+function readHint() {
+  try {
+    const raw = localStorage.getItem(HINT_KEY);
+    if (!raw) return null;
+    const h = JSON.parse(raw);
+    if (!h || typeof h !== 'object' || !h.sub) return null;
+    // A stored `token`/`exp` would mean an older or tampered entry. Drop it:
+    // this object must never be able to authenticate anything.
+    return { sub: String(h.sub), email: String(h.email || ''), name: String(h.name || ''), picture: String(h.picture || '') };
+  } catch (e) { return null; }
+}
+
+function clearHint() {
+  try { localStorage.removeItem(HINT_KEY); } catch (e) {}
 }
 
 /**
@@ -162,49 +210,100 @@ function loadGis() {
   return gisReady;
 }
 
-/* ---------- header chip ---------- */
+/* ---------- header avatar + account menu ----------
+
+   There is no separate sign-in button: the avatar IS the affordance. Clicking
+   it opens a popover, and when signed out that popover hosts Google's own
+   rendered button — One Tap alone is not reliable enough to be the only way
+   in, because FedCM can suppress it silently. */
 
 export function mountAuthUI(el) {
   if (!el) return;
+  let open = false;
+
   const render = () => {
-    el.innerHTML = chipHtml();
+    el.innerHTML = avatarHtml() + (open ? menuHtml() : '');
+    el.classList.toggle('open', open);
+
     const holder = el.querySelector('#gisBtn');
     if (holder) renderSignInButton(holder);
-    const out = el.querySelector('#btnSignOut');
-    if (out) out.addEventListener('click', () => Auth.signOut());
+    el.querySelector('#btnSignOut')?.addEventListener('click', () => { open = false; Auth.signOut(); });
+    el.querySelector('#btnRetry')?.addEventListener('click', () => Auth.signIn());
   };
+
+  const setOpen = v => { if (open !== v) { open = v; render(); } };
+
+  el.addEventListener('click', e => {
+    if (e.target.closest('#authBtn')) { e.stopPropagation(); setOpen(!open); }
+  });
+  document.addEventListener('click', e => { if (open && !el.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+
   render();
   Auth.onChange(render);
 }
 
-function chipHtml() {
+function avatarFace() {
+  if (Auth.avatar) {
+    return '<img class="avatar" src="' + esc(Auth.avatar) + '" alt="" referrerpolicy="no-referrer">';
+  }
+  if (Auth.identity) {
+    return '<span class="avatar avatar-fallback">' + esc(Auth.displayName.slice(0, 1).toUpperCase()) + '</span>';
+  }
+  // Signed out: a neutral face, still a button.
+  return '<span class="avatar avatar-anon" aria-hidden="true">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">'
+    + '<circle cx="12" cy="8.5" r="3.6"/><path d="M4.5 20c1.4-3.9 4.1-5.8 7.5-5.8s6.1 1.9 7.5 5.8"/></svg></span>';
+}
+
+/** One button, four states — the state lives in `data-state` for CSS. */
+function avatarHtml() {
+  let state = 'anon', label = 'Đăng nhập Google';
+  if (!Auth.enabled) { state = 'offline'; label = 'Chế độ ngoại tuyến — chưa cấu hình backend'; }
+  else if (!Auth.ready) { state = 'loading'; label = 'Đang tải…'; }
+  else if (Auth.error) { state = 'error'; label = 'Lỗi đăng nhập — bấm để thử lại'; }
+  else if (Auth.session && Auth.token) { state = 'signed'; label = 'Tài khoản: ' + Auth.displayName; }
+  else if (Auth.identity) { state = 'connecting'; label = 'Đang kết nối lại — bấm để đăng nhập'; }
+
+  return '<button class="authbtn" id="authBtn" data-state="' + state + '"'
+    + ' aria-haspopup="dialog" title="' + esc(label) + '" aria-label="' + esc(label) + '">'
+    + avatarFace()
+    + (Auth.isAdmin && state === 'signed' ? '<span class="av-admin" title="Admin">★</span>' : '')
+    + '</button>';
+}
+
+function menuHtml() {
+  let body;
+
   if (!Auth.enabled) {
-    return '<span class="authchip offline" title="Backend is not configured. Progress is saved on this device only. See README to enable sync.">'
-      + '<span class="dot"></span>Offline</span>';
+    body = '<p class="am-note">Chưa cấu hình backend nên tiến độ chỉ lưu trên máy này. '
+      + 'Xem README để bật đồng bộ Google Sheet.</p>';
+  } else if (Auth.session && Auth.token) {
+    body = '<div class="am-id">'
+      + '<div class="am-name">' + esc(Auth.displayName) + (Auth.isAdmin ? '<span class="rolebadge">ADMIN</span>' : '') + '</div>'
+      + (Auth.email ? '<div class="am-mail">' + esc(Auth.email) + '</div>' : '')
+      + '</div>'
+      + '<p class="am-note ok">Tiến độ, ghi chú và nhật ký phỏng vấn đang đồng bộ lên Google Sheet.</p>'
+      + '<button class="am-action danger" id="btnSignOut">Đăng xuất</button>';
+  } else if (Auth.identity) {
+    // Known face, no token: either auto_select is still running or it declined.
+    body = '<div class="am-id">'
+      + '<div class="am-name">' + esc(Auth.displayName) + '</div>'
+      + (Auth.email ? '<div class="am-mail">' + esc(Auth.email) + '</div>' : '')
+      + '</div>'
+      + '<p class="am-note">Phiên đã hết hạn hoặc chưa kết nối lại được. Đăng nhập lại để tiếp tục đồng bộ — '
+      + 'dữ liệu đang chờ vẫn nằm an toàn trên máy.</p>'
+      + '<div class="gis-holder" id="gisBtn"></div>'
+      + '<button class="am-action danger" id="btnSignOut">Quên tài khoản này</button>';
+  } else {
+    body = '<p class="am-note">Đăng nhập Google để lưu tiến độ, ghi chú và nhật ký phỏng vấn '
+      + 'lên Google Sheet riêng của bạn. Không đăng nhập thì mọi thứ vẫn chạy, chỉ lưu trên máy này.</p>'
+      + '<div class="gis-holder" id="gisBtn"></div>';
   }
-  if (Auth.error) {
-    return '<span class="authchip error" title="' + esc(Auth.error) + '"><span class="dot"></span>Sign-in error</span>';
-  }
-  if (!Auth.ready) return '<span class="authchip loading">…</span>';
 
-  if (!Auth.session) return '<div class="gis-holder" id="gisBtn"></div>';
-
-  const av = Auth.avatar
-    ? '<img class="avatar" src="' + esc(Auth.avatar) + '" alt="" referrerpolicy="no-referrer">'
-    : '<span class="avatar avatar-fallback">' + esc(Auth.displayName.slice(0, 1).toUpperCase()) + '</span>';
-
-  // Keep the identity visible while expired, so it reads as "re-auth", not "signed out".
-  if (Auth.expired) {
-    return '<div class="authchip stale">' + av
-      + '<div class="gis-holder" id="gisBtn" title="Your session expired. Sign in again to continue syncing."></div>'
-      + '<button class="btn-signout" id="btnSignOut" title="Sign out" aria-label="Sign out">⏻</button></div>';
-  }
-
-  return '<div class="authchip signed">' + av
-    + '<span class="authname" title="' + esc(Auth.session.email) + '">' + esc(shortName(Auth.displayName)) + '</span>'
-    + (Auth.isAdmin ? '<span class="rolebadge">ADMIN</span>' : '')
-    + '<button class="btn-signout" id="btnSignOut" title="Sign out" aria-label="Sign out">⏻</button>'
-    + '</div>';
+  return '<div class="authmenu" role="dialog" aria-label="Tài khoản">'
+    + (Auth.error ? '<p class="am-note err">' + esc(Auth.error) + '</p>' : '')
+    + body + '</div>';
 }
 
 /** Google's own button: more reliable than One Tap, which FedCM can suppress. */
@@ -212,20 +311,17 @@ function renderSignInButton(holder) {
   loadGis().then(() => {
     try {
       google.accounts.id.renderButton(holder, {
-        type: 'standard', theme: 'outline', size: 'medium',
+        type: 'standard', theme: 'outline', size: 'large',
         shape: 'pill', text: 'signin_with', logo_alignment: 'center',
-        locale: 'en'
+        locale: 'vi', width: 240
       });
     } catch (e) {
-      holder.innerHTML = '<button class="btn-ghost">Sign in</button>';
+      holder.innerHTML = '<button class="am-action" id="btnRetry">Đăng nhập Google</button>';
       holder.querySelector('button').addEventListener('click', () => Auth.signIn());
     }
-  }).catch(() => { holder.textContent = ''; });
-}
-
-function shortName(n) {
-  const first = String(n).split(/\s+/)[0];
-  return first.length > 14 ? first.slice(0, 13) + '…' : first;
+  }).catch(() => {
+    holder.innerHTML = '<p class="am-note err">Không tải được Google sign-in.</p>';
+  });
 }
 function esc(s) {
   return String(s == null ? '' : s)

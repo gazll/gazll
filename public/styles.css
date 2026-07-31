@@ -8,7 +8,9 @@
     --radius:14px; --shadow:0 1px 2px rgba(20,35,58,.05), 0 12px 30px -18px rgba(20,35,58,.28);
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  /* stable gutter so locking scroll for the drawer cannot shift the header */
+  html{scroll-behavior:smooth;scrollbar-gutter:stable}
+  body.nav-open{overflow:hidden}
   body{margin:0;background:radial-gradient(120% 90% at 100% 0%, #F4F6FA 0%, var(--paper) 55%) fixed;
     color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;}
   ::selection{background:var(--emerald);color:#fff}
@@ -18,16 +20,21 @@
     transition:transform .26s ease, box-shadow .2s ease;}
   /* hides on scroll down, returns on scroll up */
   header.top.hidden{transform:translateY(-100%)}
-  .top-inner{max-width:1120px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:18px;justify-content:space-between;
+  /* Nav lives in the drawer now, so the bar is just: menu · brand · account. */
+  .top-inner{max-width:1120px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px;
     transition:padding .2s ease;}
-  .brand{display:flex;align-items:center;gap:14px;min-width:0;flex:0 1 auto;max-width:42%}
-  .brand>div{min-width:0}
-  .seal{flex:none;width:42px;height:42px;border-radius:10px;background:linear-gradient(145deg,var(--emerald),var(--emerald-deep));
-    display:grid;place-items:center;color:#fff;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:17px;
+  .brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto}
+  .brandtext{min-width:0}
+  .seal{flex:none;width:38px;height:38px;border-radius:11px;background:linear-gradient(145deg,var(--emerald),var(--emerald-deep));
+    display:grid;place-items:center;color:#fff;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:15px;
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.12), 0 6px 16px -8px var(--emerald);}
   .brand h1{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:15px;letter-spacing:.2px;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .brand p{margin:0;font-size:11px;color:var(--muted);font-family:"IBM Plex Mono",monospace;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .progress-wrap{display:flex;align-items:center;gap:12px;flex:none}
+  /* second line is the current view, so the header always says where you are */
+  .brand p{margin:0;font-size:11px;color:var(--muted);font-family:"IBM Plex Mono",monospace;letter-spacing:.5px;
+    text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #viewCrumb{color:var(--emerald-deep);font-weight:600}
+  .headright{display:flex;align-items:center;gap:12px;flex:none;margin-left:auto}
+  .progress-wrap{display:flex;align-items:center;gap:10px;flex:none}
   .progress-meta{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-soft);text-align:right}
   .progress-meta b{color:var(--emerald);font-weight:600}
   .ring{--p:0;width:38px;height:38px;border-radius:50%;flex:none;
@@ -72,22 +79,69 @@
   .gcount{font-size:10px;opacity:.65;font-weight:500}
   .gchip:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
 
-  /* main navigation (all-in-one views) */
-  .mainnav{display:flex;align-items:center;gap:3px;flex:1 1 auto;justify-content:center;flex-wrap:nowrap;min-width:0;
-    overflow-x:auto;scrollbar-width:none}
-  .mainnav::-webkit-scrollbar{display:none}
-  .navlink{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:13px;color:var(--ink-soft);text-decoration:none;
-    padding:7px 14px;border-radius:999px;border:1px solid transparent;white-space:nowrap;transition:.15s ease}
-  .navlink:hover{background:var(--surface);border-color:var(--line)}
-  .navlink[aria-current="true"]{background:linear-gradient(180deg,var(--emerald),var(--emerald-deep));color:#fff;border-color:var(--emerald-deep);box-shadow:var(--shadow)}
   body:not(.view-track) .track-only{display:none !important}
 
-  /* hamburger toggle (mobile only) */
-  .navtoggle{display:none;flex:none;width:42px;height:42px;border-radius:10px;border:1px solid var(--line);
-    background:var(--surface);color:var(--ink);font-size:20px;line-height:1;cursor:pointer;
-    align-items:center;justify-content:center;padding:0}
-  .navtoggle:hover{border-color:var(--line-strong)}
+  .skiplink{position:absolute;left:-9999px;top:0;z-index:200;background:var(--emerald-deep);color:#fff;
+    padding:10px 16px;border-radius:0 0 10px 0;font-size:14px}
+  .skiplink:focus{left:0}
+
+  /* ---------- navigation panel (slide-out drawer) ---------- */
+  .navtoggle{flex:none;width:40px;height:40px;border-radius:11px;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;padding:0;transition:.16s ease}
+  .navtoggle svg{width:19px;height:19px}
+  .navtoggle:hover{border-color:var(--emerald);color:var(--emerald);transform:translateY(-1px)}
   .navtoggle:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
+
+  .nav-scrim{position:fixed;inset:0;z-index:90;background:rgba(20,35,58,.34);
+    backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .24s ease}
+  body.nav-open .nav-scrim{opacity:1;pointer-events:auto}
+
+  .navpanel{position:fixed;top:0;left:0;bottom:0;z-index:100;width:min(318px,86vw);
+    display:flex;flex-direction:column;background:var(--surface);
+    border-right:1px solid var(--line);box-shadow:14px 0 44px -26px rgba(20,35,58,.5);
+    transform:translateX(-100%);transition:transform .28s cubic-bezier(.22,.68,.36,1)}
+  body.nav-open .navpanel{transform:none}
+
+  .np-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:16px 16px 14px;border-bottom:1px solid var(--line)}
+  .np-brand{display:flex;align-items:center;gap:10px;font-family:"Space Grotesk",sans-serif;
+    font-weight:600;font-size:14px;letter-spacing:1.4px;color:var(--ink)}
+  .np-brand .seal{width:30px;height:30px;font-size:12px;border-radius:9px}
+  .np-close{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
+    color:var(--ink-soft);cursor:pointer;display:grid;place-items:center;padding:0;transition:.15s ease}
+  .np-close svg{width:16px;height:16px}
+  .np-close:hover{border-color:var(--clay);color:var(--clay)}
+  .np-close:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
+
+  .np-body{flex:1 1 auto;overflow-y:auto;padding:6px 10px 12px;scrollbar-width:thin}
+  .nv-sec{margin-top:12px}
+  .nv-sec:first-child{margin-top:6px}
+  .nv-sectitle{font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;letter-spacing:1.4px;
+    text-transform:uppercase;color:var(--muted);margin:0 0 6px;padding:0 10px}
+
+  .navlink{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:11px;
+    border:1px solid transparent;text-decoration:none;color:inherit;transition:.15s ease;position:relative}
+  .navlink:hover{background:var(--paper);border-color:var(--line)}
+  .navlink:focus-visible{outline:2px solid var(--emerald);outline-offset:1px}
+  .nv-icon{width:19px;height:19px;flex:none;color:var(--muted);transition:color .15s ease}
+  .navlink:hover .nv-icon{color:var(--emerald)}
+  .nv-text{min-width:0;display:flex;flex-direction:column;gap:1px}
+  .nv-label{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:14px;color:var(--ink);
+    line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nv-desc{font-size:11.5px;color:var(--muted);line-height:1.3;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nv-ext{margin-left:auto;flex:none;font-size:12px;color:var(--muted);transition:.15s ease}
+  .navlink.is-external:hover .nv-ext{color:var(--brass);transform:translate(1px,-1px)}
+
+  .navlink[aria-current="true"]{background:var(--emerald-soft);border-color:#cfe6da}
+  .navlink[aria-current="true"] .nv-label{color:var(--emerald-deep);font-weight:600}
+  .navlink[aria-current="true"] .nv-icon{color:var(--emerald-deep)}
+  .navlink[aria-current="true"]::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);
+    width:3px;height:20px;border-radius:0 3px 3px 0;background:var(--emerald)}
+
+  .np-foot{margin:0;padding:12px 18px 16px;border-top:1px solid var(--line);
+    font-size:11.5px;line-height:1.5;color:var(--muted)}
 
   /* header collapse button */
   .hdrtoggle{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
@@ -97,14 +151,18 @@
   .hdrtoggle:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
   header.top.collapsed .hdrtoggle svg{transform:rotate(180deg)}
 
-  /* manually collapsed: a thin bar only */
+  /* manually collapsed: a thin bar only. The view crumb survives — it is the
+     one line worth keeping when everything else is folded away. */
   header.top.collapsed .top-inner{padding-top:5px;padding-bottom:5px}
-  header.top.collapsed .brand h1,header.top.collapsed .brand p{display:none}
-  header.top.collapsed .seal{width:30px;height:30px;font-size:13px}
+  header.top.collapsed .brand h1{display:none}
+  header.top.collapsed .seal{width:30px;height:30px;font-size:13px;border-radius:9px}
   header.top.collapsed .stepper-wrap{display:none}
   header.top.collapsed .progress-meta{display:none}
   header.top.collapsed .ring{width:28px;height:28px}
   header.top.collapsed .ring::after{width:22px;height:22px}
+  header.top.collapsed .navtoggle{width:34px;height:34px}
+  header.top.collapsed .authbtn{width:32px;height:32px}
+  header.top.collapsed .avatar{width:24px;height:24px}
 
   main{max-width:1120px;margin:0 auto;padding:30px 24px 90px}
 
@@ -281,26 +339,22 @@
   .foot-note{text-align:center;color:var(--muted);font-size:12px;font-family:"IBM Plex Mono",monospace;margin-top:26px;letter-spacing:.3px}
 
   /* ============ RESPONSIVE / MOBILE ============ */
-  /* under 1100px: drop the brand subtitle so nav always fits */
-  @media (max-width:1100px){
-    .brand p{display:none}
-    .brand{max-width:34%}
-  }
-  /* under 1000px: nav no longer fits on one line, switch to hamburger */
-  @media (max-width:999px){
-    .top-inner{position:relative;flex-wrap:nowrap}
-    .brand{max-width:none;flex:1 1 auto}
-    .navtoggle{display:inline-flex}
-    .mainnav{position:absolute;top:100%;left:0;right:0;display:none;flex-direction:column;
-      align-items:stretch;justify-content:flex-start;gap:4px;margin:0;padding:10px 16px 14px;overflow:visible;
-      background:var(--surface);border-bottom:1px solid var(--line);box-shadow:var(--shadow);z-index:60}
-    header.top.nav-open .mainnav{display:flex}
-    .navlink{font-size:15px;padding:11px 14px;border:1px solid var(--line);text-align:left}
+  /* The drawer holds the nav at every width, so the header only has to shed
+     its own ornaments as space runs out. */
+  @media (max-width:860px){
+    .brand h1{font-size:14px}
+    .hdrtoggle{display:none}          /* collapse-on-scroll already does this job */
   }
   @media (max-width:760px){
-    .top-inner{padding:12px 16px;gap:12px}
+    .top-inner{padding:10px 14px;gap:10px}
     .progress-meta{display:none}
-    .hdrtoggle{width:38px;height:38px}
+    /* the long product title gives way to the current view — more useful here */
+    .brand h1{display:none}
+    .brand p{font-size:12px;text-transform:none;letter-spacing:.2px}
+    #viewCrumb{font-family:"Space Grotesk",sans-serif;font-size:15px;color:var(--ink)}
+    .seal{width:34px;height:34px;font-size:13px}
+    .authbtn{width:34px;height:34px}
+    .avatar{width:26px;height:26px}
     /* the filter bar scrolls sideways rather than stacking into rows */
     .groupbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:8px 16px 0}
     .groupbar::-webkit-scrollbar{display:none}
@@ -363,29 +417,60 @@
   .syncstate.s-error::before{background:var(--clay)}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 
-  .authbar{display:flex;align-items:center;flex:none;min-height:34px}
-  .authchip{display:inline-flex;align-items:center;gap:8px;padding:4px 6px 4px 4px;border:1px solid var(--line);
-    border-radius:999px;background:var(--surface);font-size:12.5px;color:var(--ink-soft)}
-  .authchip.offline,.authchip.error,.authchip.loading{padding:5px 11px;font-family:"IBM Plex Mono",monospace;font-size:11px}
-  .authchip.offline{color:var(--muted)}
-  .authchip.error{color:var(--clay);border-color:#e6c6c0;background:var(--clay-soft)}
-  .authchip.stale{border-color:#e3d6b8;background:#faf5e9}
-  .authchip .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
-  .authchip.error .dot{background:var(--clay)}
-  .authname{font-weight:500;color:var(--ink);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ---------- account: the avatar IS the sign-in control ---------- */
+  .authbar{position:relative;display:flex;align-items:center;flex:none}
+  .authbtn{position:relative;width:36px;height:36px;padding:0;border-radius:50%;cursor:pointer;
+    border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;transition:.16s ease}
+  .authbtn:hover{border-color:var(--emerald);transform:translateY(-1px)}
+  .authbtn:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
 
-  .avatar{width:26px;height:26px;border-radius:50%;flex:none;object-fit:cover;border:1px solid var(--line)}
+  .avatar{width:28px;height:28px;border-radius:50%;flex:none;object-fit:cover;border:1px solid var(--line);display:block}
   .avatar.sm{width:22px;height:22px}
   .avatar-fallback{display:grid;place-items:center;background:linear-gradient(145deg,var(--emerald),var(--emerald-deep));
     color:#fff;font-weight:600;font-size:12px;border:none}
+  .avatar-anon{display:grid;place-items:center;border:none;color:var(--muted);background:transparent}
+  .avatar-anon svg{width:20px;height:20px}
+
+  /* A ring around the avatar carries the state — no extra chip in the header. */
+  .authbtn::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:1.5px solid transparent;transition:.2s ease}
+  .authbtn[data-state="signed"]::after{border-color:var(--emerald)}
+  .authbtn[data-state="connecting"]::after{border-color:var(--brass);
+    border-right-color:transparent;animation:spin 1.1s linear infinite}
+  .authbtn[data-state="error"]::after{border-color:var(--clay)}
+  .authbtn[data-state="error"]{border-color:#e6c6c0;background:var(--clay-soft)}
+  .authbtn[data-state="offline"]{opacity:.7}
+  .authbtn[data-state="anon"]:hover .avatar-anon{color:var(--emerald)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .av-admin{position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;
+    background:var(--indigo);color:#fff;font-size:8px;line-height:14px;text-align:center;
+    border:1.5px solid var(--surface)}
+
+  .authmenu{position:absolute;top:calc(100% + 10px);right:0;z-index:80;width:280px;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+    padding:16px;display:flex;flex-direction:column;gap:11px;
+    animation:menuIn .17s cubic-bezier(.2,.7,.4,1)}
+  @keyframes menuIn{from{opacity:0;transform:translateY(-5px)}}
+  .am-id{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .am-name{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:14.5px;color:var(--ink);
+    display:flex;align-items:center;gap:7px}
+  .am-mail{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .am-note{margin:0;font-size:12.5px;line-height:1.55;color:var(--ink-soft)}
+  .am-note.ok{color:var(--emerald-deep)}
+  .am-note.err{color:var(--clay);background:var(--clay-soft);border:1px solid #e6c6c0;
+    border-radius:9px;padding:8px 11px;font-size:12px}
+  .am-action{font:inherit;font-size:13px;font-family:"IBM Plex Mono",monospace;cursor:pointer;
+    border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:var(--surface);
+    color:var(--ink-soft);transition:.16s ease;width:100%}
+  .am-action:hover{border-color:var(--emerald);color:var(--emerald)}
+  .am-action.danger:hover{border-color:var(--clay);color:var(--clay);background:var(--clay-soft)}
+  .am-action:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
 
   .rolebadge{font-family:"IBM Plex Mono",monospace;font-size:9px;font-weight:600;letter-spacing:.5px;
     padding:2px 6px;border-radius:999px;background:var(--indigo-soft);color:var(--indigo);flex:none}
 
-  .btn-signout{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid transparent;background:transparent;
-    color:var(--muted);cursor:pointer;font-size:12px;line-height:1;display:grid;place-items:center;transition:.15s ease}
-  .btn-signout:hover{border-color:#e6c6c0;background:var(--clay-soft);color:var(--clay)}
-  .gis-holder{display:flex;align-items:center;min-width:0}
+  .gis-holder{display:flex;align-items:center;justify-content:center;min-width:0;min-height:40px}
 
   /* ---------- buttons ---------- */
   .btn-primary{font:inherit;font-size:13px;font-family:"IBM Plex Mono",monospace;cursor:pointer;
@@ -510,16 +595,15 @@
   .ad-when{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);white-space:nowrap}
 
   /* ---------- responsive for the sections above ---------- */
-  @media (max-width:1100px){
-    .authname{display:none}
-  }
   @media (max-width:999px){
     /* dot only, no label: the header is already tight under 1000px */
     .syncstate{font-size:0;gap:0}
     .stat-row{grid-template-columns:repeat(2,1fr)}
   }
   @media (max-width:760px){
-    .headright{gap:7px}
+    .headright{gap:8px}
+    /* anchor the menu to the viewport so it cannot overflow a narrow screen */
+    .authmenu{position:fixed;top:auto;right:10px;left:10px;width:auto}
     .fgrid{grid-template-columns:1fr}
     .modal-form{padding:18px 16px;max-height:92vh}
     .heatmap-wrap{padding:14px 12px}

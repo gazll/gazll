@@ -6,7 +6,11 @@ Vietnamese-language study site for backend engineering interview prep. No
 framework, no build step, no package.json — vanilla ES modules served straight
 to the browser. `public/` is published to GitHub Pages by GitHub Actions.
 
-UI strings are Vietnamese and stay that way. Code comments are English.
+UI strings are Vietnamese and stay that way — with one deliberate exception:
+the **nav panel is English** (section titles, menu labels, their one-line
+descriptions, and the panel's own chrome). New menu entries follow it. The
+header crumb mirrors the active menu label, so it is English too; everything
+below the header stays Vietnamese. Code comments are English.
 
 ## Layout
 
@@ -28,7 +32,7 @@ public/
     interviews.js    interview journal CRUD (<dialog>)
     stats.js         streak + heatmap + per-topic progress
     admin.js         all-user overview (admin role only)
-  content.json       266 track items + 42 microservices items
+  content.json       282 track items + 42 microservices items
   interviews.json    seed entries, merged under everyone's own Sheet rows
 apps-script/Code.gs  the entire backend (Google Sheet as database)
 secret/              GITIGNORED. Personal setup notes and credentials
@@ -41,7 +45,7 @@ secret/              GITIGNORED. Personal setup notes and credentials
   and if it degrades to an empty string the regex wraps **every number** in
   `<code>`. Do not "tidy" that line into a literal.
 
-- **`item_id` is one flat key space.** Track items are `1.1`–`23.8`,
+- **`item_id` is one flat key space.** Track items are `1.1`–`24.8`,
   microservices items are `M1.1`–`M10.6`. They do not collide, which is why
   `progress` and `notes` can share a single id column.
 
@@ -80,6 +84,11 @@ secret/              GITIGNORED. Personal setup notes and credentials
   backend creates new rows rather than editing. Seed entries whose name
   matches an own row are dropped, which is what makes import look in-place.
 
+- **SVG `<marker>` ids must be unique across the whole file.** Every open
+  card shares one DOM, so `url(#ar6)` resolves to whichever diagram rendered
+  first — two diagrams reusing an id silently borrow each other's arrowheads.
+  Name them after the item (`ar6_165`) rather than sequentially.
+
 - **Syntax-highlight classes are scoped to `pre code`.** `.k .s .c .n .r .f`
   are one letter long and collide with UI classes — `.f` is also the interview
   modal's form-field class (`display:flex;flex-direction:column`), which put
@@ -97,6 +106,17 @@ secret/              GITIGNORED. Personal setup notes and credentials
 
 - **`.legend` is `display:none` below 760px.** Real buttons belong in
   `.tb-actions`.
+
+- **Adding a menu is one entry in `VIEWS`.** `sec` picks the nav-panel section
+  (`technical` · `tool` · `about`). An entry with `href` is an external
+  destination: it renders as a new-tab link and `currentViewId()` refuses to
+  route to it, so a hash matching its id falls back to the track. That is how
+  sibling apps under `public/` (e.g. `fshare-tool/`) join the menu.
+
+- **The nav panel is `inert` while closed.** Without it the off-screen links
+  stay in the tab order — the drawer is moved by `transform`, not `display`.
+  `close()` blurs first, because focus inside a subtree that then becomes
+  inert is not moved out on its own.
 
 ## Security model
 
@@ -118,6 +138,14 @@ never persist it to `localStorage`/`sessionStorage`, include it in an error, or
 write it to any browser/server log. The Sheet itself must keep **General
 access: Restricted** and must not be shared with app users; they access only
 their own rows through the verified Apps Script API.
+
+What `localStorage` *does* hold is `gazl.profile` — the **profile hint**:
+`{sub, email, name, picture}` and nothing else. It exists so a returning
+reader sees their own avatar on first paint while `auto_select` fetches a real
+token; `readHint()` rebuilds the object field by field, so a `token`/`role`
+planted there is dropped rather than trusted. Never widen it: `role` still
+comes from the backend and `user_id` still comes from the verified `sub`.
+Three tests in `tests/security.test.mjs` pin this.
 
 ## Before pushing
 

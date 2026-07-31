@@ -24,11 +24,12 @@ function jwt(payload) {
   return `header.${encoded}.signature`;
 }
 
-async function loadAuth({ storedSession } = {}) {
+async function loadAuth({ storedSession, storedProfile } = {}) {
   const source = await readFile(path.join(root, 'public/lib/auth.js'), 'utf8');
-  const storage = memoryStorage(storedSession
-    ? { 'gazl.session': JSON.stringify(storedSession) }
-    : {});
+  const seed = {};
+  if (storedSession) seed['gazl.session'] = JSON.stringify(storedSession);
+  if (storedProfile) seed['gazl.profile'] = JSON.stringify(storedProfile);
+  const storage = memoryStorage(seed);
   const consoleCalls = [];
   let credentialCallback = null;
 
@@ -172,6 +173,54 @@ test('Google ID tokens live in memory only and a legacy stored token is discarde
 
   assert.equal(browser.Auth.token, newToken);
   assert.equal(browser.storage.has('gazl.session'), false);
+
+  // The profile hint exists so a returning reader sees their own avatar on
+  // first paint. It must stay a display record: anything token-shaped in here
+  // would put a credential back on disk, which is the whole thing we avoid.
+  const hint = JSON.parse(browser.storage.get('gazl.profile'));
+  assert.deepEqual(Object.keys(hint).sort(), ['email', 'name', 'picture', 'sub']);
+  assert.equal(JSON.stringify(hint).includes(newToken), false);
+});
+
+test('the stored profile hint cannot smuggle a credential back into a session', async () => {
+  // A tampered or downgraded entry that carries a token must not be trusted.
+  const forged = 'attacker-planted-token';
+  const browser = await loadAuth({
+    storedProfile: {
+      sub: 'victim', email: 'v@example.com', name: 'V', picture: '',
+      token: forged, exp: Date.now() + 3_600_000, role: 'admin'
+    }
+  });
+
+  await browser.Auth.init();
+
+  // The face is shown...
+  assert.equal(browser.Auth.identity.name, 'V');
+  assert.equal(browser.Auth.displayName, 'V');
+  // ...but nothing about it authenticates or elevates anything.
+  assert.equal(browser.Auth.session, null);
+  assert.equal(browser.Auth.token, null);
+  assert.equal(browser.Auth.isAdmin, false);
+  assert.equal(browser.Auth.connecting, true);
+  assert.equal(browser.Auth.hint.token, undefined);
+  assert.equal(browser.Auth.hint.role, undefined);
+  assert.equal(browser.Auth.hint.exp, undefined);
+});
+
+test('signing out clears the profile hint, not just the in-memory session', async () => {
+  const browser = await loadAuth();
+  await browser.Auth.init();
+  browser.credential({
+    credential: jwt({ sub: 'u', email: 'u@example.com', name: 'U', exp: Math.floor(Date.now() / 1000) + 3600 })
+  });
+  assert.equal(browser.storage.has('gazl.profile'), true);
+
+  browser.Auth.signOut();
+
+  assert.equal(browser.Auth.session, null);
+  assert.equal(browser.Auth.hint, null);
+  assert.equal(browser.Auth.identity, null);
+  assert.equal(browser.storage.has('gazl.profile'), false);
 });
 
 test('a malformed Google credential never writes diagnostic details to the console', async () => {

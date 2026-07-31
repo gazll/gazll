@@ -24,34 +24,49 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<a class="skiplink" href="#view-track">Skip to content</a>
+
 <header class="top">
   <div class="top-inner">
+    <button class="navtoggle" id="navToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="navPanel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
     <div class="brand">
       <div class="seal">&lt;/&gt;</div>
-      <div>
+      <div class="brandtext">
         <h1>Backend Engineering · Technical Mastery Track</h1>
-        <p>JAVA · JVM · SPRING · DATABASE · DISTRIBUTED SYSTEMS · ARCHITECTURE · NETWORK · DEVOPS</p>
+        <p><span id="viewCrumb">Study Track</span></p>
       </div>
     </div>
-    <nav class="mainnav" id="mainnav" aria-label="Điều hướng chính"></nav>
     <div class="headright">
+      <div class="progress-wrap track-only">
+        <div class="progress-meta">Đã ôn<br><b id="reviewedCount">0</b> / <span id="totalCount">0</span> mục</div>
+        <div class="ring" id="ring"></div>
+      </div>
       <span class="syncstate" id="syncState"></span>
       <div class="authbar" id="authbar"></div>
+      <button class="hdrtoggle" id="hdrToggle" aria-label="Thu gọn header" aria-expanded="true" title="Thu gọn header (phím H)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>
+      </button>
     </div>
-    <div class="progress-wrap track-only">
-      <div class="progress-meta">Đã ôn<br><b id="reviewedCount">0</b> / <span id="totalCount">0</span> mục</div>
-      <div class="ring" id="ring"></div>
-    </div>
-    <button class="hdrtoggle" id="hdrToggle" aria-label="Thu gọn header" aria-expanded="true" title="Thu gọn header (phím H)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>
-    </button>
-    <button class="navtoggle" id="navToggle" aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="mainnav">☰</button>
   </div>
   <div class="stepper-wrap track-only">
     <div class="groupbar" id="groupbar" role="group" aria-label="Lọc theo nhóm chủ đề"></div>
     <div class="stepper" id="stepper"></div>
   </div>
 </header>
+
+<div class="nav-scrim" id="navScrim"></div>
+<aside class="navpanel" id="navPanel" aria-label="Main navigation">
+  <div class="np-head">
+    <div class="np-brand"><span class="seal">&lt;/&gt;</span><b>GAZLL</b></div>
+    <button class="np-close" id="navClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <nav class="np-body" id="mainnav"></nav>
+  <p class="np-foot">Everything works signed out — progress is saved on this device.</p>
+</aside>
 
 <main>
   <!-- VIEW: topic track -->
