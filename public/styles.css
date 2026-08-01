@@ -205,32 +205,28 @@
     font-size:11.5px;line-height:1.5;color:var(--muted)}
 
   /* ---------- content language switch ---------- */
-  /* Shared by the header switch and every per-card toggle, so they match exactly. */
+  /* One control (role="switch"), used identically by the header and every per-card toggle. */
   :root{--switch-w:46px; --switch-h:24px; --switch-knob:20px}
 
-  /* EN/VI are real <button>s; .lang-track/.lang-knob are a decorative slider on top. */
-  .langswitch{display:inline-flex;align-items:center;gap:8px}
+  .langswitch{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
   .langswitch.busy{opacity:.55;pointer-events:none}
-  .langswitch .lang-label{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:700;
-    letter-spacing:.5px;cursor:pointer;border:0;background:none;color:var(--muted);
-    padding:2px 1px;transition:color .15s ease}
-  .langswitch .lang-label:hover{color:var(--ink)}
-  .langswitch .lang-label[aria-pressed="true"]{color:var(--ink)}
-  .langswitch .lang-label:focus-visible{outline:2px solid var(--emerald);outline-offset:1px;border-radius:4px}
+  .langswitch:focus-visible{outline:2px solid var(--emerald);outline-offset:2px;border-radius:8px}
+  .langswitch .lang-label{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:700;
+    letter-spacing:.5px;color:var(--muted);transition:color .15s ease}
+  .langswitch[aria-checked="false"] .lang-label[data-lang="en"],
+  .langswitch[aria-checked="true"] .lang-label[data-lang="vi"]{color:var(--ink)}
 
-  .lang-track, .qlangbtn{position:relative;flex:none;width:var(--switch-w);height:var(--switch-h);
+  .lang-track{position:relative;flex:none;width:var(--switch-w);height:var(--switch-h);
     border-radius:999px;background:var(--paper);
-    box-shadow:inset 0 1px 3px rgba(20,35,58,.18), inset 0 -1px 1px rgba(255,255,255,.7);
-    transition:background .2s ease}
+    box-shadow:inset 0 1px 3px rgba(20,35,58,.18), inset 0 -1px 1px rgba(255,255,255,.7)}
   /* padding leaves a bezel ring around the flag so it reads as a coin */
-  .lang-knob, .qlang-knob{position:absolute;top:50%;left:2px;width:var(--switch-knob);height:var(--switch-knob);
+  .lang-knob{position:absolute;top:50%;left:2px;width:var(--switch-knob);height:var(--switch-knob);
     border-radius:50%;background:var(--surface);padding:2px;overflow:hidden;box-sizing:border-box;
     box-shadow:0 2px 5px rgba(20,35,58,.32), 0 1px 2px rgba(20,35,58,.22);
     display:flex;align-items:center;justify-content:center;
     transform:translateY(-50%);transition:transform .2s ease}
-  .lang-knob svg, .qlang-knob svg{width:100%;height:100%;display:block;border-radius:50%}
-  .langswitch[data-active="vi"] .lang-knob,
-  .qlangbtn[aria-checked="true"] .qlang-knob{
+  .lang-knob svg{width:100%;height:100%;display:block;border-radius:50%}
+  .langswitch[aria-checked="true"] .lang-knob{
     transform:translateY(-50%) translateX(calc(var(--switch-w) - var(--switch-knob) - 4px))}
 
   .hdr-lang{flex:none}
@@ -344,9 +340,7 @@
   .qbadge.core{color:var(--emerald-deep);border-color:#cfe6da;background:var(--emerald-soft)}
   .qbadge.advanced{color:var(--clay);border-color:#e6c6c0;background:var(--clay-soft)}
   .qbadge.extra{color:var(--indigo);border-color:#cdd5ef;background:var(--indigo-soft)}
-  /* Per-item language toggle; same geometry as .lang-track/.lang-knob above. */
-  .qlangbtn{cursor:pointer}
-  .qlangbtn:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
+  .qlangbtn{flex:none}
   .chev{flex:none;width:20px;height:20px;color:var(--muted);transition:transform .25s}
   .qcard.open .chev{transform:rotate(90deg);color:var(--emerald)}
 
@@ -527,17 +521,6 @@
     border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;transition:.16s ease}
   .authbtn:hover{border-color:var(--emerald);transform:translateY(-1px)}
   .authbtn:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
-
-  /* States needing a click get a text label — an avatar alone is too quiet to
-     read as "signed out". data-state, not :has(), for selector support. */
-  .authbtn[data-state="anon"],
-  .authbtn[data-state="stale"],
-  .authbtn[data-state="error"]{width:auto;border-radius:999px;padding:0 12px 0 6px;gap:7px;
-    grid-auto-flow:column;place-items:center}
-  .auth-chip{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.4px;
-    color:var(--ink-soft);white-space:nowrap}
-  .authbtn[data-state="stale"] .auth-chip,
-  .authbtn[data-state="error"] .auth-chip{color:var(--clay)}
 
   .avatar{width:28px;height:28px;border-radius:50%;flex:none;object-fit:cover;border:1px solid var(--line);display:block}
   .avatar.sm{width:22px;height:22px}

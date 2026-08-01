@@ -157,13 +157,12 @@ function qcard(it) {
   const seq = (/\.q(\d+)$/.exec(it.id) || [, '?'])[1];
   // Not a <button>: it's inside .qhead, which is one — nested buttons make the browser silently close the outer one.
   const pair = Content.itemPair(it.id);
-  const otherLang = Content.lang === 'vi' ? 'en' : 'vi';
   const langBtn = (pair && pair.vi)
-    ? '<span class="qlangbtn" role="switch" tabindex="0" data-item-lang="' + Content.lang + '" '
-      + 'aria-checked="' + (Content.lang === 'vi') + '" '
-      + 'title="Show this question in ' + (otherLang === 'vi' ? 'Vietnamese' : 'English') + '" '
-      + 'aria-label="Show this question in ' + (otherLang === 'vi' ? 'Vietnamese' : 'English') + '">'
-      + '<span class="qlang-knob">' + LANG_FLAG[Content.lang] + '</span></span>'
+    ? '<span class="langswitch qlangbtn" role="switch" tabindex="0" data-item-lang="' + Content.lang + '" '
+      + 'aria-checked="' + (Content.lang === 'vi') + '" aria-label="Show this question in the other language">'
+      + '<span class="lang-label" data-lang="en">EN</span>'
+      + '<span class="lang-track" aria-hidden="true"><span class="lang-knob">' + LANG_FLAG[Content.lang] + '</span></span>'
+      + '<span class="lang-label" data-lang="vi">VI</span></span>'
     : '';
   return '<div class="qcard' + diffClass + done + '" data-qid="' + it.id + '">'
     + '<button class="qhead" aria-expanded="false">'
@@ -201,11 +200,8 @@ function wireQcards(root, onMark) {
         card.querySelector('.answer-body').innerHTML = renderMarkdown(nextText.a);
         langBtn.dataset.itemLang = next;
         langBtn.setAttribute('aria-checked', String(next === 'vi'));
-        const knob = langBtn.querySelector('.qlang-knob');
+        const knob = langBtn.querySelector('.lang-knob');
         if (knob) knob.innerHTML = LANG_FLAG[next];
-        const otherName = next === 'vi' ? 'English' : 'Vietnamese';
-        langBtn.title = 'Show this question in ' + otherName;
-        langBtn.setAttribute('aria-label', 'Show this question in ' + otherName);
       };
       langBtn.addEventListener('click', e => {
         e.stopPropagation();   // don't also toggle open/close
@@ -311,27 +307,28 @@ function wireNavPanel() {
 /* ---------- content language switch ---------- */
 
 function paintLangSwitch() {
-  const box = document.querySelector('.langswitch');
+  const box = document.querySelector('.langswitch.hdr-lang');
   if (!box) return;
-  box.dataset.active = Content.lang;
-  box.querySelectorAll('button[data-lang]').forEach(b => {
-    const lang = b.dataset.lang;
-    b.setAttribute('aria-pressed', String(lang === Content.lang));
-  });
+  box.setAttribute('aria-checked', String(Content.lang === 'vi'));
   const knob = box.querySelector('.lang-knob');
   if (knob) knob.innerHTML = LANG_FLAG[Content.lang] || '';
 }
 
 function wireLangSwitch() {
-  const box = document.querySelector('.langswitch');
+  const box = document.querySelector('.langswitch.hdr-lang');
   if (!box) return;
 
-  box.addEventListener('click', async e => {
-    const b = e.target.closest('button[data-lang]');
-    if (!b || b.dataset.lang === Content.lang) return;
+  const flip = async () => {
+    const next = Content.lang === 'vi' ? 'en' : 'vi';
     box.classList.add('busy');   // setLang re-applies the overlay
-    await Content.setLang(b.dataset.lang);
+    await Content.setLang(next);
     box.classList.remove('busy');
+  };
+  box.addEventListener('click', flip);
+  box.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    flip();
   });
 
   Content.onChange(paintLangSwitch);

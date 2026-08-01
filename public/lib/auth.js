@@ -352,18 +352,14 @@ const STATE_LABEL = {
   anon: 'Sign in with Google'
 };
 
-const STATE_CHIP = { anon: 'Sign in', stale: 'Sign in', error: 'Retry' };
-
 function avatarHtml() {
   const state = Auth.state;
   const raw = STATE_LABEL[state] || STATE_LABEL.anon;
   const label = typeof raw === 'function' ? raw() : raw;
-  const chip = STATE_CHIP[state];
 
   return '<button class="authbtn" id="authBtn" data-state="' + state + '"'
     + ' aria-haspopup="dialog" title="' + esc(label) + '" aria-label="' + esc(label) + '">'
     + avatarFace()
-    + (chip ? '<span class="auth-chip">' + chip + '</span>' : '')
     + (Auth.isAdmin && state === 'signed' ? '<span class="av-admin" title="Admin">★</span>' : '')
     + '</button>';
 }
