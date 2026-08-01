@@ -60,6 +60,25 @@ async function load({ lang, metaOverride, topicOverrides, dropVi } = {}) {
 
 const topic = (Content, n) => Content.topics.find(t => t.n === n);
 
+/** Build the realistic pre-translation state without depending on today's data progress. */
+function topicWithoutEnglishTranslations(n) {
+  const row = MANIFEST.topics.find(r => r.n === n);
+  const enPath = 'data/' + row.file;
+  const viPath = 'data/' + row.file.replace(/\.json$/, '.vi.json');
+  const content = structuredClone(TOPIC_FILES.get(enPath));
+  const viById = new Map(TOPIC_VI_FILES.get(viPath).sections
+    .flatMap(section => section.items.map(item => [item.id, item])));
+  for (const section of content.sections) {
+    for (const item of section.items) {
+      const source = viById.get(item.id);
+      item.q = source.q;
+      item.a = source.a;
+      item.translated = false;
+    }
+  }
+  return { enPath, content };
+}
+
 beforeEach(() => { delete globalThis.fetch; });
 
 test('English is the default language and every topic loads, including microservice', async () => {
@@ -71,7 +90,8 @@ test('English is the default language and every topic loads, including microserv
 });
 
 test('an item with no real translation falls back to Vietnamese and is flagged', async () => {
-  const { Content } = await load();
+  const { enPath, content } = topicWithoutEnglishTranslations(1);
+  const { Content } = await load({ topicOverrides: { [enPath]: content } });
   await Content.load();
   const item = topic(Content, 1).sections[0].items[0];
 
@@ -124,20 +144,22 @@ test('a stored language choice is honoured, and both languages are fetched upfro
 });
 
 test('a topic with zero translated items reports hasEn:false, hasVi:true', async () => {
-  const { Content } = await load();
+  const { enPath, content } = topicWithoutEnglishTranslations(1);
+  const { Content } = await load({ topicOverrides: { [enPath]: content } });
   await Content.load();
-  // None of the seed data has real translations yet.
   assert.equal(topic(Content, 1).hasEn, false);
   assert.equal(topic(Content, 1).hasVi, true);
 });
 
 test('a topic with at least one translated item reports hasEn:true', async () => {
-  const topic1Row = MANIFEST.topics.find(r => r.n === 1);
-  const enPath = 'data/' + topic1Row.file;
-  const base = TOPIC_FILES.get(enPath);
-  const patched = structuredClone(base);
-  patched.sections[0].items[0] = { ...patched.sections[0].items[0], translated: true };
-  const { Content } = await load({ topicOverrides: { [enPath]: patched } });
+  const { enPath, content } = topicWithoutEnglishTranslations(1);
+  content.sections[0].items[0] = {
+    ...content.sections[0].items[0],
+    q: 'Synthetic translated question',
+    a: 'Synthetic translated answer',
+    translated: true,
+  };
+  const { Content } = await load({ topicOverrides: { [enPath]: content } });
   await Content.load();
 
   assert.equal(topic(Content, 1).hasEn, true);
