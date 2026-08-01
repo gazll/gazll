@@ -38,11 +38,11 @@ test('content patch tool can append a bilingual item in dry-run mode', async () 
   const patchPath = path.join(dir, 'item.patch');
   const id = '03-spring-boot-deep-build.auto-configuration-build.q99';
   await writeFile(patchPath, [
-    `@@ item ${id} en ext`,
+    `@@ item ${id} en extra`,
     '? Which baseline should a new Spring application target?',
     'Target a supported generation and record the compatibility matrix.',
     '',
-    `@@ item ${id} vi ext`,
+    `@@ item ${id} vi extra`,
     '? Ứng dụng Spring mới nên chọn baseline nào?',
     'Chọn một thế hệ còn được hỗ trợ và ghi lại compatibility matrix.',
     ''

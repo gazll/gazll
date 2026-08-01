@@ -121,7 +121,7 @@ như một hằng số của công nghệ.
 }
 ```
 
-`difficulty`: `core` (ESSENTIAL) · `hard` (ADVANCED) · `ext` (EXTRA) —
+`difficulty`: `core` (CORE) · `advanced` (ADVANCED) · `extra` (EXTRA) —
 định nghĩa ở [lib/constants.js](../public/lib/constants.js).
 `id` = `{topic-key}.{section-slug}.q{n}`, `topic-key` là tên file bỏ `.json`.
 
@@ -303,16 +303,16 @@ New exact text
 ```
 
 Để append một item vào section hiện có, dùng mode `item`, thêm
-`core|hard|ext` ở cuối header và đặt câu hỏi ở dòng đầu với tiền tố `? `.
+`core|advanced|extra` ở cuối header và đặt câu hỏi ở dòng đầu với tiền tố `? `.
 ID phải là `q` kế tiếp của section; object được ghi ra vẫn giữ đúng bốn field
 `id`, `difficulty`, `q`, `a`:
 
 ```
-@@ item 03-spring-boot-deep-build.auto-configuration-build.q11 en ext
+@@ item 03-spring-boot-deep-build.auto-configuration-build.q11 en extra
 ? Which platform generation should a new service target?
 Answer text…
 
-@@ item 03-spring-boot-deep-build.auto-configuration-build.q11 vi ext
+@@ item 03-spring-boot-deep-build.auto-configuration-build.q11 vi extra
 ? Dịch vụ mới nên chọn thế hệ platform nào?
 Nội dung trả lời…
 ```

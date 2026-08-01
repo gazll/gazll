@@ -31,7 +31,7 @@
      item      append a new item; add difficulty to the header and prefix the
                first content line (the question) with "? "
 
-     @@ item 03-spring-boot-deep-build.auto-configuration-build.q11 en ext
+     @@ item 03-spring-boot-deep-build.auto-configuration-build.q11 en extra
      ? Which platform generation should a new service target?
      Answer text starts here.
 
@@ -40,10 +40,15 @@
    tools/validate-content.mjs afterwards — this tool checks placement, not markup. */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { DIFFICULTIES } from '../public/lib/constants.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TOPICS = ROOT + 'public/data/topics/';
 const MODES = new Set(['deep', 'body', 'end', 'answer', 'question', 'replace', 'item']);
+// Read from constants.js rather than repeating the literal set, so a future
+// difficulty rename can't leave this parser accepting stale keys.
+const DIFFICULTY_KEYS = new Set(DIFFICULTIES.map(d => d.key));
+const DIFFICULTY_RE = DIFFICULTIES.map(d => d.key).join('|');
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
@@ -59,7 +64,7 @@ const blocks = [];
   const lines = readFileSync(patchPath, 'utf8').replace(/\r/g, '').split('\n');
   let cur = null;
   for (const line of lines) {
-    const h = /^@@\s+([\w-]+)\s+(\S+)\s+(en|vi)(?:\s+(core|hard|ext))?\s*$/.exec(line);
+    const h = new RegExp(`^@@\\s+([\\w-]+)\\s+(\\S+)\\s+(en|vi)(?:\\s+(${DIFFICULTY_RE}))?\\s*$`).exec(line);
     if (h) {
       if (!MODES.has(h[1])) { console.error(`bad mode "${h[1]}" — use deep|body|end|answer|question|replace|item`); process.exit(2); }
       cur = { mode: h[1], id: h[2], lang: h[3], difficulty: h[4], lines: [] };
@@ -76,7 +81,11 @@ for (const b of blocks) {
   if (!b.text) { console.error(`empty block for ${b.id} (${b.lang})`); process.exit(2); }
   if (b.mode === 'item') {
     if (!b.difficulty) {
-      console.error(`item ${b.id} (${b.lang}) needs difficulty core|hard|ext in its header`);
+      console.error(`item ${b.id} (${b.lang}) needs difficulty ${DIFFICULTY_RE} in its header`);
+      process.exit(2);
+    }
+    if (!DIFFICULTY_KEYS.has(b.difficulty)) {
+      console.error(`item ${b.id} (${b.lang}): "${b.difficulty}" is not a known difficulty (${[...DIFFICULTY_KEYS].join('|')})`);
       process.exit(2);
     }
     const [questionLine, ...answerLines] = b.text.split('\n');
