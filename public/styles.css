@@ -204,33 +204,41 @@
   .np-foot{margin:0;padding:12px 18px 16px;border-top:1px solid var(--line);
     font-size:11.5px;line-height:1.5;color:var(--muted)}
 
-  /* ---------- content language switch ---------- */
+  /* ---------- content language switch ----------
+     One shared geometry for BOTH the header switch and every per-card
+     toggle, so they can never drift apart visually — everything below reads
+     these three custom properties rather than repeating pixel values.
+     Neumorphic pill: an inset track plus a raised circular knob carrying the
+     active language's flag, sliding between the two ends. */
+  :root{--switch-w:46px; --switch-h:24px; --switch-knob:20px}
+
   /* EN/VI stay real <button>s (each jumps straight to that language, not a
      single flip) — .lang-track/.lang-knob are a decorative slider layered
      on top, driven by data-active on .langswitch (set in paintLangSwitch). */
-  .langswitch{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);
-    border-radius:999px;background:var(--paper);padding:2px 8px}
+  .langswitch{display:inline-flex;align-items:center;gap:8px}
   .langswitch.busy{opacity:.55;pointer-events:none}
-  .langswitch .lang-label{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
-    letter-spacing:.6px;cursor:pointer;border:0;background:none;color:var(--muted);
+  .langswitch .lang-label{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:700;
+    letter-spacing:.5px;cursor:pointer;border:0;background:none;color:var(--muted);
     padding:2px 1px;transition:color .15s ease}
   .langswitch .lang-label:hover{color:var(--ink)}
-  .langswitch .lang-label[aria-pressed="true"]{color:var(--emerald-deep)}
+  .langswitch .lang-label[aria-pressed="true"]{color:var(--ink)}
   .langswitch .lang-label:focus-visible{outline:2px solid var(--emerald);outline-offset:1px;border-radius:4px}
-  .lang-track{position:relative;flex:none;width:34px;height:18px;border-radius:999px;
-    background:var(--line);transition:background .2s ease}
-  .langswitch[data-active="vi"] .lang-track{background:var(--emerald-soft)}
-  .lang-knob{position:absolute;top:1px;left:1px;width:16px;height:16px;border-radius:50%;
-    background:var(--surface);box-shadow:0 1px 3px rgba(20,35,58,.35);
-    display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;
-    transition:transform .2s ease}
-  .langswitch[data-active="vi"] .lang-knob{transform:translateX(16px)}
-  .hdr-lang{flex:none;background:var(--surface)}
-  .hdr-lang .lang-label{padding:2px 1px;font-size:10.5px}
-  header.top.collapsed .hdr-lang{padding:2px 6px}
-  header.top.collapsed .lang-track{width:28px;height:15px}
-  header.top.collapsed .lang-knob{width:13px;height:13px;font-size:9px}
-  header.top.collapsed .langswitch[data-active="vi"] .lang-knob{transform:translateX(13px)}
+
+  .lang-track, .qlangbtn{position:relative;flex:none;width:var(--switch-w);height:var(--switch-h);
+    border-radius:999px;background:var(--paper);
+    box-shadow:inset 0 1px 3px rgba(20,35,58,.18), inset 0 -1px 1px rgba(255,255,255,.7);
+    transition:background .2s ease}
+  .lang-knob, .qlang-knob{position:absolute;top:50%;left:2px;width:var(--switch-knob);height:var(--switch-knob);
+    border-radius:50%;background:var(--surface);
+    box-shadow:0 2px 5px rgba(20,35,58,.32), 0 1px 2px rgba(20,35,58,.22);
+    display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;
+    transform:translateY(-50%);transition:transform .2s ease}
+  .langswitch[data-active="vi"] .lang-knob,
+  .qlangbtn[aria-checked="true"] .qlang-knob{
+    transform:translateY(-50%) translateX(calc(var(--switch-w) - var(--switch-knob) - 4px))}
+
+  .hdr-lang{flex:none}
+  header.top.collapsed .lang-track{transform:scale(.82);transform-origin:left center}
 
   /* header collapse button */
   .hdrtoggle{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
@@ -349,20 +357,13 @@
   .qbadge.advanced{color:var(--clay);border-color:#e6c6c0;background:var(--clay-soft)}
   .qbadge.extra{color:var(--indigo);border-color:#cdd5ef;background:var(--indigo-soft)}
   /* Per-item language toggle: shows the OTHER language available for this
-     one card, independent of the header's site-wide EN/VI switch. */
-  /* Mini slider switch (track + knob), same visual language as the header's
-     .lang-track/.lang-knob — the knob carries the active language's flag and
-     slides right once aria-checked="true" (Vietnamese showing). */
-  .qlangbtn{position:relative;flex:none;width:28px;height:16px;border-radius:999px;
-    border:1px solid var(--line);background:var(--paper);cursor:pointer;transition:background .15s ease}
-  .qlangbtn:hover{border-color:var(--teal)}
-  .qlangbtn[aria-checked="true"]{background:var(--teal-soft);border-color:var(--teal)}
-  .qlangbtn:focus-visible{outline:2px solid var(--emerald);outline-offset:1px}
-  .qlang-knob{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;
-    background:var(--surface);box-shadow:0 1px 2px rgba(20,35,58,.35);
-    display:flex;align-items:center;justify-content:center;font-size:8px;line-height:1;
-    transition:transform .15s ease}
-  .qlangbtn[aria-checked="true"] .qlang-knob{transform:translateX(12px)}
+     one card, independent of the header's site-wide EN/VI switch. Same
+     .qlangbtn/.qlang-knob geometry as .lang-track/.lang-knob above — see
+     the shared --switch-* custom properties — just with interaction states
+     (cursor, focus ring) that the header's plain decorative track doesn't
+     need since its real hit targets are the EN/VI buttons beside it. */
+  .qlangbtn{cursor:pointer}
+  .qlangbtn:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
   .chev{flex:none;width:20px;height:20px;color:var(--muted);transition:transform .25s}
   .qcard.open .chev{transform:rotate(90deg);color:var(--emerald)}
 
