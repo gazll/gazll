@@ -17,9 +17,9 @@ step, no package.json — vanilla ES modules served straight to the browser.
 
 2. **The study material has an `EN`/`VI` switch in the header**, right of the
    progress ring. It was in the nav panel first and nobody could find it.
-   The `data/` tree (Vietnamese) is the source of truth; `meta.json`'s `en`
-   blocks and `topics/N.en.json` files are partial overlays — see "The
-   English overlay".
+   English is the default language and each topic's base file; the complete
+   Vietnamese original always exists alongside it as a `.vi.json` companion
+   — see "The VI/EN language split".
 
 Code comments are English, and they answer **why**, not what: the code already
 says what it does. Keep them short.
@@ -29,10 +29,11 @@ says what it does. Keep them short.
 ```
 public/
   index.html         shell; loads app.js as <script type="module">
-  app.js             entry: hash router, topic track view, Microservices view
+  app.js             entry: hash router, topic track view (all 25 topics, including Microservices)
   config.js          GITIGNORED. Generated at deploy time from repo variables
   config.example.js  template to copy for local dev
   lib/
+    constants.js     TOPIC_TYPES, DIFFICULTIES — the closed-set identifiers, label source
     markdown.js      renderMarkdown + renderUser (escaping variant)
     ui.js            chevSVG, BADGE, FALLBACK_BADGE, debounce, localDay
     content.js       loads data/manifest.json + meta.json + per-topic files; owns the language
@@ -45,12 +46,11 @@ public/
     stats.js         streak + heatmap + per-topic progress
     admin.js         all-user overview (admin role only)
   data/
-    manifest.json    ordered list of topics + the microservices entry, each pointing at its file
-    meta.json        label/title/intro/tags per topic + microservices, VI + EN in one file
-    topics/N.json    one file per topic — sections/items only (282 items total across 24 files)
-    topics/N.en.json optional per-topic EN item overlay; anything absent falls back to VI
-    microservices.json / microservices.en.json   same pattern, 42 items
-    interviews.json  seed entries, merged under everyone's own Sheet rows
+    manifest.json       ordered list of every topic (n, topic_type, file) — 25 rows, Microservices is n=25
+    meta.json            label/title/intro/tags/key/topic_type per topic, VI + EN in one file
+    topics/NN-slug.json     English base, one file per topic (324 items total across 25 files)
+    topics/NN-slug.vi.json  the complete Vietnamese original, same shape, every item translated:true
+    interviews.json     seed entries, merged under everyone's own Sheet rows
 apps-script/Code.gs  the entire backend (Google Sheet as database)
 tests/               security · interviews.merge · auth.state · content.i18n
 tools/               validate-content.mjs
@@ -64,29 +64,41 @@ secret/              GITIGNORED. Personal setup notes and credentials
   and if it degrades to an empty string the regex wraps **every number** in
   `<code>`. Do not "tidy" that line into a literal.
 
-- **`item_id` is one flat key space.** Track items are `1.1`–`24.8`,
-  microservices items are `M1.1`–`M10.6`. They do not collide, which is why
-  `progress` and `notes` can share a single id column.
+- **`item_id` is one flat key space, and it is a slug, not a number.**
+  Format: `{topic-key}.{section-slug}.q{n}` — e.g.
+  `01-java-core-jvm.memory-execution-model.q1`. `topic-key` is the topic's
+  filename stem (matches `manifest.json`'s `file` and `meta.json`'s `key`);
+  `section-slug` is generated once from the section's English title and
+  reused for its `.vi.json` counterpart, so an item's id never changes with
+  language. `progress`/`notes`/`study_log` in the Sheet key on this string
+  verbatim (`item_id` is untyped there — see `Code.gs`'s `keyOf`), so an id
+  is a **stored key**: renaming a topic's file, or re-slugifying a section
+  title, orphans every row already in the Sheet for that topic.
 
-  A topic's `n` and its items' id prefix are **stored keys**, not display
-  order. Renumbering a topic orphans every `progress` and `notes` row already
-  in the Sheet — append new topics at the end instead.
+- **The progress ring counts every topic, Microservices included.**
+  `Content.topicItemIds` / `Content.totalTopicItems` cover all 25 topics —
+  there is no separate "track" vs "standalone" split anymore. The
+  denominator is derived, never hardcoded.
 
-- **The progress ring counts track items only.** `Store.reviewed` also holds
-  microservices items, so `updateProgress()` intersects with
-  `Content.dayItemIds` first — otherwise it exceeds the track denominator and
-  renders past 100%. The denominator is derived, never hardcoded.
+- **Every topic needs a `topic_type`.** One of `core` · `data` · `design` ·
+  `platform` · `algorithm` · `microservice`, defined once in
+  `lib/constants.js` (`TOPIC_TYPES`) and read from there everywhere —
+  `app.js`'s filter bar/stepper chip, `views/stats.js`, and
+  `validate-content.mjs`'s validation set all import it rather than
+  re-typing the list. The colours are the `[data-topic-type="…"]`
+  custom-property blocks in `styles.css`. A topic with an unknown
+  `topic_type` renders with no accent colour and drops out of the filter
+  bar. Every item needs a `difficulty` the same way (`core` · `hard` · `ext`,
+  `DIFFICULTIES` in `lib/constants.js`) — it drives the ESSENTIAL/ADVANCED/EXTRA
+  badge. `lib/constants.js`'s `label` is UI chrome (always English, per the
+  "interface is always English" rule above); its `vi` field is reference
+  only and nothing renders it.
 
-- **Every topic needs a `group`.** One of `core` · `data` · `design` ·
-  `platform` · `algorithm`. It drives the stepper chip, the filter bar
-  (`buildGroupBar`) and the hero accent; the colours are the
-  `[data-group="…"]` custom-property blocks in `styles.css`. A topic with an
-  unknown group renders with no accent colour and drops out of the filter bar.
-
-- **Raw HTML blocks in a topic's `data/topics/N.json` end at the first blank
-  line.** `renderMarkdown` collects lines starting with `<` until a blank one,
-  so a blank line inside a `<pre>` or `<table>` truncates it and dumps the
-  rest as literal text. Use a comment-only line as a separator instead.
+- **Raw HTML blocks in a topic's `data/topics/NN-slug.json` end at the first
+  blank line.** `renderMarkdown` collects lines starting with `<` until a
+  blank one, so a blank line inside a `<pre>` or `<table>` truncates it and
+  dumps the rest as literal text. Use a comment-only line as a separator
+  instead.
 
 - **`renderMarkdown` never escapes, so `<` must be written `&lt;` everywhere
   in `data/topics/*.json`** — including inside inline code spans. `` `jcmd <pid>` ``
@@ -161,43 +173,59 @@ secret/              GITIGNORED. Personal setup notes and credentials
   way in. `Auth.state` is the single value the UI switches on.
   `tests/auth.state.test.mjs` pins all of it.
 
-## The English overlay
+## The VI/EN language split
 
-The `data/` tree (Vietnamese) always loads: `manifest.json` lists every topic
-and the microservices entry, `meta.json` holds each one's label/title/intro/
-tags, and each topic's `topics/N.json` holds its sections/items. There are
-**two independent overlays**, both optional and both fetched only when the
-reader is in EN:
+English is the **default and base** language; Vietnamese is the **complete,
+ground-truth** content that always exists alongside it. `Content.load()`
+fetches both eagerly (`manifest.json`, `meta.json`, every topic's base file,
+and every topic's `.vi.json` companion) so switching language in the header
+never needs a refetch.
 
-- **Metadata** — `meta.json`'s own `topics["N"].en` / `microservices.en`
-  block, sitting right next to the `vi` block in the same file:
+- **Per-item `translated` flag** — every item in every file carries
+  `translated: true|false`. It means "this item's text is authentically
+  written in this file's language," not "this item has been looked at."
+  A `.vi.json` file is the real, complete Vietnamese original, so every one
+  of its items is `translated: true` by construction. A topic's base
+  (English) file starts with the Vietnamese text copied in verbatim and
+  `translated: false`, until someone actually translates that item — then
+  only that item flips to `true` and gets real English text.
   ```json
-  { "topics": { "1": { "group": "core",
+  { "sections": [{ "title": "…", "items": [
+    { "id": "01-java-core-jvm.memory-execution-model.q1", "difficulty": "core", "q": "…", "a": "…", "translated": false }
+  ] }] }
+  ```
+- **Metadata** — `meta.json`'s `topics["N"].vi` / `.en` blocks, key name
+  always matching the language of its value:
+  ```json
+  { "topics": { "1": { "topic_type": "core", "key": "01-java-core-jvm",
                         "vi": { "label": "…", "title": "…", "intro": "…", "tags": ["…"] },
-                        "en": { "label": "…" } } } }
+                        "en": { "label": "…", "title": "…", "intro": "…", "tags": ["…"] } } } }
   ```
-  Any field the `en` block omits falls back to the matching `vi` field.
-- **Item content** — an optional `topics/N.en.json` (or
-  `microservices.en.json`) next to the topic's content file, sections by
-  index and items by id:
-  ```json
-  { "sections": ["…"], "items": { "1.1": { "q": "…", "a": "…" } } }
-  ```
-  A missing file just means "no translation yet for this topic" — `fetch`
-  404s are swallowed the same way a missing field is.
-
-- **Anything absent falls back to Vietnamese.** That is what lets English be
-  filled in one item, or one topic, at a time. An item whose `a` has no
-  translation renders the Vietnamese text with a `VI` badge
+  `key` is the topic's filename stem (without `.json`) — the id-reference
+  the file names are built from, kept here so lookups don't need to parse
+  paths, and the prefix every item id in that topic starts with.
+- **`Content.isFallback(item)`** is just `!item.translated` — true whenever
+  the text on screen isn't authentically written in the language currently
+  selected. Today that only ever fires in EN (0/324 items are really
+  translated yet), which renders the Vietnamese text with a `VI` badge
   (`FALLBACK_BADGE`) so the reader knows why it switched language mid-page.
+- **Per-topic `hasEn`/`hasVi`** (on `Content.topics[i]`) says whether that
+  topic has *any* `translated: true` item in that language. `.vi.json`
+  makes `hasVi` always true; `hasEn` is false until a topic gets its first
+  real translation. The header's `EN`/`VI` switch
+  (`wireLangSwitch`/`paintLangSwitch` in `app.js`) disables the button for a
+  language the current topic doesn't have — there is nothing to switch to.
 - **`_apply()` must keep cloning the source.** Overlaying in place would
-  overwrite the Vietnamese strings, and switching back to VI would then show
-  English.
-- **The overlay is validated, not trusted.** `validate-content.mjs` fails on a
-  topic `n` or item id that does not exist — otherwise a typo silently means
-  the translation you wrote never appears.
-- Current state: all 24 topics have English metadata (`meta.json`); no
-  `topics/N.en.json` item overlays exist yet.
+  overwrite one language's strings with the other's, and switching back
+  would then show the wrong text.
+- **Content is validated, not trusted.** `validate-content.mjs` fails if a
+  topic's `.vi.json` is missing, has a mismatched section count, references
+  an item id that doesn't exist, or isn't `translated: true` throughout — and
+  fails if `meta.json`'s `key` or `topic_type` doesn't match the manifest.
+- Current state: all 25 topics have English metadata (`meta.json`); no item
+  has a real English translation yet (`translated: false` everywhere in the
+  base files) — the EN button is effectively disabled site-wide until that
+  changes one item at a time.
 
 ## Security model
 
@@ -231,14 +259,14 @@ Three tests in `tests/security.test.mjs` pin this.
 ## Before pushing
 
 ```bash
-# structure of the data/ tree + the English overlay, and a content report
+# structure of the data/ tree + translation progress, and a content report
 node tools/validate-content.mjs --stats
 
 # same check the CI runs
 for f in $(find public -name '*.js'); do node --input-type=module --check < "$f" || echo "FAIL $f"; done
 
 # auth/authorization/row-isolation/error-disclosure, the seed-vs-own merge
-# rules, the sign-in state machine, and the VI/EN overlay
+# rules, the sign-in state machine, and the VI/EN language split
 NODE_NO_WARNINGS=1 node --experimental-vm-modules --test tests/*.test.mjs
 
 # CI also refuses any console.* under public/ or apps-script/

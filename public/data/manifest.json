@@ -3,151 +3,128 @@
   "topics": [
     {
       "n": 1,
-      "type": "track",
-      "group": "core",
-      "file": "topics/01-java-core-jvm.json"
+      "file": "topics/01-java-core-jvm.json",
+      "topic_type": "core"
     },
     {
       "n": 2,
-      "type": "track",
-      "group": "core",
-      "file": "topics/02-java-8-25-java-vs-go.json"
+      "file": "topics/02-java-8-25-java-vs-go.json",
+      "topic_type": "core"
     },
     {
       "n": 3,
-      "type": "track",
-      "group": "core",
-      "file": "topics/03-spring-boot-deep-build.json"
+      "file": "topics/03-spring-boot-deep-build.json",
+      "topic_type": "core"
     },
     {
       "n": 4,
-      "type": "track",
-      "group": "design",
-      "file": "topics/04-rest-grpc-webflux.json"
+      "file": "topics/04-rest-grpc-webflux.json",
+      "topic_type": "design"
     },
     {
       "n": 5,
-      "type": "track",
-      "group": "data",
-      "file": "topics/05-db-core-index-lock.json"
+      "file": "topics/05-db-core-index-lock.json",
+      "topic_type": "data"
     },
     {
       "n": 6,
-      "type": "track",
-      "group": "data",
-      "file": "topics/06-db-scaling.json"
+      "file": "topics/06-db-scaling.json",
+      "topic_type": "data"
     },
     {
       "n": 7,
-      "type": "track",
-      "group": "data",
-      "file": "topics/07-sql-nosql-db-engines.json"
+      "file": "topics/07-sql-nosql-db-engines.json",
+      "topic_type": "data"
     },
     {
       "n": 8,
-      "type": "track",
-      "group": "data",
-      "file": "topics/08-message-queue.json"
+      "file": "topics/08-message-queue.json",
+      "topic_type": "data"
     },
     {
       "n": 9,
-      "type": "track",
-      "group": "design",
-      "file": "topics/09-distributed-tx-fintech.json"
+      "file": "topics/09-distributed-tx-fintech.json",
+      "topic_type": "design"
     },
     {
       "n": 10,
-      "type": "track",
-      "group": "design",
-      "file": "topics/10-system-design-rate-limit.json"
+      "file": "topics/10-system-design-rate-limit.json",
+      "topic_type": "design"
     },
     {
       "n": 11,
-      "type": "track",
-      "group": "design",
-      "file": "topics/11-system-design-cases.json"
+      "file": "topics/11-system-design-cases.json",
+      "topic_type": "design"
     },
     {
       "n": 12,
-      "type": "track",
-      "group": "design",
-      "file": "topics/12-architecture-patterns.json"
+      "file": "topics/12-architecture-patterns.json",
+      "topic_type": "design"
     },
     {
       "n": 13,
-      "type": "track",
-      "group": "platform",
-      "file": "topics/13-security-oauth2.json"
+      "file": "topics/13-security-oauth2.json",
+      "topic_type": "platform"
     },
     {
       "n": 14,
-      "type": "track",
-      "group": "platform",
-      "file": "topics/14-devops-k8s-best-practices.json"
+      "file": "topics/14-devops-k8s-best-practices.json",
+      "topic_type": "platform"
     },
     {
       "n": 15,
-      "type": "track",
-      "group": "core",
-      "file": "topics/15-network-i-o-models.json"
+      "file": "topics/15-network-i-o-models.json",
+      "topic_type": "core"
     },
     {
       "n": 16,
-      "type": "track",
-      "group": "algorithm",
-      "file": "topics/16-project-concurrency-whiteboard.json"
+      "file": "topics/16-project-concurrency-whiteboard.json",
+      "topic_type": "algorithm"
     },
     {
       "n": 17,
-      "type": "track",
-      "group": "design",
-      "file": "topics/17-rest-api-design.json"
+      "file": "topics/17-rest-api-design.json",
+      "topic_type": "design"
     },
     {
       "n": 18,
-      "type": "track",
-      "group": "data",
-      "file": "topics/18-query-optimization.json"
+      "file": "topics/18-query-optimization.json",
+      "topic_type": "data"
     },
     {
       "n": 19,
-      "type": "track",
-      "group": "algorithm",
-      "file": "topics/19-dsa-leetcode.json"
+      "file": "topics/19-dsa-leetcode.json",
+      "topic_type": "algorithm"
     },
     {
       "n": 20,
-      "type": "track",
-      "group": "platform",
-      "file": "topics/20-observability-sre.json"
+      "file": "topics/20-observability-sre.json",
+      "topic_type": "platform"
     },
     {
       "n": 21,
-      "type": "track",
-      "group": "platform",
-      "file": "topics/21-linux-production-debug.json"
+      "file": "topics/21-linux-production-debug.json",
+      "topic_type": "platform"
     },
     {
       "n": 22,
-      "type": "track",
-      "group": "algorithm",
-      "file": "topics/22-low-level-design-ood.json"
+      "file": "topics/22-low-level-design-ood.json",
+      "topic_type": "algorithm"
     },
     {
       "n": 23,
-      "type": "track",
-      "group": "algorithm",
-      "file": "topics/23-java-concurrency-coding.json"
+      "file": "topics/23-java-concurrency-coding.json",
+      "topic_type": "algorithm"
     },
     {
       "n": 24,
-      "type": "track",
-      "group": "design",
-      "file": "topics/24-domain-driven-design.json"
+      "file": "topics/24-domain-driven-design.json",
+      "topic_type": "design"
+    },
+    {
+      "n": 25,
+      "topic_type": "microservice",
+      "file": "topics/25-microservice.json"
     }
-  ],
-  "microservices": {
-    "type": "microservices",
-    "file": "microservices.json"
-  }
+  ]
 }

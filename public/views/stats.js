@@ -36,9 +36,9 @@ function paint(root, log) {
 
   const streak = streaks([...byDay.keys()]);
   const reviewed = Store.reviewed;
-  const dayIds = Content.dayItemIds;
-  const trackDone = [...reviewed].filter(id => dayIds.has(id)).length;
-  const total = Content.totalDayItems;
+  const topicIds = Content.topicItemIds;
+  const trackDone = [...reviewed].filter(id => topicIds.has(id)).length;
+  const total = Content.totalTopicItems;
 
   let html = '<section class="hero"><div class="hero-head"><div>'
     + '<h2>Study statistics</h2>'
@@ -160,14 +160,14 @@ function level(n, max) {
 /* ---------- per-topic track progress ---------- */
 
 function perDay(reviewed) {
-  const rows = Content.dayCounts().map(d => {
-    const done = d.ids.filter(id => reviewed.has(id)).length;
-    const pct = d.ids.length ? Math.round(done / d.ids.length * 100) : 0;
-    return '<a class="pd-row" href="#/track" data-day="' + d.n + '" data-group="' + esc(d.group) + '">'
-      + '<span class="pd-n">' + String(d.n).padStart(2, '0') + '</span>'
-      + '<span class="pd-label">' + esc(d.label) + '</span>'
+  const rows = Content.topicCounts().map(t => {
+    const done = t.ids.filter(id => reviewed.has(id)).length;
+    const pct = t.ids.length ? Math.round(done / t.ids.length * 100) : 0;
+    return '<a class="pd-row" href="#/track" data-day="' + t.n + '" data-topic-type="' + esc(t.topic_type) + '">'
+      + '<span class="pd-n">' + String(t.n).padStart(2, '0') + '</span>'
+      + '<span class="pd-label">' + esc(t.label) + '</span>'
       + '<span class="pd-bar"><span class="pd-fill" style="width:' + pct + '%"></span></span>'
-      + '<span class="pd-num">' + done + '/' + d.ids.length + '</span></a>';
+      + '<span class="pd-num">' + done + '/' + t.ids.length + '</span></a>';
   }).join('');
 
   return '<div class="toolbar"><span class="sectioncount">Progress by topic</span></div>'

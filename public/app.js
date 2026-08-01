@@ -1,7 +1,8 @@
 'use strict';
 
-/* Entry point. The topic track and the Microservices view render here;
-   shared pieces live in lib/ and the larger views in views/.
+/* Entry point. The topic track renders here (Microservices is topic_type
+   "microservice", one topic among the others — no separate view); shared
+   pieces live in lib/ and the larger views in views/.
 
    Adding a menu = adding one entry to VIEWS below.
 
@@ -10,30 +11,19 @@
 import { renderMarkdown, escapeHtml } from './lib/markdown.js';
 import { chevSVG, BADGE, FALLBACK_BADGE, debounce } from './lib/ui.js';
 import { Content } from './lib/content.js';
+import { TOPIC_TYPES, TOPIC_TYPE_LABEL } from './lib/constants.js';
 import { Store } from './lib/store.js';
 import { Auth, mountAuthUI } from './lib/auth.js';
 import { renderInterviews, mountInterviews } from './views/interviews.js';
 import { renderStats, mountStats } from './views/stats.js';
 import { renderAdmin, mountAdmin } from './views/admin.js';
 
-let DAYS = [];
-let MICRO = null;
+let TOPICS = [];
 let current = 0;
 let totalQ = 0;
-let dayItemIds = new Set();
-let groupFilter = 'all';
+let topicItemIds = new Set();
+let typeFilter = 'all';
 let topicQuery = '';
-
-/* Topic groups. Order here is the order of the filter bar; `key` matches the
-   `group` field of every topic in data/manifest.json. */
-const GROUPS = [
-  { key: 'core', label: 'Core' },
-  { key: 'data', label: 'Data' },
-  { key: 'design', label: 'Design' },
-  { key: 'platform', label: 'Platform' },
-  { key: 'algorithm', label: 'Algorithm' }
-];
-const GROUP_LABEL = Object.fromEntries(GROUPS.map(g => [g.key, g.label]));
 
 const panel = document.getElementById('panel');
 const dots = document.getElementById('dots');
@@ -56,11 +46,11 @@ const GUIDE_MD = [
   ':::deep Storage and languages',
   'Progress, notes and the interview journal are written to `localStorage` immediately, then synced to a **Google Sheet** through Apps Script once you are signed in with Google. Losing the network or closing the tab mid-save costs nothing — the queue lives in `localStorage` and is resent on the next visit.',
   '',
-  'The study material lives under `data/` (JSON + Markdown): `data/manifest.json` lists every topic and points at its `data/topics/N.json` file; `data/meta.json` holds each topic\'s label/title/intro/tags. Supported syntax: **bold**, *italic*, `code`, `-` lists, and three callout blocks — `:::tip Label`, `:::warn Label`, `:::deep`.',
+  'The study material lives under `data/` (JSON + Markdown): `data/manifest.json` lists every topic — including the Microservices track, filed as topic_type `microservice` like any other — and points at its `data/topics/NN-slug.json` file; `data/meta.json` holds each topic\'s label/title/intro/tags. Supported syntax: **bold**, *italic*, `code`, `-` lists, and three callout blocks — `:::tip Label`, `:::warn Label`, `:::deep`.',
   '',
-  'The interface is always English. The **material** has an `EN`/`VI` switch in the header. Vietnamese is the source of truth; `data/meta.json`\'s `en` block and an optional `data/topics/N.en.json` per topic are partial overlays keyed by topic number and item id, so English can be filled in one item at a time. Anything not translated yet falls back to Vietnamese and is tagged `VI` on the card.',
+  'The interface is always English. The **material** has an `EN`/`VI` switch in the header. Each topic\'s base file (`data/topics/NN-slug.json`) is English by default; the complete Vietnamese original always lives alongside it as `NN-slug.vi.json`. An item\'s `translated` flag says whether its text is authentically written in that file\'s language — until an item is really translated, the English file just carries the Vietnamese text verbatim and is tagged `VI` on the card. The `EN` button greys out for a topic with no real translations yet, since there is nothing English to switch to.',
   '',
-  'Every topic carries a `group` field (`core` · `data` · `design` · `platform` · `algorithm`) — that is what drives the filter chips in the topic picker.',
+  'Every topic carries a `topic_type` field (`core` · `data` · `design` · `platform` · `algorithm` · `microservice`, from `lib/constants.js`) — that is what drives the filter chips in the topic picker. Every item carries a `difficulty` (`core` · `hard` · `ext`) — the ESSENTIAL/ADVANCED/EXTRA badge.',
   '',
   'Raw HTML (SVG diagrams, tables) can be embedded straight into the Markdown. To update content: edit the topic\'s file under `data/topics/`, then `git push` — GitHub Actions deploys it.',
   ':::'
@@ -83,8 +73,6 @@ const VIEWS = [
   { id: 'track', sec: 'technical', label: 'Study Track', desc: 'Topic-based learning path', icon: 'track' },
   { id: 'gazl', sec: 'technical', label: 'Gazl Try', desc: 'Companies interviewed', icon: 'journal',
     render: renderInterviews, mount: mountInterviews },
-  { id: 'micro', sec: 'technical', label: 'Microservices', desc: 'Standalone mastery track', icon: 'micro',
-    render: renderMicro, mount: wireMicro },
   { id: 'stats', sec: 'technical', label: 'Stats', desc: 'Streak, heatmap, progress', icon: 'stats',
     render: renderStats, mount: mountStats },
   { id: 'admin', sec: 'technical', label: 'Admin', desc: 'All-user overview', icon: 'admin',
@@ -101,7 +89,6 @@ const VIEWS = [
 const ICONS = {
   track: '<path d="M4 6h16M4 12h16M4 18h10"/>',
   journal: '<path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h5"/>',
-  micro: '<circle cx="12" cy="12" r="2.6"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M6.7 7.4 10 10.4M17.3 7.4 14 10.4M6.7 16.6 10 13.6M17.3 16.6 14 13.6"/>',
   stats: '<path d="M5 19V10M12 19V5M19 19v-6"/>',
   admin: '<path d="M12 3l7 3v5c0 4.2-2.8 7.6-7 10-4.2-2.4-7-5.8-7-10V6z"/>',
   tool: '<path d="M14.5 3.5a5 5 0 0 0-6.1 6.7L3.5 15v5.5H9l4.8-4.9a5 5 0 0 0 6.7-6.1L17 12l-2.5-.5L14 9z"/>',
@@ -147,48 +134,13 @@ function wireNotes(root) {
   });
 }
 
-/* ---------------------------------------------------------------------
-   View "Microservices"
---------------------------------------------------------------------- */
-
-function renderMicro() {
-  const m = MICRO;
-  if (!m || !m.chapters) {
-    return '<div class="page"><p>No data yet. Add <code>data/microservices.json</code> '
-      + '(<code>{ chapters:[{ title, items:[{id,lvl,q,a}] }] }</code>) and a <code>microservices</code> entry '
-      + 'in <code>data/meta.json</code>.</p></div>';
-  }
-  const count = m.chapters.reduce((s, c) => s + ((c.items || []).length), 0);
-  let html = '<section class="hero"><div class="hero-head"><div>'
-    + '<h2>' + m.title + '</h2>'
-    + '<p class="intro">' + m.intro + '</p>'
-    + '<div class="tags">' + (m.tags || []).map(t => '<span class="tag">' + t + '</span>').join('') + '</div>'
-    + '</div></div></section>'
-    + '<div class="toolbar"><span class="sectioncount">' + count + ' items · ' + m.chapters.length + ' chapters</span>'
-    + '<div class="legend"><span class="lg-core">ESSENTIAL</span><span class="lg-hard">ADVANCED</span><span class="lg-ext">EXTRA</span></div>'
-    + '<div class="tb-actions"><button class="btn-ghost" id="microToggleAll">Expand all</button></div></div>';
-
-  html += m.chapters.map((ch, ci) => {
-    const items = (ch.items || []).map(it => qcard(it)).join('');
-    const isOpen = ci === 0; // first chapter starts open
-    return '<div class="chapter' + (isOpen ? ' open' : '') + '">'
-      + '<button class="chapter-head" aria-expanded="' + isOpen + '">'
-      + '<span class="chapter-title">' + ch.title + '</span>'
-      + '<span class="chapter-meta">' + (ch.items || []).length + ' items' + chevSVG + '</span>'
-      + '</button>'
-      + '<div class="chapter-body"><div class="chapter-body-inner">' + items + '</div></div></div>';
-  }).join('');
-  return html;
-}
-
-/** Shared by the track view and the Microservices view. */
 function qcard(it) {
-  const badge = BADGE[it.lvl] || '';
+  const badge = BADGE[it.difficulty] || '';
   // Silent language switches read as a bug; the badge says why.
   const fallback = Content.isFallback(it) ? FALLBACK_BADGE : '';
-  const lvlClass = it.lvl ? (' lvl-' + it.lvl) : '';
+  const diffClass = it.difficulty ? (' difficulty-' + it.difficulty) : '';
   const done = Store.reviewed.has(it.id) ? ' done' : '';
-  return '<div class="qcard' + lvlClass + done + '" data-qid="' + it.id + '">'
+  return '<div class="qcard' + diffClass + done + '" data-qid="' + it.id + '">'
     + '<button class="qhead" aria-expanded="false">'
     + '<span class="qid">' + it.id + '</span>'
     + '<span class="qtext">' + it.q + '</span>'
@@ -213,38 +165,6 @@ function wireQcards(root, onMark) {
     });
   });
   wireNotes(root);
-}
-
-function wireMicro(root) {
-  const r = root || document;
-  r.querySelectorAll('.chapter-head').forEach(head => {
-    head.addEventListener('click', () => {
-      const chapter = head.closest('.chapter');
-      const open = chapter.classList.toggle('open');
-      head.setAttribute('aria-expanded', open);
-      syncMicroToggleLabel(r);
-    });
-  });
-  wireQcards(r, updateProgress);
-  const btn = r.querySelector('#microToggleAll');
-  if (btn) btn.addEventListener('click', () => {
-    const chapters = [...r.querySelectorAll('.chapter')];
-    const anyClosed = chapters.some(c => !c.classList.contains('open'));
-    chapters.forEach(c => {
-      c.classList.toggle('open', anyClosed);
-      c.querySelector('.chapter-head').setAttribute('aria-expanded', anyClosed);
-    });
-    syncMicroToggleLabel(r);
-  });
-  syncMicroToggleLabel(r);
-}
-
-function syncMicroToggleLabel(root) {
-  const r = root || document;
-  const chapters = [...r.querySelectorAll('.chapter')];
-  const allOpen = chapters.length && chapters.every(c => c.classList.contains('open'));
-  const btn = r.querySelector('#microToggleAll');
-  if (btn) btn.textContent = allOpen ? 'Collapse all' : 'Expand all';
 }
 
 /* ---------------------------------------------------------------------
@@ -334,24 +254,39 @@ function wireNavPanel() {
 
 /* ---------- content language switch ---------- */
 
+/** Which language(s) the content on screen right now actually has. */
+function activeLangAvailability() {
+  const active = TOPICS[current];
+  if (!active) return { en: true, vi: true };
+  return { en: !!active.hasEn, vi: !!active.hasVi };
+}
+
+function paintLangSwitch() {
+  const box = document.querySelector('.langswitch');
+  if (!box) return;
+  const avail = activeLangAvailability();
+  box.querySelectorAll('button[data-lang]').forEach(b => {
+    const lang = b.dataset.lang;
+    b.setAttribute('aria-pressed', String(lang === Content.lang));
+    b.disabled = !avail[lang];
+    b.title = b.disabled ? 'Not available for this topic yet' : '';
+  });
+}
+
 function wireLangSwitch() {
   const box = document.querySelector('.langswitch');
   if (!box) return;
 
-  const paint = () => box.querySelectorAll('button').forEach(b => {
-    b.setAttribute('aria-pressed', String(b.dataset.lang === Content.lang));
-  });
-
   box.addEventListener('click', async e => {
     const b = e.target.closest('button[data-lang]');
-    if (!b || b.dataset.lang === Content.lang) return;
-    box.classList.add('busy');   // setLang may fetch the overlay
+    if (!b || b.disabled || b.dataset.lang === Content.lang) return;
+    box.classList.add('busy');   // setLang re-applies the overlay
     await Content.setLang(b.dataset.lang);
     box.classList.remove('busy');
   });
 
-  Content.onChange(paint);
-  paint();
+  Content.onChange(paintLangSwitch);
+  paintLangSwitch();
 }
 
 /* ---- Header: collapse toggle (remembered) + hide-on-scroll-down ---- */
@@ -457,6 +392,7 @@ function showView(id) {
     else host.innerHTML = '';
     if (v && v.mount) v.mount(host);
   }
+  paintLangSwitch();
   window.scrollTo({ top: 0 });
 }
 
@@ -483,34 +419,34 @@ function cacheTopicEls() {
 
 const pad2 = n => String(n).padStart(2, '0');
 
-function topicProgress(d) {
-  const ids = d.sections.flatMap(s => s.items.map(it => it.id));
+function topicProgress(t) {
+  const ids = t.sections.flatMap(s => s.items.map(it => it.id));
   let done = 0;
   for (const id of ids) if (Store.reviewed.has(id)) done++;
   return { done, total: ids.length };
 }
 
-function topicMatches(d) {
-  if (groupFilter !== 'all' && d.group !== groupFilter) return false;
+function topicMatches(t) {
+  if (typeFilter !== 'all' && t.topic_type !== typeFilter) return false;
   if (!topicQuery) return true;
-  const hay = [pad2(d.n), d.label, d.title, (d.tags || []).join(' '), GROUP_LABEL[d.group] || '']
+  const hay = [pad2(t.n), t.label, t.title, (t.tags || []).join(' '), TOPIC_TYPE_LABEL[t.topic_type] || '']
     .join(' ').toLowerCase();
   return hay.includes(topicQuery);
 }
 
 function buildTopicList() {
   let shown = 0;
-  pick.list.innerHTML = DAYS.map((d, i) => {
-    const { done, total } = topicProgress(d);
+  pick.list.innerHTML = TOPICS.map((t, i) => {
+    const { done, total } = topicProgress(t);
     const pct = total ? Math.round(done / total * 100) : 0;
-    const hit = topicMatches(d);
+    const hit = topicMatches(t);
     if (hit) shown++;
-    return '<button class="tm-row" role="option" data-i="' + i + '" data-group="' + d.group + '"'
+    return '<button class="tm-row" role="option" data-i="' + i + '" data-topic-type="' + t.topic_type + '"'
       + ' aria-selected="' + (i === current) + '"' + (hit ? '' : ' hidden') + '>'
-      + '<span class="tm-n">' + pad2(d.n) + '</span>'
+      + '<span class="tm-n">' + pad2(t.n) + '</span>'
       + '<span class="tm-main">'
-      + '<span class="tm-label">' + escapeHtml(d.label) + '</span>'
-      + '<span class="tm-meta">' + (GROUP_LABEL[d.group] || d.group) + ' · ' + total + ' items</span>'
+      + '<span class="tm-label">' + escapeHtml(t.label) + '</span>'
+      + '<span class="tm-meta">' + (TOPIC_TYPE_LABEL[t.topic_type] || t.topic_type) + ' · ' + total + ' items</span>'
       + '</span>'
       + '<span class="tm-prog" title="' + done + ' of ' + total + ' reviewed">'
       + '<span class="tm-bar" style="--p:' + pct + '"></span>'
@@ -525,17 +461,17 @@ function buildTopicList() {
 }
 
 function paintTopicButton() {
-  const d = DAYS[current];
-  if (!d || !pick.btn) return;
-  const { done, total } = topicProgress(d);
-  pick.num.textContent = pad2(d.n);
-  pick.btn.dataset.group = d.group;
-  pick.num.dataset.group = d.group;
-  pick.label.textContent = d.label;
-  pick.sub.textContent = (GROUP_LABEL[d.group] || d.group) + ' · ' + done + '/' + total + ' reviewed';
+  const t = TOPICS[current];
+  if (!t || !pick.btn) return;
+  const { done, total } = topicProgress(t);
+  pick.num.textContent = pad2(t.n);
+  pick.btn.dataset.topicType = t.topic_type;
+  pick.num.dataset.topicType = t.topic_type;
+  pick.label.textContent = t.label;
+  pick.sub.textContent = (TOPIC_TYPE_LABEL[t.topic_type] || t.topic_type) + ' · ' + done + '/' + total + ' reviewed';
   document.getElementById('tbCur').textContent = current + 1;
   document.getElementById('prevTopic').disabled = current === 0;
-  document.getElementById('nextTopic').disabled = current === DAYS.length - 1;
+  document.getElementById('nextTopic').disabled = current === TOPICS.length - 1;
 }
 
 function openTopicMenu() {
@@ -594,51 +530,51 @@ function wireTopicPicker() {
   document.getElementById('prevTopic').addEventListener('click', () => goTo(current - 1));
   document.getElementById('nextTopic').addEventListener('click', () => goTo(current + 1));
 
-  buildGroupBar();
+  buildTypeBar();
   paintTopicButton();
-  dots.innerHTML = DAYS.map((_, i) => '<span class="pdot' + (i === current ? ' on' : '') + '"></span>').join('');
+  dots.innerHTML = TOPICS.map((_, i) => '<span class="pdot' + (i === current ? ' on' : '') + '"></span>').join('');
 }
 
 /* ---------- topic track view ---------- */
 
-/* Filtering only hides rows: DAYS and every index stay whole, so `current`,
+/* Filtering only hides rows: TOPICS and every index stay whole, so `current`,
    the dots and the pager keep counting across the full track. */
-function buildGroupBar() {
+function buildTypeBar() {
   const bar = document.getElementById('groupbar');
   if (!bar) return;
-  const counts = DAYS.reduce((m, d) => (m[d.group] = (m[d.group] || 0) + 1, m), {});
+  const counts = TOPICS.reduce((m, t) => (m[t.topic_type] = (m[t.topic_type] || 0) + 1, m), {});
   const chip = (key, label, n) =>
-    '<button class="gchip" data-g="' + key + '" data-group="' + key + '" '
-    + 'aria-pressed="' + (groupFilter === key) + '">' + label
+    '<button class="gchip" data-g="' + key + '" data-topic-type="' + key + '" '
+    + 'aria-pressed="' + (typeFilter === key) + '">' + label
     + '<span class="gcount">' + n + '</span></button>';
 
-  bar.innerHTML = chip('all', 'All', DAYS.length)
-    + GROUPS.filter(g => counts[g.key]).map(g => chip(g.key, g.label, counts[g.key])).join('');
+  bar.innerHTML = chip('all', 'All', TOPICS.length)
+    + TOPIC_TYPES.filter(g => counts[g.key]).map(g => chip(g.key, g.label, counts[g.key])).join('');
 
   bar.querySelectorAll('.gchip').forEach(b => b.addEventListener('click', () => {
-    groupFilter = groupFilter === b.dataset.g ? 'all' : b.dataset.g;
-    buildGroupBar();
+    typeFilter = typeFilter === b.dataset.g ? 'all' : b.dataset.g;
+    buildTypeBar();
     buildTopicList();
   }));
 }
 
 function renderDay() {
-  const d = DAYS[current];
-  const sectionsHTML = d.sections.map(sec =>
+  const t = TOPICS[current];
+  const sectionsHTML = t.sections.map(sec =>
     '<div class="section-h">' + sec.title + '<span class="sline"></span></div>'
     + sec.items.map(it => qcard(it)).join('')
   ).join('');
-  const dayQcount = d.sections.reduce((a, s) => a + s.items.length, 0);
+  const topicQcount = t.sections.reduce((a, s) => a + s.items.length, 0);
 
   panel.innerHTML =
     '<section class="hero"><div class="hero-head">'
-    + '<div class="daynum" data-group="' + d.group + '"><small>'
-    + (GROUP_LABEL[d.group] || d.group).toUpperCase() + '</small>' + d.n + '</div>'
-    + '<div><h2>' + d.title + '</h2><p class="intro">' + d.intro + '</p>'
-    + '<div class="tags">' + d.tags.map(t => '<span class="tag">' + t + '</span>').join('') + '</div></div>'
+    + '<div class="daynum" data-topic-type="' + t.topic_type + '"><small>'
+    + (TOPIC_TYPE_LABEL[t.topic_type] || t.topic_type).toUpperCase() + '</small>' + t.n + '</div>'
+    + '<div><h2>' + t.title + '</h2><p class="intro">' + t.intro + '</p>'
+    + '<div class="tags">' + t.tags.map(tag => '<span class="tag">' + tag + '</span>').join('') + '</div></div>'
     + '</div></section>'
     + '<div class="toolbar">'
-    + '<span class="sectioncount">' + dayQcount + ' items · ' + d.sections.length + ' sections</span>'
+    + '<span class="sectioncount">' + topicQcount + ' items · ' + t.sections.length + ' sections</span>'
     + '<div class="legend"><span class="lg-core">ESSENTIAL</span><span class="lg-hard">ADVANCED</span><span class="lg-ext">EXTRA</span></div>'
     + '<div class="tb-actions"><button class="btn-ghost" id="toggleAll">Expand all</button></div>'
     + '</div>' + sectionsHTML;
@@ -661,8 +597,8 @@ function renderDay() {
   document.getElementById('curDay').textContent = current + 1;
   document.getElementById('prevBtn').disabled = current === 0;
   const nextBtn = document.getElementById('nextBtn');
-  nextBtn.disabled = current === DAYS.length - 1;
-  nextBtn.textContent = current === DAYS.length - 1 ? 'Finished ✓' : 'Next topic →';
+  nextBtn.disabled = current === TOPICS.length - 1;
+  nextBtn.textContent = current === TOPICS.length - 1 ? 'Finished ✓' : 'Next topic →';
 }
 
 function syncToggleAllLabel() {
@@ -672,24 +608,21 @@ function syncToggleAllLabel() {
   if (btn) btn.textContent = allOpen ? 'Collapse all' : 'Expand all';
 }
 
-/**
- * Track items only. Store.reviewed also holds Microservices items, and
- * counting those would push the ring past 100% of the track denominator.
- */
 function updateProgress() {
   let done = 0;
-  for (const id of Store.reviewed) if (dayItemIds.has(id)) done++;
+  for (const id of Store.reviewed) if (topicItemIds.has(id)) done++;
   document.getElementById('reviewedCount').textContent = done;
   document.getElementById('totalCount').textContent = totalQ;
   document.getElementById('ring').style.setProperty('--p', totalQ ? Math.round(done / totalQ * 100) : 0);
 }
 
 function goTo(i) {
-  if (i < 0 || i >= DAYS.length) return;
+  if (i < 0 || i >= TOPICS.length) return;
   current = i;
   dots.querySelectorAll('.pdot').forEach((dt, idx) => dt.classList.toggle('on', idx === current));
   renderDay();
   paintTopicButton();
+  paintLangSwitch();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -733,8 +666,7 @@ function mountSyncState(el) {
 async function init() {
   try {
     await Content.load();
-    DAYS = Content.days;
-    MICRO = Content.micro;
+    TOPICS = Content.topics;
   } catch (e) {
     panel.innerHTML = '<section class="hero"><div style="padding:8px 4px">'
       + '<h2>Could not load the content</h2>'
@@ -747,10 +679,10 @@ async function init() {
     return;
   }
 
-  dayItemIds = Content.dayItemIds;
-  totalQ = Content.totalDayItems;
-  document.getElementById('totDay').textContent = DAYS.length;
-  document.getElementById('tbTot').textContent = DAYS.length;
+  topicItemIds = Content.topicItemIds;
+  totalQ = Content.totalTopicItems;
+  document.getElementById('totDay').textContent = TOPICS.length;
+  document.getElementById('tbTot').textContent = TOPICS.length;
 
   // Must precede the first render: qcard() reads reviewed state and notes.
   Store.attachAuth();
@@ -781,9 +713,8 @@ async function init() {
   });
 
   Content.onChange(() => {
-    DAYS = Content.days;
-    MICRO = Content.micro;
-    buildGroupBar();
+    TOPICS = Content.topics;
+    buildTypeBar();
     paintTopicButton();
     if (isTopicMenuOpen()) buildTopicList();
     refreshCurrentView();

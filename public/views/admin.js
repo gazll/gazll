@@ -40,7 +40,7 @@ function paintMsg(root, msg) {
 }
 
 function paint(root, users) {
-  const total = Content.totalDayItems;
+  const total = Content.totalTopicItems;
   const sum = (f) => users.reduce((s, u) => s + (Number(u[f]) || 0), 0);
 
   let html = '<section class="hero"><div class="hero-head"><div>'

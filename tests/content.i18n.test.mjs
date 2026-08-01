@@ -1,13 +1,19 @@
-/* The VI/EN overlay in lib/content.js.
+/* The VI/EN language switch in lib/content.js.
 
-   data/manifest.json + data/meta.json + per-topic data/topics/N.json are the
-   Vietnamese source of truth and always load; data/meta.json's `en` blocks
-   and optional data/topics/N.en.json files are a partial overlay keyed by
-   topic `n` and item id. The rules worth pinning are the ones that make a
-   partial overlay safe: a missing field falls back rather than blanking
-   out, applying the overlay never mutates the Vietnamese source (or
-   switching back would show English), and an absent overlay file degrades
-   instead of throwing. */
+   data/manifest.json + data/meta.json + per-topic data/topics/NN-slug.json
+   are the English base and always load — including the Microservices track,
+   filed as topic_type "microservice" like any other topic (n=25). Every
+   topic's Vietnamese original always lives alongside it as
+   data/topics/NN-slug.vi.json — the complete, ground-truth content — and is
+   fetched eagerly too, so switching language never needs a refetch. An
+   item's `translated` flag says whether its text is authentically written
+   in that file's language: the EN base carries Vietnamese text verbatim
+   (translated:false) until someone actually translates it, while every item
+   in a .vi.json file is translated:true. The rules worth pinning: a topic
+   with zero real English translations still renders (falls back to the
+   Vietnamese text, flagged), applying a language never mutates the other
+   language's source, and the reported hasEn/hasVi availability matches
+   what's actually on the page. */
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -20,26 +26,15 @@ const pub = path.join(root, 'public');
 const MANIFEST = JSON.parse(await readFile(path.join(pub, 'data/manifest.json'), 'utf8'));
 const META = JSON.parse(await readFile(path.join(pub, 'data/meta.json'), 'utf8'));
 const TOPIC_FILES = new Map();
+const TOPIC_VI_FILES = new Map();
 for (const row of MANIFEST.topics) {
   TOPIC_FILES.set('data/' + row.file, JSON.parse(await readFile(path.join(pub, 'data', row.file), 'utf8')));
+  const viPath = 'data/' + row.file.replace(/\.json$/, '.vi.json');
+  TOPIC_VI_FILES.set(viPath, JSON.parse(await readFile(path.join(pub, viPath), 'utf8')));
 }
-const MICRO_FILE = 'data/' + MANIFEST.microservices.file;
-const MICRO = JSON.parse(await readFile(path.join(pub, MICRO_FILE), 'utf8'));
-
-async function readOptional(file) {
-  try { return JSON.parse(await readFile(path.join(pub, file), 'utf8')); }
-  catch (e) { return null; }
-}
-const TOPIC_EN_FILES = new Map();
-for (const row of MANIFEST.topics) {
-  const enPath = 'data/' + row.file.replace(/\.json$/, '.en.json');
-  TOPIC_EN_FILES.set(enPath, await readOptional(enPath));
-}
-const MICRO_EN_FILE = 'data/' + MANIFEST.microservices.file.replace(/\.json$/, '.en.json');
-const MICRO_EN = await readOptional(MICRO_EN_FILE);
 
 /** A fresh Content module with stubbed fetch + localStorage, serving the real data/ tree. */
-async function load({ dropEn = false, lang, metaOverride, extraTopicEn } = {}) {
+async function load({ lang, metaOverride, topicOverrides, dropVi } = {}) {
   const store = new Map();
   if (lang) store.set('gazl.contentLang', lang);
   globalThis.localStorage = {
@@ -52,13 +47,9 @@ async function load({ dropEn = false, lang, metaOverride, extraTopicEn } = {}) {
     fetched.push(url);
     if (url === 'data/manifest.json') return { ok: true, json: async () => structuredClone(MANIFEST) };
     if (url === 'data/meta.json') return { ok: true, json: async () => structuredClone(metaOverride || META) };
+    if (topicOverrides && topicOverrides[url]) return { ok: true, json: async () => structuredClone(topicOverrides[url]) };
     if (TOPIC_FILES.has(url)) return { ok: true, json: async () => structuredClone(TOPIC_FILES.get(url)) };
-    if (url === MICRO_FILE) return { ok: true, json: async () => structuredClone(MICRO) };
-    if (!dropEn && TOPIC_EN_FILES.has(url) && TOPIC_EN_FILES.get(url)) {
-      const override = extraTopicEn && extraTopicEn[url];
-      return { ok: true, json: async () => structuredClone(override || TOPIC_EN_FILES.get(url)) };
-    }
-    if (!dropEn && url === MICRO_EN_FILE && MICRO_EN) return { ok: true, json: async () => structuredClone(MICRO_EN) };
+    if (!dropVi && TOPIC_VI_FILES.has(url)) return { ok: true, json: async () => structuredClone(TOPIC_VI_FILES.get(url)) };
     return { ok: false, status: 404 };
   };
   // Cache-bust so every test gets its own module instance.
@@ -67,22 +58,19 @@ async function load({ dropEn = false, lang, metaOverride, extraTopicEn } = {}) {
   return { Content, fetched, store };
 }
 
-const topic = (Content, n) => Content.days.find(d => d.n === n);
+const topic = (Content, n) => Content.topics.find(t => t.n === n);
 
 beforeEach(() => { delete globalThis.fetch; });
 
-test('English is the default and the overlay replaces topic metadata', async () => {
+test('English is the default language and every topic loads, including microservice', async () => {
   const { Content } = await load();
   assert.equal(Content.lang, 'en');
   await Content.load();
-
-  assert.equal(topic(Content, 17).label, 'REST API design');
-  assert.equal(topic(Content, 1).sections[0].title, 'Memory & execution model');
-  assert.equal(topic(Content, 10).tags[0], '7-step framework');
-  assert.match(Content.micro.chapters[8].title, /Central Link/);
+  assert.equal(Content.topics.length, 25);
+  assert.equal(topic(Content, 25).topic_type, 'microservice');
 });
 
-test('an answer with no translation falls back to Vietnamese and is flagged', async () => {
+test('an item with no real translation falls back to Vietnamese and is flagged', async () => {
   const { Content } = await load();
   await Content.load();
   const item = topic(Content, 1).sections[0].items[0];
@@ -90,15 +78,16 @@ test('an answer with no translation falls back to Vietnamese and is flagged', as
   assert.match(item.a, /JMM/);
   assert.equal(Content.isFallback(item), true);
   // Falling back must never drop items — the ring denominator depends on it.
-  assert.equal(Content.totalDayItems, 282);
+  assert.equal(Content.totalTopicItems, 324);
 });
 
-test('a translated answer is used and stops being flagged', async () => {
+test('a translated item is used and stops being flagged', async () => {
   const topic1Row = MANIFEST.topics.find(r => r.n === 1);
-  const enPath = 'data/' + topic1Row.file.replace(/\.json$/, '.en.json');
-  const base = TOPIC_EN_FILES.get(enPath) || {};
-  const extraTopicEn = { [enPath]: { ...base, items: { ...(base.items || {}), '1.1': { q: 'How does the JMM work?', a: 'Translated body.' } } } };
-  const { Content } = await load({ extraTopicEn });
+  const enPath = 'data/' + topic1Row.file;
+  const base = TOPIC_FILES.get(enPath);
+  const patched = structuredClone(base);
+  patched.sections[0].items[0] = { ...patched.sections[0].items[0], q: 'How does the JMM work?', a: 'Translated body.', translated: true };
+  const { Content } = await load({ topicOverrides: { [enPath]: patched } });
   await Content.load();
 
   const item = topic(Content, 1).sections[0].items[0];
@@ -107,89 +96,107 @@ test('a translated answer is used and stops being flagged', async () => {
   assert.equal(Content.isFallback(item), false);
 });
 
-test('switching to Vietnamese restores the source, and back again needs no refetch', async () => {
-  const { Content, fetched, store } = await load();
+test('switching to Vietnamese shows the complete source, and back again needs no refetch', async () => {
+  const { Content, fetched } = await load();
   await Content.load();
 
   await Content.setLang('vi');
-  assert.equal(topic(Content, 17).label, 'Thiết kế REST API');
-  assert.equal(topic(Content, 1).sections[0].title, 'Bộ nhớ & mô hình thực thi');
-  assert.equal(Content.isFallback(topic(Content, 1).sections[0].items[0]), false);
-  assert.equal(store.get('gazl.contentLang'), 'vi');
+  const viItem = topic(Content, 1).sections[0].items[0];
+  assert.equal(Content.isFallback(viItem), false);
+  const viBase = TOPIC_VI_FILES.get('data/' + MANIFEST.topics[0].file.replace(/\.json$/, '.vi.json'));
+  assert.equal(topic(Content, 1).sections[0].title, viBase.sections[0].title);
 
   const before = fetched.length;
   await Content.setLang('en');
   assert.equal(fetched.length, before, 'both languages are already in memory');
-  assert.equal(topic(Content, 17).label, 'REST API design');
 });
 
-test('applying the overlay does not mutate the Vietnamese source', async () => {
-  // Without a clone in _apply, the first EN render would overwrite the source
-  // and switching back to VI would keep showing English.
-  const { Content } = await load();
-  await Content.load();
-  assert.equal(topic(Content, 17).label, 'REST API design');
-
-  await Content.setLang('vi');
-  assert.equal(topic(Content, 17).label, 'Thiết kế REST API');
-  await Content.setLang('en');
-  await Content.setLang('vi');
-  assert.equal(topic(Content, 17).label, 'Thiết kế REST API');
-});
-
-test('missing English item overlay files degrade to Vietnamese instead of throwing', async () => {
-  // Dropping only the per-topic .en.json (item text) files must not affect
-  // meta.json's own `en` block (label/title/intro/tags) — they are two
-  // independent overlays.
-  const { Content } = await load({ dropEn: true });
-  await Content.load();
-
-  assert.equal(Content.days.length, 24);
-  assert.equal(topic(Content, 17).label, 'REST API design');
-  const item = topic(Content, 1).sections[0].items[0];
-  assert.match(item.a, /JMM/);
-  assert.equal(Content.isFallback(item), true);
-});
-
-test('a topic with no meta.json en block falls back to Vietnamese metadata', async () => {
-  const metaOverride = structuredClone(META);
-  delete metaOverride.topics['17'].en;
-  const { Content } = await load({ metaOverride });
-  await Content.load();
-
-  assert.equal(topic(Content, 17).label, 'Thiết kế REST API');
-  // Other topics keep their English metadata.
-  assert.equal(topic(Content, 1).label, META.topics['1'].en.label);
-});
-
-test('a stored language choice is honoured on the next visit', async () => {
+test('a stored language choice is honoured, and both languages are fetched upfront', async () => {
   const { Content, fetched } = await load({ lang: 'vi' });
   assert.equal(Content.lang, 'vi');
   await Content.load();
 
-  // Reading in Vietnamese should not pull any English file at all.
-  assert.deepEqual(fetched, ['data/manifest.json', 'data/meta.json', ...MANIFEST.topics.map(r => 'data/' + r.file), MICRO_FILE]);
-  assert.equal(topic(Content, 17).label, 'Thiết kế REST API');
+  const expected = ['data/manifest.json', 'data/meta.json',
+    ...MANIFEST.topics.map(r => 'data/' + r.file),
+    ...MANIFEST.topics.map(r => 'data/' + r.file.replace(/\.json$/, '.vi.json'))
+  ];
+  assert.deepEqual([...fetched].sort(), [...expected].sort());
 });
 
-test('every meta overlay topic points at something real, and every content overlay item exists', async () => {
-  const byN = new Map(MANIFEST.topics.map(r => [String(r.n), r]));
-  const ids = new Set([...TOPIC_FILES.values()].flatMap(c => c.sections.flatMap(s => s.items.map(i => i.id))));
+test('a topic with zero translated items reports hasEn:false, hasVi:true', async () => {
+  const { Content } = await load();
+  await Content.load();
+  // None of the seed data has real translations yet.
+  assert.equal(topic(Content, 1).hasEn, false);
+  assert.equal(topic(Content, 1).hasVi, true);
+});
 
+test('a topic with at least one translated item reports hasEn:true', async () => {
+  const topic1Row = MANIFEST.topics.find(r => r.n === 1);
+  const enPath = 'data/' + topic1Row.file;
+  const base = TOPIC_FILES.get(enPath);
+  const patched = structuredClone(base);
+  patched.sections[0].items[0] = { ...patched.sections[0].items[0], translated: true };
+  const { Content } = await load({ topicOverrides: { [enPath]: patched } });
+  await Content.load();
+
+  assert.equal(topic(Content, 1).hasEn, true);
+});
+
+test('a missing .vi.json degrades to the English base instead of throwing', async () => {
+  const { Content } = await load({ dropVi: true });
+  await Content.load();
+  assert.equal(Content.topics.length, 25);
+
+  await Content.setLang('vi');
+  // No VI file fetched successfully, so VI falls back to whatever the base has.
+  const item = topic(Content, 1).sections[0].items[0];
+  assert.match(item.a, /JMM/);
+});
+
+test('applying a language never mutates the other language source', async () => {
+  const { Content } = await load();
+  await Content.load();
+  const enLabel = topic(Content, 17).label;
+
+  await Content.setLang('vi');
+  const viLabel = topic(Content, 17).label;
+  await Content.setLang('en');
+  assert.equal(topic(Content, 17).label, enLabel);
+  await Content.setLang('vi');
+  assert.equal(topic(Content, 17).label, viLabel);
+});
+
+test('every meta.json topic points at a real manifest entry, and key matches the file', async () => {
+  const byN = new Map(MANIFEST.topics.map(r => [String(r.n), r]));
   for (const [n, m] of Object.entries(META.topics)) {
-    assert.ok(byN.has(n), `meta topic ${n} does not exist in manifest`);
-    if (m.en) assert.ok(typeof m.en === 'object');
+    const row = byN.get(n);
+    assert.ok(row, `meta topic ${n} does not exist in manifest`);
+    assert.equal('topics/' + m.key + '.json', row.file, `meta topic ${n} key does not match its manifest file`);
+    assert.equal(m.topic_type, row.topic_type, `meta topic ${n} topic_type does not match manifest`);
   }
-  for (const [enPath, overlay] of TOPIC_EN_FILES) {
-    if (!overlay) continue;
-    const n = enPath.match(/topics\/(\d+)\.en\.json$/)[1];
-    const topicRow = byN.get(n);
-    assert.ok(topicRow, `overlay file ${enPath} has no matching topic`);
-    const topicContent = TOPIC_FILES.get('data/' + topicRow.file);
-    assert.ok((overlay.sections || []).length <= topicContent.sections.length,
-      `overlay topic ${n} has more section titles than the topic has sections`);
-    for (const id of Object.keys(overlay.items || {})) {
-      assert.ok(ids.has(id), `overlay item ${id} does not exist`);
+});
+
+test('every .vi.json item exists in the base file and is translated:true', async () => {
+  const ids = new Set([...TOPIC_FILES.values()].flatMap(c => c.sections.flatMap(s => s.items.map(i => i.id))));
+  for (const [viPath, viContent] of TOPIC_VI_FILES) {
+    for (const sec of viContent.sections) {
+      for (const it of sec.items) {
+        assert.ok(ids.has(it.id), `${viPath}: item ${it.id} does not exist in the base file`);
+        assert.equal(it.translated, true, `${viPath}: item ${it.id} must be translated:true`);
+      }
+    }
+  }
+});
+
+test('every item id encodes its own topic key', async () => {
+  for (const row of MANIFEST.topics) {
+    const key = row.file.replace(/^topics\//, '').replace(/\.json$/, '');
+    const content = TOPIC_FILES.get('data/' + row.file);
+    for (const sec of content.sections) {
+      for (const it of sec.items) {
+        assert.ok(it.id.startsWith(key + '.'), `item ${it.id} does not start with topic key ${key}`);
+      }
     }
   }
 });

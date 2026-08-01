@@ -1,43 +1,42 @@
 {
-  "n": 10,
   "sections": [
     {
       "title": "Framework & building blocks",
       "items": [
         {
-          "id": "10.1",
-          "lvl": "core",
+          "id": "10-system-design-rate-limit.framework-building-blocks.q1",
           "q": "Khung trả lời một bài system design?",
           "a": "**7 bước:**\n1. [[b:Làm rõ yêu cầu]]: functional + non-functional (scale, latency p99, availability, consistency)\n2. [[b:Ước lượng dung lượng]]: QPS đọc/ghi, storage, bandwidth\n3. [[b:API design]]: vài endpoint chính\n4. [[b:Data model]]: bảng/collection, index, SQL vs NoSQL\n5. [[b:High-level diagram]]: client → LB → service → cache/DB/queue\n6. [[b:Deep dive]] 1–2 thành phần trọng yếu\n7. [[b:Bottleneck & trade-off]]: điểm nghẽn, cách scale, đánh đổi\n\n:::tip Chốt\ndẫn dắt, liên tục nêu trade-off & xác nhận giả định. Điều quyết định là tư duy & cách lập luận, không phải sơ đồ hoàn hảo.\n:::\n\n:::deep\n- bắt đầu bằng làm rõ functional + non-functional (QPS, latency p99, availability, consistency, đọc/ghi ratio) — [[r:đừng lao vào vẽ box]]\n- liên tục nêu *trade-off* &amp; xác nhận giả định ('giả sử 10M booking/ngày, p99 &lt; 200ms, ledger strong consistency — đúng chứ?')\n- deep-dive 1–2 thành phần cốt lõi\n\nNgười đánh giá chấm *quá trình tư duy* (phân rã, đánh đổi, bottleneck), không phải sơ đồ đẹp. Kết bằng 'điểm nghẽn ở đâu, scale thế nào, đánh đổi gì' — phần phân biệt senior.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "core"
         },
         {
-          "id": "10.2",
-          "lvl": "core",
+          "id": "10-system-design-rate-limit.framework-building-blocks.q2",
           "q": "Capacity estimation nhanh — back-of-envelope?",
           "a": "Mốc tròn: 1 ngày ≈ 86.400s ≈ [[o:10⁵ s]].\n- 1 triệu req/ngày ≈ ~12 QPS TB; nhân 2–3 cho peak\n- vd 10M giao dịch/ngày ≈ ~115 QPS TB, peak ~300\n- record ~500B → 5GB/ngày → ~1.8TB/năm (cần archiving/partition)\n- [[g:đọc ≫ ghi]] → lý do cần cache/replica\n\n**Bộ số nên thuộc:**\n- 1 ngày ≈ 10⁵ giây · 1 tháng ≈ 2,6 · 10⁶ giây\n- 1M request/ngày ≈ 12 QPS · 100M request/ngày ≈ 1.200 QPS\n- đọc RAM ~100ns · SSD ~100µs · đĩa quay ~10ms · round-trip trong một DC ~0,5ms · xuyên lục địa ~150ms\n- một instance I/O-bound thường gánh vài nghìn QPS; một primary Postgres/MySQL vài nghìn ghi/giây\n\n:::tip Chốt\nđúng [[g:bậc độ lớn]] là đủ để biện minh kiến trúc.\n:::\n\n:::deep\n- storage = số bản ghi × kích thước × hệ số (index, replica ×3, retention); bandwidth = QPS × payload\n- tính riêng đọc vs ghi (đọc ≫ ghi → biện minh cache/replica)\n- mục tiêu là *đúng bậc độ lớn* (cần shard chưa? cache bao lớn? bao nhiêu instance?), không phải số chính xác — [[o:sai ×2 chấp nhận được, sai bậc độ lớn thì không]]\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "core"
         },
         {
-          "id": "10.3",
-          "lvl": "core",
+          "id": "10-system-design-rate-limit.framework-building-blocks.q3",
           "q": "Chiến lược caching và bài toán invalidation? Cache stampede xử lý sao?",
           "a": "- [[b:Cache-aside]] (lazy): app đọc cache, miss thì đọc DB rồi nạp — phổ biến nhất\n- [[b:Write-through]]: ghi cache+DB đồng bộ → đọc mới, ghi chậm hơn\n- [[b:Write-behind]]: ghi cache trước, flush DB async → nhanh, rủi ro mất khi crash\n\n**Invalidation:** TTL, eviction khi ghi, versioned key.\n\n[[r:Stampede/thundering herd]]: key hot hết hạn đồng loạt → TTL có jitter, request coalescing (single-flight), refresh-ahead.\n\n:::warn Fintech\nthận trọng cache số dư; ưu tiên không cache hoặc TTL cực ngắn + invalidate khi ghi.\n:::\n\n:::deep\n- pattern an toàn nhất: [[g:cache-aside + invalidate (xóa) khi ghi]], KHÔNG 'update cache' (dễ race ghi cũ đè mới)\n- race hiếm 'đọc miss → set cache (giá trị cũ)' xen giữa 'ghi DB → xóa cache' → giảm bằng TTL ngắn hoặc delayed double-delete\n- [[r:hot key]] (chuyến viral): nhân bản key (`key#1..N` random), local cache tại app, hoặc request coalescing\n\nOTA: giá/availability đổi liên tục → TTL rất ngắn (giây) + invalidate theo event GDS; [[r:tuyệt đối không quyết định 'còn ghế' dựa cache cũ ở bước cuối]] — bước book phải xác nhận lại với inventory/GDS.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "core"
         },
         {
-          "id": "10.4",
-          "lvl": "core",
+          "id": "10-system-design-rate-limit.framework-building-blocks.q4",
           "q": "Load balancer L4 vs L7 và thuật toán phân phối?",
           "a": "<table class=\"cmp\"><thead><tr><th></th><th>L4</th><th>L7</th></tr></thead><tbody>\n<tr><td>Tầng</td><td>transport (IP/port)</td><td>application (HTTP)</td></tr>\n<tr><td>Hiểu nội dung</td><td>không</td><td>route theo path/header/cookie</td></tr>\n<tr><td>Tính năng</td><td>nhanh, ít CPU</td><td>TLS termination, sticky, canary, WAF</td></tr>\n</tbody></table>\n\n**Thuật toán:** round-robin, least-connections, weighted, consistent hashing (giữ cache/session locality). Cần health check loại node hỏng.\n\n:::tip Chốt\nservice [[g:stateless]] sau LB là chìa khoá scale ngang — đẩy state ra cache/DB/queue.\n:::\n\n:::deep\n- thuật toán: round-robin (đơn giản), least-connections (tải lệch), weighted (instance khác cấu hình), consistent hashing (locality); health check active + passive\n- [[r:gRPC/HTTP2]] cần LB hiểu HTTP/2 (multiplex nhiều RPC trên 1 connection → L4 ghim hết về 1 backend → cần L7 hoặc client-side LB)\n\nOTA: gateway L7 làm auth/rate-limit tập trung + dịch REST→gRPC nội bộ.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "core"
         },
         {
-          "id": "10.5",
-          "lvl": "ext",
+          "id": "10-system-design-rate-limit.framework-building-blocks.q5",
           "q": "CDN giải quyết gì và caching ở biên hoạt động ra sao?",
           "a": "CDN đặt nội dung (tĩnh & cache được) gần user ([[g:edge]]) → giảm latency & tải gốc.\n\n- điều khiển bằng `Cache-Control`/TTL, cache key, invalidation/purge\n- edge compute cho logic nhẹ\n- [[r:không hợp data cá nhân hoá/đổi liên tục]] trừ khi cấu hình cẩn thận\n\n:::deep\n- CDN cache nội dung tĩnh &amp; cache-được ở *edge* gần user (PoP) → giảm latency + tải gốc + chịu spike/DDoS lớp tĩnh\n- `Cache-Control`/TTL, cache key (gồm query/header chọn lọc), purge khi đổi, edge compute (Workers/Lambda@Edge)\n\nOTA: CDN cho asset (ảnh điểm đến, JS/CSS), có thể cache *kết quả tìm kiếm phổ biến* (tuyến hot) TTL ngắn ở edge; nhưng [[r:giá/ghế cá nhân hoá & checkout không cache ở CDN]]. Cân nhắc stale-while-revalidate cho UX nhanh.\n\n- Ba thứ quyết định hit ratio ở edge, xếp theo mức hay sai: [[b:cache key]] (thừa một `utm_*` hay một header `Accept-Language` là băm nát cache — phải chuẩn hoá query string trước khi tính key), [[b:TTL]], rồi [[b:Vary]].\n- Hai chỉ thị đáng nhớ: `stale-while-revalidate` (trả bản cũ ngay rồi làm mới ngầm — UX nhanh) và `stale-if-error` (origin sập thì vẫn còn trang để trả).\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "ext"
         }
       ]
     },
@@ -45,39 +44,39 @@
       "title": "Rate limiting in depth",
       "items": [
         {
-          "id": "10.6",
-          "lvl": "hard",
+          "id": "10-system-design-rate-limit.rate-limiting-in-depth.q1",
           "q": "Token bucket — thuật toán, ưu điểm, cài đặt?",
-          "a": "<figure class='dgm'><svg viewBox='0 0 680 220' xmlns='http://www.w3.org/2000/svg' font-family='IBM Plex Mono, monospace' font-size='11' text-anchor='middle'>\n<text x='150' y='28' fill='#085239' font-weight='600'>refill r token / giây</text>\n<path d='M150 36 L150 70' stroke='#0B6E4F' stroke-width='2' marker-end='url(#ar9)'/>\n<rect x='90' y='72' width='120' height='100' rx='8' fill='#E4F1EB' stroke='#0B6E4F'/>\n<g fill='#0B6E4F'><circle cx='120' cy='150' r='8'/><circle cx='150' cy='150' r='8'/><circle cx='180' cy='150' r='8'/><circle cx='135' cy='125' r='8'/><circle cx='165' cy='125' r='8'/></g>\n<text x='150' y='192' fill='#42536C'>bucket tối đa B token (cho phép BURST)</text>\n<rect x='320' y='100' width='150' height='44' rx='6' fill='#fff' stroke='#42536C'/><text x='395' y='122' fill='#14233A'>request tới</text><text x='395' y='138' fill='#42536C'>tiêu 1 token</text>\n<g stroke='#42536C' stroke-width='1.6' marker-end='url(#ar9b)'><line x1='210' y1='122' x2='318' y2='122'/></g>\n<rect x='520' y='72' width='130' height='40' rx='6' fill='#E4F1EB' stroke='#0B6E4F'/><text x='585' y='96' fill='#085239'>còn token &#8594; ALLOW</text>\n<rect x='520' y='128' width='130' height='40' rx='6' fill='#F6E8E5' stroke='#AE4536'/><text x='585' y='152' fill='#7d2f24'>hết &#8594; 429 REJECT</text>\n<g stroke='#42536C' stroke-width='1.4' marker-end='url(#ar9b)'><line x1='470' y1='115' x2='518' y2='95'/><line x1='470' y1='130' x2='518' y2='148'/></g>\n<text x='340' y='210' fill='#3D4E8F'>Phân tán: token bucket trong Redis bằng Lua (atomic check-and-decrement)</text>\n<defs><marker id='ar9' markerWidth='8' markerHeight='8' refX='6' refY='3' orient='auto'><path d='M0,0 L7,3 L0,6 z' fill='#0B6E4F'/></marker>\n<marker id='ar9b' markerWidth='8' markerHeight='8' refX='6' refY='3' orient='auto'><path d='M0,0 L7,3 L0,6 z' fill='#42536C'/></marker></defs>\n</svg></figure>\n\nBucket chứa tối đa B token, refill r token/giây.\n- mỗi request tiêu 1 token; hết token → từ chối/chờ\n- cho phép [[g:burst]] tới B (linh hoạt), trung bình giới hạn ở r\n- phổ biến nhất cho API\n\n<pre><code><span class=\"c\"># pseudo</span>\nnow = time()\ntokens = min(B, tokens + (now-last)*r)\nlast = now\n<span class=\"k\">if</span> tokens &gt;= 1: tokens -= 1; allow()\n<span class=\"k\">else</span>: reject()</code></pre>\n\n:::deep\n- token bucket cho phép burst (tốt cho API có spike); leaky bucket làm mượt (bảo vệ downstream yếu)\n- [[r:phân tán cần atomic]]: lưu `(tokens, last_refill)` + tính lazy refill trong một Lua script Redis (đọc-tính-ghi nguyên tử) — [[r:không tách `GET` rồi `SET`]] (race)\n- gọi Redis mỗi request thêm latency → có thể token bucket *cục bộ* per-instance với hạn mức = tổng/N (kém chính xác khi tải lệch)\n\nTrả `429` + `Retry-After` + `X-RateLimit-Remaining` để client tự điều tiết. (đề whiteboard hay gặp — xem Ngày 16)\n\n- Bản code đầy đủ của token bucket, kèm phần đồng bộ khi nhiều luồng cùng lấy token, nằm ở vòng LLD (22.3).\n:::",
-          "translated": false
+          "a": "<figure class='dgm'><svg viewBox='0 0 680 220' xmlns='http://www.w3.org/2000/svg' font-family='IBM Plex Mono, monospace' font-size='11' text-anchor='middle'>\n<text x='150' y='28' fill='#085239' font-weight='600'>refill r token / giây</text>\n<path d='M150 36 L150 70' stroke='#0B6E4F' stroke-width='2' marker-end='url(#ar9)'/>\n<rect x='90' y='72' width='120' height='100' rx='8' fill='#E4F1EB' stroke='#0B6E4F'/>\n<g fill='#0B6E4F'><circle cx='120' cy='150' r='8'/><circle cx='150' cy='150' r='8'/><circle cx='180' cy='150' r='8'/><circle cx='135' cy='125' r='8'/><circle cx='165' cy='125' r='8'/></g>\n<text x='150' y='192' fill='#42536C'>bucket tối đa B token (cho phép BURST)</text>\n<rect x='320' y='100' width='150' height='44' rx='6' fill='#fff' stroke='#42536C'/><text x='395' y='122' fill='#14233A'>request tới</text><text x='395' y='138' fill='#42536C'>tiêu 1 token</text>\n<g stroke='#42536C' stroke-width='1.6' marker-end='url(#ar9b)'><line x1='210' y1='122' x2='318' y2='122'/></g>\n<rect x='520' y='72' width='130' height='40' rx='6' fill='#E4F1EB' stroke='#0B6E4F'/><text x='585' y='96' fill='#085239'>còn token &#8594; ALLOW</text>\n<rect x='520' y='128' width='130' height='40' rx='6' fill='#F6E8E5' stroke='#AE4536'/><text x='585' y='152' fill='#7d2f24'>hết &#8594; 429 REJECT</text>\n<g stroke='#42536C' stroke-width='1.4' marker-end='url(#ar9b)'><line x1='470' y1='115' x2='518' y2='95'/><line x1='470' y1='130' x2='518' y2='148'/></g>\n<text x='340' y='210' fill='#3D4E8F'>Phân tán: token bucket trong Redis bằng Lua (atomic check-and-decrement)</text>\n<defs><marker id='ar9' markerWidth='8' markerHeight='8' refX='6' refY='3' orient='auto'><path d='M0,0 L7,3 L0,6 z' fill='#0B6E4F'/></marker>\n<marker id='ar9b' markerWidth='8' markerHeight='8' refX='6' refY='3' orient='auto'><path d='M0,0 L7,3 L0,6 z' fill='#42536C'/></marker></defs>\n</svg></figure>\n\nBucket chứa tối đa B token, refill r token/giây.\n- mỗi request tiêu 1 token; hết token → từ chối/chờ\n- cho phép [[g:burst]] tới B (linh hoạt), trung bình giới hạn ở r\n- phổ biến nhất cho API\n\n<pre><code><span class=\"c\"># pseudo</span>\nnow = time()\ntokens = min(B, tokens + (now-last)*r)\nlast = now\n<span class=\"k\">if</span> tokens &gt;= 1: tokens -= 1; allow()\n<span class=\"k\">else</span>: reject()</code></pre>\n\n:::deep\n- token bucket cho phép burst (tốt cho API có spike); leaky bucket làm mượt (bảo vệ downstream yếu)\n- [[r:phân tán cần atomic]]: lưu `(tokens, last_refill)` + tính lazy refill trong một Lua script Redis (đọc-tính-ghi nguyên tử) — [[r:không tách `GET` rồi `SET`]] (race)\n- gọi Redis mỗi request thêm latency → có thể token bucket *cục bộ* per-instance với hạn mức = tổng/N (kém chính xác khi tải lệch)\n\nTrả `429` + `Retry-After` + `X-RateLimit-Remaining` để client tự điều tiết. (đề whiteboard hay gặp — xem Ngày 16)\n\n- Bản code đầy đủ của token bucket, kèm phần đồng bộ khi nhiều luồng cùng lấy token, nằm ở vòng LLD (22-low-level-design-ood.the-lld-framework-classic-problems.q3).\n:::",
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "10.7",
-          "lvl": "hard",
+          "id": "10-system-design-rate-limit.rate-limiting-in-depth.q2",
           "q": "Leaky bucket vs token bucket khác gì?",
-          "a": "<table class=\"cmp\"><thead><tr><th></th><th>Token bucket</th><th>Leaky bucket</th></tr></thead><tbody>\n<tr><td>Burst</td><td>cho phép (tới B)</td><td>không (output đều)</td></tr>\n<tr><td>Output</td><td>dồn rồi tiêu</td><td>ép đều, tốc độ cố định</td></tr>\n<tr><td>Vượt hạn</td><td>reject/chờ</td><td>queue đầy thì drop</td></tr>\n<tr><td>Hợp cho</td><td>API có spike tự nhiên</td><td>bảo vệ downstream yếu (smoothing)</td></tr>\n</tbody></table>\n\n:::deep\n- token bucket = 'cho phép dồn rồi tiêu'; leaky = 'ép đều bất kể đến dồn'\n\nOTA:\n- chống bot cào giá → [[g:token bucket]] per-IP/key (chặn lạm dụng nhưng cho user thật burst nhẹ)\n- bảo vệ GDS (hạn mức cứng từ nhà cung cấp) → [[g:leaky bucket]] làm mượt request ra GDS để không vượt quota\n- Hệ thật thường dùng cả hai cùng lúc: token bucket ở lối vào (đo theo client) và leaky bucket ở lối ra (đo theo hạn mức nhà cung cấp). Chúng giới hạn hai thứ khác nhau nên không thay thế nhau được.\n- Code của cả hai, kèm phần đồng bộ khi nhiều luồng cùng lấy token, ở vòng LLD (22.3).\n:::",
-          "translated": false
+          "a": "<table class=\"cmp\"><thead><tr><th></th><th>Token bucket</th><th>Leaky bucket</th></tr></thead><tbody>\n<tr><td>Burst</td><td>cho phép (tới B)</td><td>không (output đều)</td></tr>\n<tr><td>Output</td><td>dồn rồi tiêu</td><td>ép đều, tốc độ cố định</td></tr>\n<tr><td>Vượt hạn</td><td>reject/chờ</td><td>queue đầy thì drop</td></tr>\n<tr><td>Hợp cho</td><td>API có spike tự nhiên</td><td>bảo vệ downstream yếu (smoothing)</td></tr>\n</tbody></table>\n\n:::deep\n- token bucket = 'cho phép dồn rồi tiêu'; leaky = 'ép đều bất kể đến dồn'\n\nOTA:\n- chống bot cào giá → [[g:token bucket]] per-IP/key (chặn lạm dụng nhưng cho user thật burst nhẹ)\n- bảo vệ GDS (hạn mức cứng từ nhà cung cấp) → [[g:leaky bucket]] làm mượt request ra GDS để không vượt quota\n- Hệ thật thường dùng cả hai cùng lúc: token bucket ở lối vào (đo theo client) và leaky bucket ở lối ra (đo theo hạn mức nhà cung cấp). Chúng giới hạn hai thứ khác nhau nên không thay thế nhau được.\n- Code của cả hai, kèm phần đồng bộ khi nhiều luồng cùng lấy token, ở vòng LLD (22-low-level-design-ood.the-lld-framework-classic-problems.q3).\n:::",
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "10.8",
-          "lvl": "hard",
+          "id": "10-system-design-rate-limit.rate-limiting-in-depth.q3",
           "q": "Fixed window vs sliding window — vấn đề biên và độ chính xác?",
-          "a": "<table class=\"cmp\"><thead><tr><th>Thuật toán</th><th>Chính xác</th><th>Chi phí</th><th>Vấn đề</th></tr></thead><tbody>\n<tr><td>Fixed window counter</td><td>thấp</td><td>rẻ (1 counter)</td><td>double burst ở biên</td></tr>\n<tr><td>Sliding window log</td><td>tuyệt đối</td><td>tốn memory (O(n))</td><td>—</td></tr>\n<tr><td>Sliding window counter</td><td>gần chính xác</td><td>rẻ (2 counter)</td><td>lựa chọn cân bằng</td></tr>\n</tbody></table>\n\n:::deep\n- [[r:fixed window double burst]]: 100/phút có thể cho ~200 trong 2 giây giáp ranh\n- sliding window log lưu timestamp từng request → chính xác tuyệt đối nhưng O(n) memory\n- sliding window counter nội suy giữa window hiện tại &amp; trước (weighted) → gần chính xác, rẻ\n\nChọn theo yêu cầu: billing/quota cứng cần chính xác (sliding counter/log); chống abuse thô thì fixed window đủ. Phân tán cần atomic (Redis Lua).\n\n- Code sliding-window-counter và token bucket đặt cạnh nhau, kèm cách chốt thread-safety khi interviewer hỏi (22.3).\n:::",
-          "translated": false
+          "a": "<table class=\"cmp\"><thead><tr><th>Thuật toán</th><th>Chính xác</th><th>Chi phí</th><th>Vấn đề</th></tr></thead><tbody>\n<tr><td>Fixed window counter</td><td>thấp</td><td>rẻ (1 counter)</td><td>double burst ở biên</td></tr>\n<tr><td>Sliding window log</td><td>tuyệt đối</td><td>tốn memory (O(n))</td><td>—</td></tr>\n<tr><td>Sliding window counter</td><td>gần chính xác</td><td>rẻ (2 counter)</td><td>lựa chọn cân bằng</td></tr>\n</tbody></table>\n\n:::deep\n- [[r:fixed window double burst]]: 100/phút có thể cho ~200 trong 2 giây giáp ranh\n- sliding window log lưu timestamp từng request → chính xác tuyệt đối nhưng O(n) memory\n- sliding window counter nội suy giữa window hiện tại &amp; trước (weighted) → gần chính xác, rẻ\n\nChọn theo yêu cầu: billing/quota cứng cần chính xác (sliding counter/log); chống abuse thô thì fixed window đủ. Phân tán cần atomic (Redis Lua).\n\n- Code sliding-window-counter và token bucket đặt cạnh nhau, kèm cách chốt thread-safety khi interviewer hỏi (22-low-level-design-ood.the-lld-framework-classic-problems.q3).\n:::",
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "10.9",
-          "lvl": "hard",
+          "id": "10-system-design-rate-limit.rate-limiting-in-depth.q4",
           "q": "Distributed rate limiting với Redis — làm sao atomic và chính xác?",
-          "a": "State chia sẻ ở Redis để mọi instance thấy chung.\n- đơn giản: `INCR` + `EXPIRE` cho fixed window\n- chính xác & atomic: [[g:Lua script]] (token bucket/sliding window) chạy nguyên tử trong Redis, tránh race check-then-decrement giữa các instance\n- cân nhắc latency Redis & fallback khi Redis lỗi (fail-open/fail-closed tuỳ rủi ro)\n\n:::tip Chốt\nđiểm mấu chốt là [[g:atomicity]] của 'kiểm tra và trừ' — Lua/INCR atomic giải quyết, không dùng GET rồi SET rời.\n:::\n\n:::deep\n- Lua script cho sliding-window-counter: KEYS=bucket theo (user, window); INCR + set EXPIRE + đọc window trước để nội suy, trả allow/deny — tất cả nguyên tử\n- [[r:Redis là SPOF]] → rate limiter sập kéo API: [[b:fail-open]] (cho qua khi Redis lỗi, ưu availability) hay [[b:fail-closed]] (chặn, ưu bảo vệ) tùy rủi ro — auth/login thường fail-closed, API thường fail-open\n- đa tầng: edge/CDN chặn flood thô, gateway giới hạn theo API key, service giới hạn theo nghiệp vụ\n- Cùng bài này ở vòng LLD thì phải viết ra code thật và chọn cấu trúc dữ liệu, không dừng ở sơ đồ (22.3).\n:::",
-          "translated": false
+          "a": "State chia sẻ ở Redis để mọi instance thấy chung.\n- đơn giản: `INCR` + `EXPIRE` cho fixed window\n- chính xác & atomic: [[g:Lua script]] (token bucket/sliding window) chạy nguyên tử trong Redis, tránh race check-then-decrement giữa các instance\n- cân nhắc latency Redis & fallback khi Redis lỗi (fail-open/fail-closed tuỳ rủi ro)\n\n:::tip Chốt\nđiểm mấu chốt là [[g:atomicity]] của 'kiểm tra và trừ' — Lua/INCR atomic giải quyết, không dùng GET rồi SET rời.\n:::\n\n:::deep\n- Lua script cho sliding-window-counter: KEYS=bucket theo (user, window); INCR + set EXPIRE + đọc window trước để nội suy, trả allow/deny — tất cả nguyên tử\n- [[r:Redis là SPOF]] → rate limiter sập kéo API: [[b:fail-open]] (cho qua khi Redis lỗi, ưu availability) hay [[b:fail-closed]] (chặn, ưu bảo vệ) tùy rủi ro — auth/login thường fail-closed, API thường fail-open\n- đa tầng: edge/CDN chặn flood thô, gateway giới hạn theo API key, service giới hạn theo nghiệp vụ\n- Cùng bài này ở vòng LLD thì phải viết ra code thật và chọn cấu trúc dữ liệu, không dừng ở sơ đồ (22-low-level-design-ood.the-lld-framework-classic-problems.q3).\n:::",
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "10.10",
-          "lvl": "ext",
+          "id": "10-system-design-rate-limit.rate-limiting-in-depth.q5",
           "q": "Rate limit đặt ở đâu trong kiến trúc? Các tầng nào?",
-          "a": "Nhiều tầng:\n- [[b:edge/CDN]]: chống DDoS thô (theo IP)\n- [[b:API gateway]]: per-API-key/IP, quota gói\n- [[b:service]]: per-user/endpoint, rule nghiệp vụ\n- [[b:downstream guard]]: bảo vệ DB/PSP/GDS\n\nTrả `429` + `Retry-After`, `X-RateLimit-*`.\n\n:::deep\nPhân biệt:\n- [[b:rate limit]] (chống lạm dụng) vs [[b:quota]] (giới hạn theo gói/billing) vs [[b:throttling/backpressure]] (bảo vệ hệ thống khi quá tải) vs [[b:concurrency limit]] (semaphore/bulkhead)\n\nOTA: rate-limit search per-key chống bot cào giá; quota cho đối tác B2B theo hợp đồng; leaky bucket bảo vệ GDS; concurrency limit (semaphore) tới PSP. [[o:Đặt limit nhiều tầng với mục đích khác nhau]], không chỉ một chỗ.\n\n- Càng ra ngoài chặn càng rẻ: chặn ở CDN gần như không tốn gì, còn tới được service thì request đã qua gateway và đã chiếm một connection trong pool. Đổi lại càng ra ngoài càng ít ngữ cảnh nghiệp vụ — edge không biết user này thuộc gói nào.\n- Tầng nào cũng phải trả cùng một hợp đồng lỗi: `429` kèm `Retry-After` và bộ `X-RateLimit-*` (17.6), nếu không client không có cách nào tự điều tiết.\n:::",
-          "translated": false
+          "a": "Nhiều tầng:\n- [[b:edge/CDN]]: chống DDoS thô (theo IP)\n- [[b:API gateway]]: per-API-key/IP, quota gói\n- [[b:service]]: per-user/endpoint, rule nghiệp vụ\n- [[b:downstream guard]]: bảo vệ DB/PSP/GDS\n\nTrả `429` + `Retry-After`, `X-RateLimit-*`.\n\n:::deep\nPhân biệt:\n- [[b:rate limit]] (chống lạm dụng) vs [[b:quota]] (giới hạn theo gói/billing) vs [[b:throttling/backpressure]] (bảo vệ hệ thống khi quá tải) vs [[b:concurrency limit]] (semaphore/bulkhead)\n\nOTA: rate-limit search per-key chống bot cào giá; quota cho đối tác B2B theo hợp đồng; leaky bucket bảo vệ GDS; concurrency limit (semaphore) tới PSP. [[o:Đặt limit nhiều tầng với mục đích khác nhau]], không chỉ một chỗ.\n\n- Càng ra ngoài chặn càng rẻ: chặn ở CDN gần như không tốn gì, còn tới được service thì request đã qua gateway và đã chiếm một connection trong pool. Đổi lại càng ra ngoài càng ít ngữ cảnh nghiệp vụ — edge không biết user này thuộc gói nào.\n- Tầng nào cũng phải trả cùng một hợp đồng lỗi: `429` kèm `Retry-After` và bộ `X-RateLimit-*` (17-rest-api-design.contracts-errors-lifecycle.q2), nếu không client không có cách nào tự điều tiết.\n:::",
+          "translated": false,
+          "difficulty": "ext"
         }
       ]
     },
@@ -85,32 +84,32 @@
       "title": "Surviving high load",
       "items": [
         {
-          "id": "10.11",
-          "lvl": "hard",
+          "id": "10-system-design-rate-limit.surviving-high-load.q1",
           "q": "Các nguyên tắc chịu high-load?",
           "a": "- [[g:Stateless + scale ngang]]: đẩy state ra cache/DB/queue, thêm instance sau LB\n- [[g:Async hoá]]: việc nặng/không real-time đẩy vào queue, xử lý nền\n- [[g:Cache nhiều tầng]] + read replica giảm tải DB\n- [[g:Bulkhead + circuit breaker]] cô lập lỗi\n- auto-scaling theo metric; connection pool & timeout hợp lý\n\n:::deep\n- (1) stateless + scale ngang (state ra Redis/DB/queue, auto-scaling theo metric)\n- (2) async hoá việc nặng (queue + worker) → giảm latency đường nóng\n- (3) cache nhiều tầng + read replica; (4) bulkhead + circuit breaker + timeout cô lập lỗi; (5) connection pool đúng size; (6) backpressure/load shedding khi quá tải\n\nOTA: search/pricing (đọc nặng) → cache + read model; booking/payment (ghi, cần đúng) → atomic + idempotency, không cache số dư; GDS/PSP → circuit breaker + bulkhead + timeout + retry idempotent.\n\nGốc: [[g:tách đường nóng khỏi việc nặng]], 'gãy có kiểm soát' khi quá tải.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "10.12",
-          "lvl": "hard",
+          "id": "10-system-design-rate-limit.surviving-high-load.q2",
           "q": "Backpressure và load shedding — khi quá tải thì làm gì?",
           "a": "- [[b:Backpressure]]: báo ngược cho upstream chậm lại (bounded queue, reactive `request(n)`) thay vì nuốt vô hạn rồi OOM\n- [[b:Load shedding]]: chủ động từ chối/hạ cấp request kém quan trọng khi quá tải (429/503, phiên bản degrade) để giữ hệ thống sống cho phần quan trọng\n\nƯu tiên request theo độ quan trọng (OTP > marketing).\n\n:::tip Chốt\nhệ thống tốt 'gãy có kiểm soát' — thà từ chối một phần còn hơn sập toàn bộ.\n:::\n\n:::deep\n- [[b:backpressure]] = báo ngược upstream chậm lại (bounded queue đầy thì chặn, reactive `request(n)`, TCP flow control) thay vì nuốt vô hạn → OOM/đổ vỡ dây chuyền\n- [[b:load shedding]] = từ chối/hạ cấp request kém quan trọng + *admission control* (giới hạn concurrency vào) &amp; *priority queue*\n\nOTA: quá tải → ưu tiên checkout/payment &amp; OTP hơn search/marketing; tạm tắt tính năng phụ (gợi ý, ảnh) để bảo vệ luồng đặt vé. Đo bằng saturation metric để kích hoạt sớm.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "10.13",
-          "lvl": "core",
+          "id": "10-system-design-rate-limit.surviving-high-load.q3",
           "q": "Scale database dưới tải: thứ tự ưu tiên?",
-          "a": "Thứ tự (rẻ/ít rủi ro trước → sau):\n1. [[g:tối ưu query + index]] (thường giải quyết phần lớn)\n2. [[g:read replica]] cho đọc\n3. [[g:caching]] (Redis) cho hot data\n4. [[g:async/queue]] giảm ghi đồng bộ\n5. [[g:partition]]\n6. [[r:sharding]] — chỉ khi thật sự vượt giới hạn 1 node\n\n**Mốc để biết đang ở bước nào:** một primary MySQL/Postgres trên phần cứng thường gánh được cỡ vài nghìn ghi/giây và vài chục nghìn đọc/giây khi query đã sạch; bảng vài chục triệu dòng vẫn là chuyện bình thường. Chưa chạm mấy con số đó mà đã bàn sharding là dấu hiệu đã bỏ qua bước 1.\n\n:::deep\n- (6) sharding mất JOIN/transaction xuyên shard, ID toàn cục, resharding đau → [[r:đừng shard sớm]]\n\nOTA: đọc (search/availability) scale bằng cache + replica + read model; ghi (booking/payment) tối ưu index + partition theo tháng trước; chỉ shard theo `user_id` khi volume ghi thật sự vượt một primary. [[o:Đo hiệu quả mỗi bước trước khi sang bước sau.]]\n\n- Mỗi bước có một cái giá phải nói ra kèm: replica kéo theo replication lag và read-after-write (6.2); cache kéo theo invalidation và stampede (10.3); queue kéo theo eventual consistency; partition bắt phải chọn đúng khoá ngay từ đầu; shard thì mất JOIN và transaction xuyên shard.\n:::",
-          "translated": false
+          "a": "Thứ tự (rẻ/ít rủi ro trước → sau):\n1. [[g:tối ưu query + index]] (thường giải quyết phần lớn)\n2. [[g:read replica]] cho đọc\n3. [[g:caching]] (Redis) cho hot data\n4. [[g:async/queue]] giảm ghi đồng bộ\n5. [[g:partition]]\n6. [[r:sharding]] — chỉ khi thật sự vượt giới hạn 1 node\n\n**Mốc để biết đang ở bước nào:** một primary MySQL/Postgres trên phần cứng thường gánh được cỡ vài nghìn ghi/giây và vài chục nghìn đọc/giây khi query đã sạch; bảng vài chục triệu dòng vẫn là chuyện bình thường. Chưa chạm mấy con số đó mà đã bàn sharding là dấu hiệu đã bỏ qua bước 1.\n\n:::deep\n- (6) sharding mất JOIN/transaction xuyên shard, ID toàn cục, resharding đau → [[r:đừng shard sớm]]\n\nOTA: đọc (search/availability) scale bằng cache + replica + read model; ghi (booking/payment) tối ưu index + partition theo tháng trước; chỉ shard theo `user_id` khi volume ghi thật sự vượt một primary. [[o:Đo hiệu quả mỗi bước trước khi sang bước sau.]]\n\n- Mỗi bước có một cái giá phải nói ra kèm: replica kéo theo replication lag và read-after-write (06-db-scaling.replication-consistency.q2); cache kéo theo invalidation và stampede (10-system-design-rate-limit.framework-building-blocks.q3); queue kéo theo eventual consistency; partition bắt phải chọn đúng khoá ngay từ đầu; shard thì mất JOIN và transaction xuyên shard.\n:::",
+          "translated": false,
+          "difficulty": "core"
         },
         {
-          "id": "10.14",
-          "lvl": "ext",
+          "id": "10-system-design-rate-limit.surviving-high-load.q4",
           "q": "Bottleneck analysis: tìm điểm nghẽn thế nào?",
-          "a": "[[g:Đo trước khi tối ưu]]:\n- metrics (RED/USE)\n- profiling (CPU/heap)\n- distributed tracing → 'request chậm ở hop nào'\n\nTìm tài nguyên [[r:bão hoà]] (CPU, DB connection, lock, I/O, GC).\n\nĐịnh luật: [[b:Little]] (throughput ≈ concurrency/latency), [[b:Amdahl]] (tối ưu phần chiếm thời gian lớn nhất).\n\n:::deep\n- metrics (RED: rate/errors/duration; USE: utilization/saturation/errors), profiling (async-profiler flame graph), distributed tracing\n- tìm bão hoà: CPU, DB connection pool (pending), lock contention, I/O, GC pause, network\n\nOTA: 'checkout chậm' → trace cho thấy gọi PSP/GDS đồng bộ +600ms → async/cache/parallel; 'API chậm theo giờ' → so plan DB (plan regression) hoặc GC log. [[r:Sai lầm]]: tối ưu chỗ không phải bottleneck (vi tối ưu code khi nghẽn là DB/mạng).\n\n- Quy trình 60 giây đầu trên một máy cụ thể — `uptime`, `vmstat`, `iostat`, `ss` — ở 21.1; nghi JVM thì thread dump (21.5) rồi profiling (21.7) là hai bước kế tiếp.\n:::",
-          "translated": false
+          "a": "[[g:Đo trước khi tối ưu]]:\n- metrics (RED/USE)\n- profiling (CPU/heap)\n- distributed tracing → 'request chậm ở hop nào'\n\nTìm tài nguyên [[r:bão hoà]] (CPU, DB connection, lock, I/O, GC).\n\nĐịnh luật: [[b:Little]] (throughput ≈ concurrency/latency), [[b:Amdahl]] (tối ưu phần chiếm thời gian lớn nhất).\n\n:::deep\n- metrics (RED: rate/errors/duration; USE: utilization/saturation/errors), profiling (async-profiler flame graph), distributed tracing\n- tìm bão hoà: CPU, DB connection pool (pending), lock contention, I/O, GC pause, network\n\nOTA: 'checkout chậm' → trace cho thấy gọi PSP/GDS đồng bộ +600ms → async/cache/parallel; 'API chậm theo giờ' → so plan DB (plan regression) hoặc GC log. [[r:Sai lầm]]: tối ưu chỗ không phải bottleneck (vi tối ưu code khi nghẽn là DB/mạng).\n\n- Quy trình 60 giây đầu trên một máy cụ thể — `uptime`, `vmstat`, `iostat`, `ss` — ở 21.1; nghi JVM thì thread dump (21-linux-production-debug.jvm-network-deep-dive-on-prod.q1) rồi profiling (21-linux-production-debug.jvm-network-deep-dive-on-prod.q3) là hai bước kế tiếp.\n:::",
+          "translated": false,
+          "difficulty": "ext"
         }
       ]
     }

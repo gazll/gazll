@@ -4,25 +4,25 @@
       "title": "Bức tranh chung",
       "items": [
         {
-          "id": "7.1",
-          "lvl": "core",
+          "id": "07-sql-nosql-db-engines.the-big-picture.q1",
           "q": "SQL vs NoSQL — chọn cái nào theo bài toán?",
           "a": "- [[b:SQL (quan hệ)]]: schema chặt, ACID mạnh, quan hệ phức tạp, query linh hoạt (JOIN, aggregate) — chuẩn cho data tài chính/giao dịch\n- [[b:NoSQL]]: schema linh hoạt, scale ngang dễ, tối ưu cho access pattern cụ thể, thường BASE/eventual\n\n<table class=\"cmp\"><thead><tr><th>Tiêu chí</th><th>SQL</th><th>NoSQL</th></tr></thead><tbody>\n<tr><td>Schema</td><td>chặt, ràng buộc, migration</td><td>linh hoạt, schema-on-read</td></tr>\n<tr><td>Nhất quán</td><td>ACID mạnh</td><td>BASE/eventual (tuỳ)</td></tr>\n<tr><td>Quan hệ/JOIN</td><td>mạnh</td><td>kém, ưu tiên denormalize</td></tr>\n<tr><td>Scale</td><td>scale-up + replica; shard khó</td><td>scale-out ngang</td></tr>\n<tr><td>Hợp với</td><td>ledger, giao dịch</td><td>catalog, session, log, time-series</td></tr>\n</tbody></table>\n\nThực tế thường [[g:polyglot persistence]]: mỗi service chọn DB hợp việc.\n\n:::deep\nTránh nhị phân 'cái nào tốt hơn' — nói theo access pattern + yêu cầu nhất quán.\n\nOTA polyglot: booking/payment dùng Postgres (ACID), giá &amp; availability cache ở Redis, log tìm kiếm ở Elasticsearch, event ở Kafka.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "core"
         },
         {
-          "id": "7.2",
-          "lvl": "core",
+          "id": "07-sql-nosql-db-engines.the-big-picture.q2",
           "q": "Các loại NoSQL và use case điển hình?",
           "a": "<table class=\"cmp\"><thead><tr><th>Loại</th><th>Ví dụ</th><th>Use case</th></tr></thead><tbody>\n<tr><td>Document</td><td>MongoDB</td><td>profile/catalog/CMS (JSON lồng nhau)</td></tr>\n<tr><td>Key-Value</td><td>Redis, DynamoDB</td><td>cache, session, counter</td></tr>\n<tr><td>Wide-column</td><td>Cassandra, HBase</td><td>ghi lớn, time-series, IoT</td></tr>\n<tr><td>Graph</td><td>Neo4j</td><td>social, fraud, recommendation</td></tr>\n</tbody></table>\n\n:::deep\n- [[b:Document]] (Mongo): aggregate đọc trọn (itinerary/profile), schema linh hoạt, nhưng quan hệ/transaction đa-document yếu\n- [[b:Key-Value]] (Redis/DynamoDB): cực nhanh theo key (cache/session/counter/feature flag); query phi-key kém\n- [[b:Wide-column]] (Cassandra): ghi khổng lồ, tuyến tính theo node, mô hình *theo query* (denormalize, không JOIN); nhất quán tunable\n- [[b:Graph]] (Neo4j): quan hệ nhiều bậc (fraud ring, recommendation, hành trình nối chuyến)\n\nOTA: Cassandra/Scylla cho clickstream/search log; Redis cho cache giá &amp; seat hold; graph cho 'tìm hành trình nối chuyến tối ưu'. Chọn theo access pattern, không theo độ 'hot'.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "core"
         },
         {
-          "id": "7.3",
-          "lvl": "hard",
+          "id": "07-sql-nosql-db-engines.the-big-picture.q3",
           "q": "ACID vs BASE — đánh đổi triết lý?",
           "a": "- [[b:ACID]] (Atomicity, Consistency, Isolation, Durability): ưu tiên đúng đắn — chuẩn RDBMS, bắt buộc cho ledger\n- [[b:BASE]] (Basically Available, Soft state, Eventual consistency): ưu tiên sẵn sàng & scale, chấp nhận nhất quán cuối — nhiều NoSQL phân tán\n\nĐây là biểu hiện của CAP/PACELC ở tầng triết lý thiết kế.\n\n:::deep\n- ACID = tính chất của *transaction* (đúng đắn); BASE = *triết lý hệ phân tán* (sẵn sàng + nhất quán cuối)\n- [[r:'Eventual consistency' không phải 'sẽ đúng nếu chờ' mơ hồ]] — phải định nghĩa *window hội tụ*, cơ chế giải xung đột (LWW/CRDT/version vector), ranh giới chấp nhận\n\nFintech/OTA — lằn ranh rõ:\n- ledger/số dư/giữ ghế = [[g:ACID]] (Consistency tuyệt đối)\n- lịch sử/loyalty/notification = [[o:BASE]]\n\nCâu khoá: 'chỗ nào RA QUYẾT ĐỊNH tiền dựa trên data?' → chỗ đó phải ACID.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "hard"
         }
       ]
     },
@@ -30,53 +30,53 @@
       "title": "So sánh các engine",
       "items": [
         {
-          "id": "7.4",
-          "lvl": "hard",
+          "id": "07-sql-nosql-db-engines.engine-by-engine.q1",
           "q": "Vì sao doanh nghiệp lớn vẫn chuộng Oracle — từ tính năng tới vật lý?",
           "a": "Oracle đắt nhưng được chọn cho hệ lõi nhờ:\n- [[b:RAC]] (Real Application Clusters): nhiều instance chung storage → HA & scale, failover trong suốt\n- [[b:PL/SQL]] mạnh; optimizer chín; partitioning, materialized view, Flashback, Data Guard (DR)\n- quản trị vật lý sâu: tablespace, ASM, redo/undo, RMAN backup\n- [[g:hỗ trợ enterprise + hợp đồng + compliance certification]] — quyết định trong ngân hàng/bảo hiểm\n\n:::tip Chốt\ndoanh nghiệp trả tiền cho HA, tooling vận hành chín, và 'một cổ để nắm' khi sự cố — không chỉ tính năng SQL.\n:::\n\n:::deep\n- [[b:RAC]] (instance chung shared storage qua Cache Fusion) → HA + scale, failover trong suốt\n- [[b:Data Guard]] (DR standby), [[b:RMAN]] backup, [[b:Flashback]] (khôi phục trạng thái quá khứ — vàng cho điều tra tài chính), [[b:ASM]], partitioning &amp; parallel query, optimizer/PLSQL cực chín\n- cốt lõi: [[g:HA + tooling + hợp đồng hỗ trợ + compliance]] — downtime/sai = mất tiền + pháp lý\n\nXu hướng: dịch sang Postgres (chi phí) cho hệ mới, nhưng core banking legacy vẫn Oracle vì rủi ro di trú &amp; tính năng vận hành.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "hard"
         },
         {
-          "id": "7.5",
-          "lvl": "core",
+          "id": "07-sql-nosql-db-engines.engine-by-engine.q2",
           "q": "MySQL rẻ nhưng vì sao vẫn được dùng rộng rãi? InnoDB mạnh ở đâu?",
           "a": "MySQL (với InnoDB) phổ biến nhờ:\n- miễn phí/chi phí thấp, đơn giản, ecosystem khổng lồ\n- replication dễ, OLTP tốt cho web\n- InnoDB: ACID, MVCC, clustered index, foreign key, crash recovery\n\n[[r:Điểm yếu lịch sử]]: optimizer & tính năng phân tích kém Oracle/Postgres — nhưng đủ tốt cho phần lớn nhu cầu (lý do RDS MySQL rất thông dụng).\n\n:::deep\n- InnoDB: clustered index + MVCC + foreign key + crash recovery (redo/undo) → ACID OLTP đủ tốt cho web/SaaS\n- Aurora MySQL tách compute/storage (replica lag mili-giây, auto-scaling storage)\n- [[r:yếu]]: optimizer &amp; analytics kém Postgres (CTE đệ quy yếu trước 8.0, JSON yếu hơn JSONB, ít index type)\n\nOTA: MySQL/Aurora hợp booking/payment quy mô vừa-lớn chi phí thấp; cần JSONB/extension/full-text mạnh thì nghiêng Postgres. '[[g:Rẻ nhưng đủ tốt]]' là lý do nó thống trị tầng giữa.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "core"
         },
         {
-          "id": "7.6",
-          "lvl": "hard",
+          "id": "07-sql-nosql-db-engines.engine-by-engine.q3",
           "q": "PostgreSQL khác MySQL ra sao và vì sao đang lên ngôi?",
           "a": "- tuân chuẩn SQL chặt hơn; tính năng nâng cao: [[g:JSONB]] (index được), CTE đệ quy, window function mạnh, partial/expression/GiST/GIN index, materialized view\n- [[g:extension]] phong phú: PostGIS (geo), TimescaleDB (time-series), [[g:pgvector]] (AI embedding) → 'đa năng'\n- MVCC khác MySQL: lưu tuple version trong bảng → cần [[o:VACUUM]] dọn tuple chết\n\n:::tip Chốt\nPostgres thắng khi cần tính năng nâng cao + JSON + extension (nhất là pgvector cho AI). MySQL thắng ở đơn giản & phổ cập.\n:::\n\n:::deep\n- [[b:JSONB]] (binary, index GIN được — hybrid relational+document), CTE đệ quy, window function, partial/expression index\n- [[b:extension]]: PostGIS, TimescaleDB, [[g:pgvector]] (lý do lớn khiến Postgres lên ngôi thời AI)\n- MVCC lưu tuple version *trong bảng* → cần `VACUUM`/autovacuum; không kịp → [[r:table/index bloat]] + transaction ID wraparound (phải vacuum freeze)\n\nOTA: Postgres + pgvector cho gợi ý/tìm kiếm ngữ nghĩa, JSONB cho snapshot kết quả tìm chuyến, PostGIS cho 'sân bay gần bạn'.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "hard"
         },
         {
-          "id": "7.7",
-          "lvl": "hard",
+          "id": "07-sql-nosql-db-engines.engine-by-engine.q4",
           "q": "Vì sao MongoDB đọc nhanh hơn SQL trong nhiều trường hợp? Đánh đổi?",
           "a": "**Lý do đọc nhanh:**\n- [[g:mô hình document]]: data liên quan gói trong 1 document (denormalized) → một lần đọc lấy hết, KHÔNG cần JOIN\n- [[g:locality]]: document lưu liền khối → ít random I/O; WiredTiger dùng cache nén, B+Tree index, document-level concurrency\n- schema linh hoạt, aggregation pipeline tối ưu cho pattern đã biết\n\n**Đánh đổi:**\n- denormalize → [[r:trùng lặp data]], cập nhật khó & dễ lệch\n- quan hệ phức tạp/transaction đa-document tốn kém\n- [[r:không hợp data cần strong consistency & quan hệ chặt]] như ledger\n\n:::warn Lưu ý fair\n'nhanh hơn' phụ thuộc workload. Cùng truy vấn theo key đơn, RDBMS index cũng rất nhanh. MongoDB thắng rõ khi pattern là 'đọc cả aggregate đã denormalize'.\n:::\n\n:::deep\n- 'Mongo nhanh hơn' chủ yếu vì *tránh JOIN* + *locality* (1 document = 1 lần đọc), không phải engine ma thuật — cùng truy vấn theo PK, B+Tree Postgres cũng vài lần đọc page\n- WiredTiger: MVCC + nén (snappy/zstd) + document-level concurrency\n- bù lại: denormalize → cập nhật lặp tốn & dễ lệch; ad-hoc/aggregation phức tạp yếu hơn SQL; transaction đa-document đắt\n\nOTA: document hợp 'snapshot kết quả tìm kiếm/itinerary'; ledger/seat inventory vẫn RDBMS (ACID + unique constraint chống double-book).\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "hard"
         },
         {
-          "id": "7.8",
-          "lvl": "ext",
+          "id": "07-sql-nosql-db-engines.engine-by-engine.q5",
           "q": "MongoDB: sharding và mô hình nhất quán?",
           "a": "- Mongo shard theo [[o:shard key]] (chọn sai → hotspot/jumbo chunk); có config server + mongos router\n- nhất quán: default đọc primary (strong), có thể đọc secondary (eventual)\n- `writeConcern`/`readConcern` điều chỉnh durability/độ mới\n- từ 4.x có multi-document ACID transaction nhưng [[r:nên hạn chế]] — thiết kế document để tránh cần transaction xuyên nhiều document\n\n:::deep\n- shard qua *shard key* (range/hashed); chọn sai → [[r:jumbo chunk]]/hotspot (monotonic key dồn một shard)\n- kiến trúc: config server (metadata) + mongos (router) + shard (replica set)\n- `readConcern` (local/majority/linearizable) &amp; `writeConcern` (`w:majority` bền hơn, chậm hơn); primary=strong, secondary=eventual\n- multi-document ACID từ 4.x nhưng đắt (giữ lock/oplog) → [[g:thiết kế document để tránh transaction]] (gom data cùng đổi vào một document)\n\nOTA: 'itinerary snapshot' → mỗi booking là một self-contained document; ledger tiền vẫn RDBMS.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "ext"
         },
         {
-          "id": "7.9",
-          "lvl": "core",
+          "id": "07-sql-nosql-db-engines.engine-by-engine.q6",
           "q": "Redis: vì sao nhanh, các cấu trúc dữ liệu và persistence?",
-          "a": "Redis nhanh vì [[g:in-memory]] + single-thread event loop (không lock contention) + cấu trúc data tối ưu.\n\n**Data structures:** string, hash, list, set, sorted set (leaderboard!), stream, bitmap, HyperLogLog.\n\n**Persistence:**\n- [[b:RDB]] (snapshot)\n- [[b:AOF]] (append log)\n\n→ đánh đổi durability vs hiệu năng.\n\nDùng cho: cache, session, rate limit, queue nhẹ, distributed lock, leaderboard.\n\n:::deep\n- single-thread data path → một lệnh O(N) (`KEYS *`, `SMEMBERS` set lớn) [[r:chặn toàn bộ]] → tránh; dùng `SCAN` cursor\n- persistence: RDB (mất data giữa hai snapshot) vs AOF (`everysec` cân bằng phổ biến); bền cao dùng cả hai\n- HA: Redis Sentinel (failover) hoặc Redis Cluster (16384 hash slot + replica)\n- [[r:lock/dedup]]: TTL hết giữa chừng → mất đúng đắn → fencing token\n\nOTA: seat hold TTL (`SET seat NX PX`), cache giá/availability TTL ngắn, rate-limit token bucket, sorted set cho 'chuyến hot/đếm tồn'.\n\n- Chính cơ chế TTL này là một đề LLD hay gặp: tự cài key-value store có TTL bằng lazy expiration + sampling đúng như Redis làm (22.8).\n:::",
-          "translated": true
+          "a": "Redis nhanh vì [[g:in-memory]] + single-thread event loop (không lock contention) + cấu trúc data tối ưu.\n\n**Data structures:** string, hash, list, set, sorted set (leaderboard!), stream, bitmap, HyperLogLog.\n\n**Persistence:**\n- [[b:RDB]] (snapshot)\n- [[b:AOF]] (append log)\n\n→ đánh đổi durability vs hiệu năng.\n\nDùng cho: cache, session, rate limit, queue nhẹ, distributed lock, leaderboard.\n\n:::deep\n- single-thread data path → một lệnh O(N) (`KEYS *`, `SMEMBERS` set lớn) [[r:chặn toàn bộ]] → tránh; dùng `SCAN` cursor\n- persistence: RDB (mất data giữa hai snapshot) vs AOF (`everysec` cân bằng phổ biến); bền cao dùng cả hai\n- HA: Redis Sentinel (failover) hoặc Redis Cluster (16384 hash slot + replica)\n- [[r:lock/dedup]]: TTL hết giữa chừng → mất đúng đắn → fencing token\n\nOTA: seat hold TTL (`SET seat NX PX`), cache giá/availability TTL ngắn, rate-limit token bucket, sorted set cho 'chuyến hot/đếm tồn'.\n\n- Chính cơ chế TTL này là một đề LLD hay gặp: tự cài key-value store có TTL bằng lazy expiration + sampling đúng như Redis làm (22-low-level-design-ood.patterns-in-interview-code.q4).\n:::",
+          "translated": true,
+          "difficulty": "core"
         },
         {
-          "id": "7.10",
-          "lvl": "ext",
+          "id": "07-sql-nosql-db-engines.engine-by-engine.q7",
           "q": "Khung quyết định: chọn DB cho một use case cụ thể?",
           "a": "Hỏi tuần tự:\n- data có [[b:quan hệ]] không? cần [[b:ACID mạnh]] không?\n- [[b:access pattern]]: theo key / range / full-text / graph?\n- tỉ lệ đọc/ghi & quy mô? nhất quán strong hay eventual?\n\n**Map nhanh:**\n- ledger/giao dịch → RDBMS (Postgres/MySQL/Oracle)\n- cache/session → Redis\n- catalog/CMS → MongoDB\n- time-series/ghi lớn → Cassandra/Timescale\n- search → Elasticsearch\n- AI embedding → pgvector\n\nThường kết hợp nhiều cái — [[g:polyglot persistence]].\n\n:::deep\nKhung hỏi: (1) quan hệ &amp; cần JOIN? (2) cần ACID mạnh (tiền/giữ chỗ)? (3) access pattern chính? (4) đọc/ghi &amp; quy mô (vượt 1 node?)? (5) strong hay eventual?\n\nMap: ledger/booking → RDBMS; cache/session/seat-hold → Redis; search chuyến/điểm đến → Elasticsearch; clickstream/log lớn → Cassandra/Timescale; AI embedding → pgvector; analytics → cột (ClickHouse/BigQuery).\n\n[[r:Sai lầm]]: ép một DB làm mọi thứ, hoặc thêm DB mới chỉ vì 'mốt' (tăng chi phí vận hành).\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "ext"
         }
       ]
     }

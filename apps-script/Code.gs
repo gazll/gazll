@@ -554,7 +554,7 @@ function upsertByKey(t, user, incoming, keyFields, mapRow) {
   return n;
 }
 
-/** '|' is safe as a separator: item_ids look like '1.1' / 'M1.1'. */
+/** '|' is safe as a separator: item_ids look like '01-java-core-jvm.memory-execution-model.q1' — hyphens and dots, never '|'. */
 function keyOf(row, fields) {
   return fields.map(function (f) { return String(row[f] == null ? '' : row[f]); }).join('|');
 }

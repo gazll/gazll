@@ -11,6 +11,7 @@
 */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { TOPIC_TYPES, DIFFICULTIES } from '../public/lib/constants.js';
 
 // fileURLToPath, not .pathname — on Windows the latter yields "/D:/…", which
 // node then resolves against the current drive as "D:\D:\…".
@@ -21,11 +22,14 @@ const readOptionalJson = (p) => { try { return readJson(p); } catch (e) { if (e.
 
 const manifest = readJson(DATA + 'manifest.json');
 const meta = readJson(DATA + 'meta.json');
-const GROUPS = new Set(['core', 'data', 'design', 'platform', 'algorithm']);
-const LVLS = new Set(['core', 'hard', 'ext']);
+const TOPIC_TYPE_KEYS = new Set(TOPIC_TYPES.map(t => t.key));
+const DIFFICULTY_KEYS = new Set(DIFFICULTIES.map(d => d.key));
 const RAW = 'pre|table|figure';
 // Tags the renderer is expected to emit; anything else means a stray '<'.
 const KNOWN = 'pre|table|figure|code|span|thead|tbody|tr|th|td|b|br|svg|defs|marker|path|rect|text|line|polygon|polyline|circle|g|small|em|i';
+// item id: {topic-key}.{section-slug}.q{n} — topic-key/section-slug are
+// slugs (lowercase, hyphenated), the item index is always numeric.
+const ID_RE = /^([a-z0-9-]+)\.([a-z0-9-]+)\.q(\d+)$/;
 
 const errs = [];
 const items = [];
@@ -42,25 +46,29 @@ const topics = manifest.topics.map(row => ({
 
 for (const { row, content, meta: m } of topics) {
   const t = `topic ${row.n}`;
-  if (!GROUPS.has(row.group)) err(t, `unknown group "${row.group}"`);
+  if (!TOPIC_TYPE_KEYS.has(row.topic_type)) err(t, `unknown topic_type "${row.topic_type}"`);
   if (!m) { err(t, 'missing meta.json entry'); continue; }
   for (const k of ['label', 'title', 'intro', 'tags']) {
     if (m.vi?.[k] === undefined) err(t, `meta.json missing vi.${k}`);
   }
   if (!Array.isArray(m.vi?.tags) || !m.vi.tags.length) err(t, 'vi.tags must be a non-empty array');
-  if (content.n !== row.n) err(t, `content file n=${content.n} does not match manifest n=${row.n}`);
+  const topicKey = row.file.replace(/^topics\//, '').replace(/\.json$/, '');
 
   for (const sec of content.sections || []) {
     if (!sec.title) err(t, 'a section has no title');
     for (const it of sec.items || []) {
-      items.push({ ...it, n: row.n, group: row.group, label: m.vi?.label });
+      items.push({ ...it, n: row.n, topic_type: row.topic_type, label: m.vi?.label });
       const id = it.id;
 
-      if (JSON.stringify(Object.keys(it).sort()) !== '["a","id","lvl","q"]') {
+      if (JSON.stringify(Object.keys(it).sort()) !== '["a","difficulty","id","q","translated"]') {
         err(id, `unexpected keys ${Object.keys(it).sort().join(',')}`);
       }
-      if (!LVLS.has(it.lvl)) err(id, `bad lvl "${it.lvl}"`);
-      if (!String(id).startsWith(row.n + '.')) err(id, `id does not belong to topic ${row.n}`);
+      if (typeof it.translated !== 'boolean') err(id, `translated must be a boolean, got ${typeof it.translated}`);
+      if (!DIFFICULTY_KEYS.has(it.difficulty)) err(id, `bad difficulty "${it.difficulty}"`);
+
+      const match = String(id).match(ID_RE);
+      if (!match) err(id, `id does not match {topic-key}.{section-slug}.q{n}`);
+      else if (match[1] !== topicKey) err(id, `id's topic key "${match[1]}" does not match its file's key "${topicKey}"`);
 
       const a = String(it.a || '');
 
@@ -113,58 +121,53 @@ for (const [mid, where] of markers) {
   if (where.length > 1) errs.push(`SVG marker id "${mid}" reused by ${where.join(', ')} — must be unique file-wide`);
 }
 
-// Cross-references written as "(12.4)" must point at a real item.
+// Cross-references written as "(topic-key.section-slug.qN)" must point at a real item.
+const REF_RE = /\(([a-z0-9-]+\.[a-z0-9-]+\.q\d+)\)/g;
 for (const it of items) {
-  for (const m of String(it.a).matchAll(/\((\d{1,2}\.\d{1,2})\)/g)) {
+  for (const m of String(it.a).matchAll(REF_RE)) {
     const target = m[1];
-    // Skip decimals that are prose, not references (e.g. "0.1/0.2", "1.5x").
-    if (!/^\d{1,2}\.\d{1,2}$/.test(target) || target.startsWith('0.')) continue;
-    if (!seen.has(target) && Number(target.split('.')[0]) <= topics.length) {
-      err(it.id, `cross-ref (${target}) points at no item`);
-    }
+    if (!seen.has(target)) err(it.id, `cross-ref (${target}) points at no item`);
   }
 }
 
-/* ---------- data/meta.json + topics/N.en.json — the optional English overlay ----------
+/* ---------- data/meta.json + topics/NN-slug.vi.json — the Vietnamese source ----------
 
-   Every field is optional and falls back to the Vietnamese source, so the
-   only real failure mode is an overlay that points at nothing: a topic
-   number or item id that does not exist gets silently ignored at runtime and
-   the reader just never sees the translation they wrote. */
+   Each topic's base file (topics/NN-slug.json) is English by default; the
+   complete Vietnamese original always lives alongside it as the .vi.json
+   companion. An item's `translated` flag says whether its text is
+   authentically written in that file's language, so a base-file item with
+   translated:true is real English, and a .vi.json item is always
+   translated:true (VI is the 100%-complete source). meta.json's `en`/`vi`
+   keys must actually hold the language they claim. */
 let enTopics = 0, enItems = 0;
 for (const [n, m] of Object.entries(meta.topics)) {
   const row = manifest.topics.find(r => String(r.n) === n);
   if (!row) { errs.push(`meta.json: topic "${n}" does not exist in manifest`); continue; }
-  if (m.en) enTopics++;
+  if (!TOPIC_TYPE_KEYS.has(m.topic_type)) errs.push(`meta.json: topic ${n} has unknown topic_type "${m.topic_type}"`);
+  if (m.topic_type !== row.topic_type) errs.push(`meta.json: topic ${n} topic_type does not match manifest`);
+  for (const k of ['label', 'title', 'intro', 'tags']) {
+    if (m.en?.[k] === undefined) errs.push(`meta.json: topic ${n} missing en.${k}`);
+  }
+  if (!m.key) errs.push(`meta.json: topic ${n} missing key`);
+  else if (`topics/${m.key}.json` !== row.file) {
+    errs.push(`meta.json: topic ${n} key "${m.key}" does not match manifest file "${row.file}"`);
+  }
+  enTopics++;
 }
 
-for (const { row } of topics) {
-  const enFile = readOptionalJson(DATA + row.file.replace(/\.json$/, '.en.json'));
-  if (!enFile) continue;
-  const content = topics.find(t => t.row.n === row.n).content;
-  if (Array.isArray(enFile.sections) && enFile.sections.length > content.sections.length) {
-    errs.push(`topic ${row.n}.en.json: ${enFile.sections.length} section titles for ${content.sections.length} sections`);
+for (const { row, content } of topics) {
+  const viFile = readOptionalJson(DATA + row.file.replace(/\.json$/, '.vi.json'));
+  if (!viFile) { errs.push(`topic ${row.n}: missing ${row.file.replace(/\.json$/, '.vi.json')}`); continue; }
+  if (!Array.isArray(viFile.sections) || viFile.sections.length !== content.sections.length) {
+    errs.push(`topic ${row.n}.vi.json: ${(viFile.sections || []).length} sections for ${content.sections.length} in the base file`);
   }
-  for (const [id, oi] of Object.entries(enFile.items || {})) {
-    if (!seen.has(id)) { errs.push(`topic ${row.n}.en.json: item "${id}" does not exist`); continue; }
-    if (!String(id).startsWith(row.n + '.')) errs.push(`topic ${row.n}.en.json: item "${id}" is filed under topic ${row.n}`);
-    if (oi.a) enItems++;
+  for (const sec of viFile.sections || []) {
+    for (const it of sec.items || []) {
+      if (!seen.has(it.id)) { errs.push(`topic ${row.n}.vi.json: item "${it.id}" does not exist`); continue; }
+      if (it.translated !== true) errs.push(`topic ${row.n}.vi.json: item "${it.id}" must be translated:true`);
+    }
   }
-}
-
-// Microservices
-const micro = readJson(DATA + manifest.microservices.file);
-const microMeta = meta.microservices || {};
-for (const k of ['title', 'intro', 'tags']) {
-  if (microMeta.vi?.[k] === undefined) errs.push(`meta.json: missing microservices.vi.${k}`);
-}
-const microEn = readOptionalJson(DATA + manifest.microservices.file.replace(/\.json$/, '.en.json'));
-if (microEn) {
-  const chapters = Array.isArray(microEn.chapters) ? microEn.chapters.length : 0;
-  const realChapters = (micro.chapters || []).length;
-  if (chapters > realChapters) {
-    errs.push(`microservices.en.json: ${chapters} chapter titles for ${realChapters} chapters`);
-  }
+  for (const sec of content.sections) for (const it of sec.items) if (it.translated) enItems++;
 }
 
 if (errs.length) {
@@ -174,17 +177,17 @@ if (errs.length) {
 }
 
 console.log(`content OK — ${topics.length} topics, ${items.length} items, ${markers.size} SVG markers`);
-console.log(`English overlay — ${enTopics}/${topics.length} topics with meta translated, ${enItems}/${items.length} answers translated`);
+console.log(`English translation — ${enTopics}/${topics.length} topics with meta translated, ${enItems}/${items.length} answers translated`);
 
 if (process.argv.includes('--stats')) {
   const by = (fn) => items.reduce((m, i) => (m[fn(i)] = (m[fn(i)] || 0) + 1, m), {});
-  const refs = items.reduce((n, i) => n + [...String(i.a).matchAll(/\((\d{1,2}\.\d{1,2})\)/g)]
+  const refs = items.reduce((n, i) => n + [...String(i.a).matchAll(REF_RE)]
     .filter(m => seen.has(m[1])).length, 0);
   const thin = items.filter(i => i.a.length < 800);
   const lens = items.map(i => i.a.length).sort((x, y) => x - y);
 
-  console.log('\ntopics per group :', by(i => i.group));
-  console.log('items per lvl    :', by(i => i.lvl));
+  console.log('\ntopics per type  :', by(i => i.topic_type));
+  console.log('items per diff.  :', by(i => i.difficulty));
   console.log('answer length    : median', lens[lens.length >> 1], '· min', lens[0], '· max', lens.at(-1));
   console.log('cross-references :', refs, `(${(refs / items.length).toFixed(2)} per item)`);
   console.log('thin items <800  :', thin.length, '→', thin.map(i => i.id).join(' '));

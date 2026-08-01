@@ -4,25 +4,25 @@
       "title": "Hai mô hình",
       "items": [
         {
-          "id": "8.1",
-          "lvl": "core",
+          "id": "08-message-queue.the-two-models.q1",
           "q": "Mô hình RabbitMQ: exchange, queue, binding, routing key?",
           "a": "Producer gửi message tới [[b:exchange]] → exchange định tuyến vào [[b:queue]] theo [[b:binding]] + routing key.\n\n**Loại exchange:**\n- direct (khớp chính xác)\n- topic (wildcard)\n- fanout (broadcast)\n- headers\n\nRabbitMQ là [[g:'smart broker, dumb consumer']] — broker quản lý định tuyến & trạng thái message.\n\n:::deep\n- [[b:direct]]: routing key khớp chính xác (phân việc theo loại)\n- [[b:topic]]: wildcard `*`/`#` (vd `booking.*.created`)\n- [[b:fanout]]: broadcast tới mọi queue bind (pub/sub)\n- [[b:headers]]: khớp theo header\n\nĐộ bền: *durable queue* + *persistent message* + *quorum queue* (Raft, thay mirrored queue cũ) mới chịu mất node.\n\nOTA: topic exchange định tuyến `payment.succeeded`/`booking.cancelled` tới nhiều consumer (ticketing, notification, loyalty); priority queue cho OTP/giao dịch gấp.\n\n[[r:queue dài (backlog) = consumer không kịp]] → scale consumer hoặc tăng prefetch.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "core"
         },
         {
-          "id": "8.2",
-          "lvl": "core",
+          "id": "08-message-queue.the-two-models.q2",
           "q": "Mô hình Kafka: topic, partition, offset, consumer group?",
           "a": "Kafka là [[g:distributed log]] bất biến:\n- [[b:topic]] chia thành [[b:partition]]\n- mỗi message có [[b:offset]] tăng dần trong partition\n- consumer cùng [[b:consumer group]] chia nhau partition (mỗi partition 1 consumer) → scale song song\n\n[[g:'Dumb broker, smart consumer']] — consumer tự quản offset. Message giữ theo retention (không xoá khi đọc) → [[g:replay được]].\n\n:::deep\n- message giữ theo [[b:retention]] (thời gian/dung lượng), KHÔNG xoá khi đọc → nhiều consumer group đọc độc lập + replay được (đặt lại offset)\n- mỗi partition do một consumer trong group xử lý (số consumer hữu ích ≤ số partition)\n- offset commit = 'đã xử lý tới đâu' → commit *sau* xử lý (at-least-once), không auto-commit trước\n\nOTA: Kafka làm event backbone (CDC booking → search/loyalty/analytics, audit immutable, event sourcing ledger); số partition theo throughput &amp; số consumer ([[r:khó giảm partition sau]] → over-provision vừa phải). Key = `booking_id` để giữ thứ tự sự kiện của một booking.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "core"
         },
         {
-          "id": "8.3",
-          "lvl": "hard",
+          "id": "08-message-queue.the-two-models.q3",
           "q": "RabbitMQ vs Kafka — khi nào dùng cái nào?",
           "a": "<table class=\"cmp\"><thead><tr><th></th><th>RabbitMQ</th><th>Kafka</th></tr></thead><tbody>\n<tr><td>Mô hình</td><td>smart broker (queue)</td><td>distributed log</td></tr>\n<tr><td>Sau khi đọc</td><td>message biến mất (ack)</td><td>giữ theo retention → replay</td></tr>\n<tr><td>Định tuyến</td><td>linh hoạt (exchange)</td><td>partition theo key</td></tr>\n<tr><td>Throughput</td><td>cao</td><td>cực cao (triệu msg/s)</td></tr>\n<tr><td>Hợp cho</td><td>task queue, RPC, gửi lệnh</td><td>event stream, sourcing, analytics</td></tr>\n</tbody></table>\n\n:::tip Chốt\nRabbitMQ = queue tác vụ thông minh về định tuyến; Kafka = log phân tán bền, replay được, throughput cao. Nhiều hệ dùng cả hai.\n:::\n\n:::deep\n- [[g:RabbitMQ]] khi cần định tuyến linh hoạt, task queue/RPC, latency thấp cho việc rời rạc, per-message TTL/priority, 'gửi lệnh tới consumer'\n- [[g:Kafka]] khi cần throughput cực lớn, lưu trữ &amp; replay, nhiều consumer độc lập, event sourcing/log pipeline/analytics, thứ tự theo partition\n\n[[r:Đừng ép một broker làm mọi việc.]] OTA thường dùng CẢ HAI: Kafka làm event bus/CDC/analytics, RabbitMQ cho task có định tuyến (gửi vé qua provider, retry job).\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "hard"
         }
       ]
     },
@@ -30,60 +30,60 @@
       "title": "Độ tin cậy & ngữ nghĩa",
       "items": [
         {
-          "id": "8.4",
-          "lvl": "hard",
+          "id": "08-message-queue.reliability-delivery-semantics.q1",
           "q": "Delivery semantics: at-most / at-least / exactly-once nghĩa là gì?",
           "a": "<table class=\"cmp\"><thead><tr><th>Semantics</th><th>Mất?</th><th>Trùng?</th><th>Ghi chú</th></tr></thead><tbody>\n<tr><td>At-most-once</td><td>có thể</td><td>không</td><td>fire-and-forget</td></tr>\n<tr><td>At-least-once</td><td>không</td><td>có thể</td><td>retry tới ack → consumer idempotent</td></tr>\n<tr><td>Exactly-once</td><td>không</td><td>không</td><td>lý tưởng; e2e gần như bất khả thi</td></tr>\n</tbody></table>\n\nThực tế đạt [[g:effectively-once]] = at-least-once + dedup/idempotency ở consumer.\n\n:::deep\n- [[r:exactly-once e2e gần như bất khả thi]] (mạng mất ack sau khi đã xử lý) → effectively-once\n- Kafka có 'exactly-once semantics' nhưng chỉ *trong phạm vi Kafka* (idempotent producer + read-process-write transaction giữa topic) — không lan ra side-effect ngoài (PSP, DB ngoài)\n- at-most-once chỉ cho data mất được (metrics thô)\n\nFintech/OTA: mọi luồng tiền/vé = at-least-once + idempotency key + dedup table → 'xử lý lặp nhưng hiệu ứng một lần'. [[r:Đừng tin 'exactly-once' cho side-effect ngoài hệ.]]\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "hard"
         },
         {
-          "id": "8.5",
-          "lvl": "hard",
+          "id": "08-message-queue.reliability-delivery-semantics.q2",
           "q": "RabbitMQ Publisher Confirms và consumer ack/prefetch hoạt động ra sao?",
           "a": "- [[b:Publisher Confirms]]: broker ack về producer khi đã nhận (và persist) → producer biết chắc message vào broker; async confirm (theo delivery tag) cho throughput cao\n- [[b:Consumer ack]] (manual): consumer chỉ ack sau khi xử lý xong → chết giữa chừng thì message redeliver\n- [[b:Prefetch (QoS)]]: giới hạn số message chưa-ack mỗi consumer → tránh một consumer 'ôm' hết, cân tải\n\n:::tip Chốt\nconfirms đảm bảo 'broker đã nhận'; manual ack đảm bảo 'đã xử lý'. Cả hai chỉ cho at-least-once → consumer vẫn phải idempotent.\n:::\n\n:::deep\n- async confirm đúng cách: lưu message chưa xác nhận vào `ConcurrentNavigableMap` theo *deliveryTag*; `basic.ack` (multiple=true → xoá tất cả ≤ tag), `basic.nack` → retry/republish. [[r:Đừng confirm đồng bộ từng message]] (throughput thấp)\n- confirms + persistent message + durable queue + mirrored/quorum queue mới đảm bảo không mất khi broker restart/mất node\n- consumer: `basic.qos(prefetch)` hợp lý để cân tải; ack sau xử lý (và idempotent vì redeliver có thể trùng)\n\nĐây chính là chỗ RabbitMQ ghép với Outbox để khoá kín dual-write.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "hard"
         },
         {
-          "id": "8.6",
-          "lvl": "hard",
+          "id": "08-message-queue.reliability-delivery-semantics.q3",
           "q": "Kafka đảm bảo độ bền thế nào: replication, ISR, acks?",
           "a": "- mỗi partition có nhiều replica: một leader + follower\n- [[b:ISR]] (In-Sync Replicas) = tập replica bắt kịp leader\n- producer chọn `acks`: `0` (không đợi, có thể mất), `1` (leader ghi xong), `all/-1` (mọi ISR ghi xong → bền nhất)\n- `min.insync.replicas` để không mất khi mất node\n\n:::deep\n[[g:Config bền vững]]: `acks=all` + `min.insync.replicas=2` + `replication.factor=3` → chịu mất 1 broker không mất data; ISR tụt dưới min → producer bị từ chối (chọn nhất quán hơn sẵn sàng). Bật `enable.idempotence=true` để producer không tạo bản trùng khi retry.\n\n- ordering chỉ trong partition → chọn key (`booking_id`) để giữ thứ tự sự kiện của một booking\n- [[r:commit offset *sau* khi xử lý]] (at-least-once), không auto-commit trước xử lý (dễ mất message khi crash)\n- rebalance dừng consume tạm thời → dùng cooperative-sticky assignor để giảm 'stop-the-world'\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "hard"
         },
         {
-          "id": "8.7",
-          "lvl": "core",
+          "id": "08-message-queue.reliability-delivery-semantics.q4",
           "q": "Ordering: hai broker đảm bảo thứ tự thế nào?",
           "a": "- [[b:Kafka]]: thứ tự *trong một partition*. Giữ thứ tự theo entity → dùng entity làm key (cùng key → cùng partition). [[r:Không có thứ tự toàn cục xuyên partition.]]\n- [[b:RabbitMQ]]: thứ tự trong một queue với một consumer; nhiều competing consumer thì thứ tự không đảm bảo\n\n<table class=\"cmp\"><thead><tr><th></th><th>Kafka</th><th>RabbitMQ</th></tr></thead><tbody>\n<tr><td>Đơn vị giữ thứ tự</td><td>một partition</td><td>một queue với một consumer</td></tr>\n<tr><td>Cách chỉ định</td><td>message key băm ra partition</td><td>routing key về đúng một queue</td></tr>\n<tr><td>Song song mà vẫn có thứ tự</td><td>được: nhiều partition, mỗi key một luồng</td><td>không: thêm consumer là mất thứ tự</td></tr>\n<tr><td>Cái làm xáo thứ tự</td><td>đổi số partition, retry qua topic khác</td><td>requeue, nhiều competing consumer</td></tr>\n</tbody></table>\n\n:::deep\n- [[r:tăng số partition sau]] làm key map sang partition khác → thứ tự lịch sử không còn liền (lên kế hoạch partition từ đầu)\n- RabbitMQ: nhiều competing consumer hoặc requeue làm xáo thứ tự\n\nOTA: sự kiện của một `booking_id` (created→paid→issued→cancelled) phải cùng partition để consumer dựng state đúng; cần thứ tự toàn cục (hiếm) → 1 partition (mất scale) hoặc sắp xếp lại ở consumer bằng sequence number.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "core"
         },
         {
-          "id": "8.8",
-          "lvl": "core",
+          "id": "08-message-queue.reliability-delivery-semantics.q5",
           "q": "DLQ và poison message — xử lý thế nào?",
-          "a": "Message lỗi lặp ([[r:poison]]) chặn queue nếu retry mãi.\n\n- sau N lần fail → chuyển [[g:Dead-Letter Queue]] để không nghẽn luồng chính → điều tra/sửa/replay\n- retry với exponential backoff + jitter, có giới hạn retry\n- Kafka: retry topic + DLT\n\n:::warn Bẫy phỏng vấn\nHai câu hỏi đi kèm hay làm sập. *'Retry đặt ở đâu?'* — retry ngay trong consumer là chặn cả partition phía sau, nên Kafka mới cần retry topic riêng. *'Replay từ DLQ thế nào cho an toàn?'* — replay chỉ đúng khi consumer idempotent (8.9); nếu không thì mỗi lần redrive là một lần trừ tiền lại.\n:::\n\n:::deep\n- pattern: retry *exponential backoff + jitter* qua retry topic (Kafka) hoặc TTL+dead-letter-exchange (RabbitMQ); sau N lần → DLQ (cần tooling redrive)\n- phân biệt lỗi [[o:tạm thời]] (retry được — network) vs [[r:vĩnh viễn]] (thẳng DLQ — schema sai)\n- theo dõi kích thước DLQ như một [[g:SLO]] (DLQ tăng = có lỗi hệ thống)\n\nOTA: message 'issue vé' fail vĩnh viễn phải vào DLQ + cảnh báo người vận hành (ảnh hưởng khách), [[r:không âm thầm drop]].\n:::",
-          "translated": true
+          "a": "Message lỗi lặp ([[r:poison]]) chặn queue nếu retry mãi.\n\n- sau N lần fail → chuyển [[g:Dead-Letter Queue]] để không nghẽn luồng chính → điều tra/sửa/replay\n- retry với exponential backoff + jitter, có giới hạn retry\n- Kafka: retry topic + DLT\n\n:::warn Bẫy phỏng vấn\nHai câu hỏi đi kèm hay làm sập. *'Retry đặt ở đâu?'* — retry ngay trong consumer là chặn cả partition phía sau, nên Kafka mới cần retry topic riêng. *'Replay từ DLQ thế nào cho an toàn?'* — replay chỉ đúng khi consumer idempotent (08-message-queue.reliability-delivery-semantics.q6); nếu không thì mỗi lần redrive là một lần trừ tiền lại.\n:::\n\n:::deep\n- pattern: retry *exponential backoff + jitter* qua retry topic (Kafka) hoặc TTL+dead-letter-exchange (RabbitMQ); sau N lần → DLQ (cần tooling redrive)\n- phân biệt lỗi [[o:tạm thời]] (retry được — network) vs [[r:vĩnh viễn]] (thẳng DLQ — schema sai)\n- theo dõi kích thước DLQ như một [[g:SLO]] (DLQ tăng = có lỗi hệ thống)\n\nOTA: message 'issue vé' fail vĩnh viễn phải vào DLQ + cảnh báo người vận hành (ảnh hưởng khách), [[r:không âm thầm drop]].\n:::",
+          "translated": true,
+          "difficulty": "core"
         },
         {
-          "id": "8.9",
-          "lvl": "hard",
+          "id": "08-message-queue.reliability-delivery-semantics.q6",
           "q": "Idempotent consumer — triển khai dedup thế nào?",
           "a": "At-least-once có thể giao trùng → consumer phải nhận diện & bỏ qua bản trùng:\n- [[b:message id/business key]] + bảng 'đã xử lý' (unique constraint) trong *cùng transaction* với hiệu ứng nghiệp vụ\n- hoặc thao tác vốn idempotent (UPSERT, set trạng thái)\n\nKafka còn có idempotent producer + transaction cho 'exactly-once trong phạm vi Kafka'.\n\n:::tip Chốt\nidempotency ở consumer là điều kiện sống còn của mọi hệ message tin cậy — đừng giả định 'mỗi message xử lý đúng một lần'.\n:::\n\n:::deep\nHai cách:\n- [[g:thao tác vốn idempotent]] (UPSERT, set trạng thái tuyệt đối) — đơn giản nhất khi có thể\n- [[g:dedup table]] với unique constraint trên message-id/business-key, ghi trong *cùng transaction* với hiệu ứng nghiệp vụ ([[r:tách → có khe 'đã làm chưa kịp đánh dấu']])\n\nOTA: consumer 'cộng điểm loyalty' khi `payment.succeeded` phải idempotent (cùng `payment_id` chỉ cộng một lần) — unique `(payment_id)` trong bảng processed + cùng tx với cập nhật điểm.\n:::",
-          "translated": true
+          "translated": true,
+          "difficulty": "hard"
         },
         {
-          "id": "8.10",
-          "lvl": "hard",
+          "id": "08-message-queue.reliability-delivery-semantics.q7",
           "q": "Outbox pattern với message queue — vì sao cần?",
-          "a": "<figure class='dgm'><svg viewBox='0 0 680 210' xmlns='http://www.w3.org/2000/svg' font-family='IBM Plex Mono, monospace' font-size='11' text-anchor='middle'>\n<rect x='30' y='40' width='190' height='110' rx='8' fill='#E4F1EB' stroke='#0B6E4F'/>\n<text x='125' y='32' fill='#085239' font-weight='600'>1 LOCAL TRANSACTION</text>\n<rect x='48' y='58' width='154' height='36' rx='5' fill='#fff' stroke='#42536C'/><text x='125' y='80' fill='#14233A'>UPDATE wallet</text>\n<rect x='48' y='102' width='154' height='36' rx='5' fill='#fff' stroke='#42536C'/><text x='125' y='124' fill='#14233A'>INSERT outbox(event)</text>\n<rect x='290' y='70' width='120' height='50' rx='6' fill='#E7EAF6' stroke='#3D4E8F'/><text x='350' y='90' fill='#3D4E8F'>Publisher</text><text x='350' y='106' fill='#42536C'>poll / CDC</text>\n<rect x='470' y='70' width='90' height='50' rx='6' fill='#fff' stroke='#42536C'/><text x='515' y='98' fill='#14233A'>Broker</text>\n<rect x='590' y='70' width='80' height='50' rx='6' fill='#F6E8E5' stroke='#AE4536'/><text x='630' y='90' fill='#7d2f24'>Consumer</text><text x='630' y='106' fill='#AE4536'>idempotent</text>\n<g stroke='#42536C' stroke-width='1.6' marker-end='url(#ar7)'>\n<line x1='220' y1='95' x2='288' y2='95'/><line x1='410' y1='95' x2='468' y2='95'/><line x1='560' y1='95' x2='588' y2='95'/></g>\n<text x='340' y='180' fill='#AE4536'>Nguyên tử DB&#8596;event (không dual-write) · at-least-once &#8594; consumer phải dedup</text>\n<defs><marker id='ar7' markerWidth='9' markerHeight='9' refX='7' refY='3' orient='auto'><path d='M0,0 L7,3 L0,6 z' fill='#42536C'/></marker></defs>\n</svg></figure>\n\n[[r:Dual write]] (ghi DB rồi publish) không nguyên tử → mất đồng bộ nếu một bên fail.\n\n[[g:Outbox]]: ghi event vào bảng outbox *cùng transaction* với thay đổi nghiệp vụ; publisher riêng (polling hoặc CDC/Debezium) đọc outbox, publish, đánh dấu đã gửi.\n\n<pre><code>BEGIN;\n  <span class=\"k\">UPDATE</span> wallet <span class=\"k\">SET</span> balance=balance-<span class=\"n\">100</span> <span class=\"k\">WHERE</span> id=?;\n  <span class=\"k\">INSERT INTO</span> outbox(type,payload,status) <span class=\"k\">VALUES</span>(<span class=\"s\">'DEBITED'</span>,?,<span class=\"s\">'PENDING'</span>);\nCOMMIT;  <span class=\"c\">-- publisher -> broker -> mark SENT (at-least-once)</span></code></pre>\n\nKết hợp [[g:Publisher Confirms]] (broker nhận) + [[g:Outbox]] (nguyên tử DB↔phát) mới kín kẽ.\n\n:::deep\n- dual-write (ghi DB rồi publish broker tách rời) KHÔNG nguyên tử → crash giữa hai bước làm lệch (DB nói chuyển tiền nhưng event không phát, hoặc ngược lại)\n- [[g:Outbox]]: ghi event vào bảng outbox *cùng transaction* (nguyên tử DB-local); publisher riêng (polling hoặc CDC/Debezium đọc binlog) phát ra broker + đánh dấu SENT (at-least-once → consumer idempotent)\n\nOTA: khi booking chuyển PAID, ghi state + outbox 'PaymentSucceeded' trong một tx → publisher phát sang ticketing/notification/loyalty; [[r:không bao giờ 'ghi DB xong rồi gọi Kafka' trực tiếp trong code nghiệp vụ]].\n\n- Phía domain của cùng một bảng outbox: cái phát ra ngoài là [[b:integration event]] — hợp đồng công khai, phải versioning — khác domain event nội bộ (24.7).\n:::",
-          "translated": true
+          "a": "<figure class='dgm'><svg viewBox='0 0 680 210' xmlns='http://www.w3.org/2000/svg' font-family='IBM Plex Mono, monospace' font-size='11' text-anchor='middle'>\n<rect x='30' y='40' width='190' height='110' rx='8' fill='#E4F1EB' stroke='#0B6E4F'/>\n<text x='125' y='32' fill='#085239' font-weight='600'>1 LOCAL TRANSACTION</text>\n<rect x='48' y='58' width='154' height='36' rx='5' fill='#fff' stroke='#42536C'/><text x='125' y='80' fill='#14233A'>UPDATE wallet</text>\n<rect x='48' y='102' width='154' height='36' rx='5' fill='#fff' stroke='#42536C'/><text x='125' y='124' fill='#14233A'>INSERT outbox(event)</text>\n<rect x='290' y='70' width='120' height='50' rx='6' fill='#E7EAF6' stroke='#3D4E8F'/><text x='350' y='90' fill='#3D4E8F'>Publisher</text><text x='350' y='106' fill='#42536C'>poll / CDC</text>\n<rect x='470' y='70' width='90' height='50' rx='6' fill='#fff' stroke='#42536C'/><text x='515' y='98' fill='#14233A'>Broker</text>\n<rect x='590' y='70' width='80' height='50' rx='6' fill='#F6E8E5' stroke='#AE4536'/><text x='630' y='90' fill='#7d2f24'>Consumer</text><text x='630' y='106' fill='#AE4536'>idempotent</text>\n<g stroke='#42536C' stroke-width='1.6' marker-end='url(#ar7)'>\n<line x1='220' y1='95' x2='288' y2='95'/><line x1='410' y1='95' x2='468' y2='95'/><line x1='560' y1='95' x2='588' y2='95'/></g>\n<text x='340' y='180' fill='#AE4536'>Nguyên tử DB&#8596;event (không dual-write) · at-least-once &#8594; consumer phải dedup</text>\n<defs><marker id='ar7' markerWidth='9' markerHeight='9' refX='7' refY='3' orient='auto'><path d='M0,0 L7,3 L0,6 z' fill='#42536C'/></marker></defs>\n</svg></figure>\n\n[[r:Dual write]] (ghi DB rồi publish) không nguyên tử → mất đồng bộ nếu một bên fail.\n\n[[g:Outbox]]: ghi event vào bảng outbox *cùng transaction* với thay đổi nghiệp vụ; publisher riêng (polling hoặc CDC/Debezium) đọc outbox, publish, đánh dấu đã gửi.\n\n<pre><code>BEGIN;\n  <span class=\"k\">UPDATE</span> wallet <span class=\"k\">SET</span> balance=balance-<span class=\"n\">100</span> <span class=\"k\">WHERE</span> id=?;\n  <span class=\"k\">INSERT INTO</span> outbox(type,payload,status) <span class=\"k\">VALUES</span>(<span class=\"s\">'DEBITED'</span>,?,<span class=\"s\">'PENDING'</span>);\nCOMMIT;  <span class=\"c\">-- publisher -> broker -> mark SENT (at-least-once)</span></code></pre>\n\nKết hợp [[g:Publisher Confirms]] (broker nhận) + [[g:Outbox]] (nguyên tử DB↔phát) mới kín kẽ.\n\n:::deep\n- dual-write (ghi DB rồi publish broker tách rời) KHÔNG nguyên tử → crash giữa hai bước làm lệch (DB nói chuyển tiền nhưng event không phát, hoặc ngược lại)\n- [[g:Outbox]]: ghi event vào bảng outbox *cùng transaction* (nguyên tử DB-local); publisher riêng (polling hoặc CDC/Debezium đọc binlog) phát ra broker + đánh dấu SENT (at-least-once → consumer idempotent)\n\nOTA: khi booking chuyển PAID, ghi state + outbox 'PaymentSucceeded' trong một tx → publisher phát sang ticketing/notification/loyalty; [[r:không bao giờ 'ghi DB xong rồi gọi Kafka' trực tiếp trong code nghiệp vụ]].\n\n- Phía domain của cùng một bảng outbox: cái phát ra ngoài là [[b:integration event]] — hợp đồng công khai, phải versioning — khác domain event nội bộ (24-domain-driven-design.tactical-modelling-it.q3).\n:::",
+          "translated": true,
+          "difficulty": "hard"
         },
         {
-          "id": "8.11",
-          "lvl": "ext",
+          "id": "08-message-queue.reliability-delivery-semantics.q8",
           "q": "Event-driven architecture & event sourcing — khái niệm và đánh đổi?",
-          "a": "- [[b:Event-driven]]: service giao tiếp qua event async → decoupling, scale, resilient\n- [[b:Event sourcing]]: lưu *chuỗi event* là nguồn sự thật thay vì state hiện tại; state = replay event\n\n**Lợi:** audit hoàn hảo, time-travel, rebuild view (rất hợp fintech/ledger).\n\n**Đánh đổi:** phức tạp, eventual consistency, event versioning, cần [[o:CQRS]] để đọc hiệu quả.\n\n:::deep\n- [[b:event-driven]] cho decoupling/scale/resilience nhưng [[r:khó suy luận luồng tổng thể]] (logic phân tán khắp consumer), eventual consistency, cần observability mạnh (trace xuyên event)\n- [[b:event sourcing]]: state = replay → audit hoàn hảo, time-travel, rebuild read model; đổi lại phức tạp (event versioning/upcasting, snapshot để replay nhanh, cần CQRS)\n\nOTA: ledger &amp; vòng đời booking là ứng viên tốt (mọi thay đổi là event bất biến → đối soát/audit/rebuild dễ); [[r:đừng event-source mọi thứ]] — CRUD đơn giản event-source là over-engineering.\n\n- Phân biệt domain event (nội bộ, đổi thoải mái) với integration event (hợp đồng công khai) trước khi chọn event-driven; nhầm hai cái là nguồn coupling ngầm khó gỡ nhất (24.7).\n:::",
-          "translated": true
+          "a": "- [[b:Event-driven]]: service giao tiếp qua event async → decoupling, scale, resilient\n- [[b:Event sourcing]]: lưu *chuỗi event* là nguồn sự thật thay vì state hiện tại; state = replay event\n\n**Lợi:** audit hoàn hảo, time-travel, rebuild view (rất hợp fintech/ledger).\n\n**Đánh đổi:** phức tạp, eventual consistency, event versioning, cần [[o:CQRS]] để đọc hiệu quả.\n\n:::deep\n- [[b:event-driven]] cho decoupling/scale/resilience nhưng [[r:khó suy luận luồng tổng thể]] (logic phân tán khắp consumer), eventual consistency, cần observability mạnh (trace xuyên event)\n- [[b:event sourcing]]: state = replay → audit hoàn hảo, time-travel, rebuild read model; đổi lại phức tạp (event versioning/upcasting, snapshot để replay nhanh, cần CQRS)\n\nOTA: ledger &amp; vòng đời booking là ứng viên tốt (mọi thay đổi là event bất biến → đối soát/audit/rebuild dễ); [[r:đừng event-source mọi thứ]] — CRUD đơn giản event-source là over-engineering.\n\n- Phân biệt domain event (nội bộ, đổi thoải mái) với integration event (hợp đồng công khai) trước khi chọn event-driven; nhầm hai cái là nguồn coupling ngầm khó gỡ nhất (24-domain-driven-design.tactical-modelling-it.q3).\n:::",
+          "translated": true,
+          "difficulty": "ext"
         }
       ]
     }

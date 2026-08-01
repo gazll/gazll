@@ -1,7 +1,8 @@
 {
   "topics": {
     "1": {
-      "group": "core",
+      "topic_type": "core",
+      "key": "01-java-core-jvm",
       "vi": {
         "label": "Java Core & JVM",
         "title": "Java Core & JVM internals",
@@ -30,7 +31,8 @@
       }
     },
     "2": {
-      "group": "core",
+      "topic_type": "core",
+      "key": "02-java-8-25-java-vs-go",
       "vi": {
         "label": "Java 8→25 & Java vs Go",
         "title": "Tiến hoá Java 8 → 25 (LTS) & so kè với Go",
@@ -61,7 +63,8 @@
       }
     },
     "3": {
-      "group": "core",
+      "topic_type": "core",
+      "key": "03-spring-boot-deep-build",
       "vi": {
         "label": "Spring Boot deep + build",
         "title": "Spring & Spring Boot chuyên sâu + Maven/Gradle",
@@ -96,7 +99,8 @@
       }
     },
     "4": {
-      "group": "design",
+      "topic_type": "design",
+      "key": "04-rest-grpc-webflux",
       "vi": {
         "label": "REST/gRPC & WebFlux",
         "title": "API protocols (REST/gRPC) & lập trình reactive (WebFlux)",
@@ -127,7 +131,8 @@
       }
     },
     "5": {
-      "group": "data",
+      "topic_type": "data",
+      "key": "05-db-core-index-lock",
       "vi": {
         "label": "DB core: index & lock",
         "title": "Database core — index internals, transaction, locking",
@@ -158,7 +163,8 @@
       }
     },
     "6": {
-      "group": "data",
+      "topic_type": "data",
+      "key": "06-db-scaling",
       "vi": {
         "label": "DB scaling",
         "title": "Database scaling — replication, sharding, partitioning",
@@ -189,7 +195,8 @@
       }
     },
     "7": {
-      "group": "data",
+      "topic_type": "data",
+      "key": "07-sql-nosql-db-engines",
       "vi": {
         "label": "SQL/NoSQL & DB engines",
         "title": "SQL vs NoSQL — Oracle / MySQL / PostgreSQL / MongoDB",
@@ -218,7 +225,8 @@
       }
     },
     "8": {
-      "group": "data",
+      "topic_type": "data",
+      "key": "08-message-queue",
       "vi": {
         "label": "Message queue",
         "title": "Message queue — RabbitMQ vs Kafka",
@@ -249,7 +257,8 @@
       }
     },
     "9": {
-      "group": "design",
+      "topic_type": "design",
+      "key": "09-distributed-tx-fintech",
       "vi": {
         "label": "Distributed tx (fintech)",
         "title": "Transaction giữa các service (fintech)",
@@ -282,7 +291,8 @@
       }
     },
     "10": {
-      "group": "design",
+      "topic_type": "design",
+      "key": "10-system-design-rate-limit",
       "vi": {
         "label": "System design + rate limit",
         "title": "System design nền tảng, xử lý tải cao & rate limiting",
@@ -313,7 +323,8 @@
       }
     },
     "11": {
-      "group": "design",
+      "topic_type": "design",
+      "key": "11-system-design-cases",
       "vi": {
         "label": "System design cases",
         "title": "System design — các đề thực chiến",
@@ -344,7 +355,8 @@
       }
     },
     "12": {
-      "group": "design",
+      "topic_type": "design",
+      "key": "12-architecture-patterns",
       "vi": {
         "label": "Architecture & patterns",
         "title": "Software architecture: DDD, Clean, Hexagonal & design patterns",
@@ -383,7 +395,8 @@
       }
     },
     "13": {
-      "group": "platform",
+      "topic_type": "platform",
+      "key": "13-security-oauth2",
       "vi": {
         "label": "Security & OAuth2",
         "title": "Security: OAuth2, OIDC, JWT & thiết kế hệ auth",
@@ -416,7 +429,8 @@
       }
     },
     "14": {
-      "group": "platform",
+      "topic_type": "platform",
+      "key": "14-devops-k8s-best-practices",
       "vi": {
         "label": "DevOps · K8s · best practices",
         "title": "DevOps & hạ tầng: Docker, K8s, Nginx, logging + best practices 2026",
@@ -449,7 +463,8 @@
       }
     },
     "15": {
-      "group": "core",
+      "topic_type": "core",
+      "key": "15-network-i-o-models",
       "vi": {
         "label": "Network & I/O models",
         "title": "Network, giao thức & mô hình xử lý I/O",
@@ -482,7 +497,8 @@
       }
     },
     "16": {
-      "group": "algorithm",
+      "topic_type": "algorithm",
+      "key": "16-project-concurrency-whiteboard",
       "vi": {
         "label": "Project · concurrency · whiteboard",
         "title": "Dự án OTA/booking, bài toán concurrency–realtime & whiteboard",
@@ -513,7 +529,8 @@
       }
     },
     "17": {
-      "group": "design",
+      "topic_type": "design",
+      "key": "17-rest-api-design",
       "vi": {
         "label": "Thiết kế REST API",
         "title": "Thiết kế REST API — resource, hợp đồng và vòng đời",
@@ -544,7 +561,8 @@
       }
     },
     "18": {
-      "group": "data",
+      "topic_type": "data",
+      "key": "18-query-optimization",
       "vi": {
         "label": "Tối ưu query",
         "title": "Tối ưu query — đọc plan, viết lại, và giữ cho nó không chậm lại",
@@ -575,7 +593,8 @@
       }
     },
     "19": {
-      "group": "algorithm",
+      "topic_type": "algorithm",
+      "key": "19-dsa-leetcode",
       "vi": {
         "label": "DSA & LeetCode",
         "title": "DSA & LeetCode — dạng bài và khung trình bày",
@@ -606,7 +625,8 @@
       }
     },
     "20": {
-      "group": "platform",
+      "topic_type": "platform",
+      "key": "20-observability-sre",
       "vi": {
         "label": "Observability & SRE",
         "title": "Observability & SRE — đo, cảnh báo và xử lý sự cố",
@@ -637,7 +657,8 @@
       }
     },
     "21": {
-      "group": "platform",
+      "topic_type": "platform",
+      "key": "21-linux-production-debug",
       "vi": {
         "label": "Linux & production debug",
         "title": "Linux & production troubleshooting — chẩn đoán khi đang cháy",
@@ -670,7 +691,8 @@
       }
     },
     "22": {
-      "group": "algorithm",
+      "topic_type": "algorithm",
+      "key": "22-low-level-design-ood",
       "vi": {
         "label": "Low-level design / OOD",
         "title": "Low-level design — thiết kế class và viết ra code",
@@ -701,7 +723,8 @@
       }
     },
     "23": {
-      "group": "algorithm",
+      "topic_type": "algorithm",
+      "key": "23-java-concurrency-coding",
       "vi": {
         "label": "Java concurrency coding",
         "title": "Java concurrency coding — bài đồng bộ viết ra code",
@@ -732,7 +755,8 @@
       }
     },
     "24": {
-      "group": "design",
+      "topic_type": "design",
+      "key": "24-domain-driven-design",
       "vi": {
         "label": "Domain-Driven Design",
         "title": "Domain-Driven Design — chia miền và mô hình hoá",
@@ -761,34 +785,38 @@
           "ACL"
         ]
       }
-    }
-  },
-  "microservices": {
-    "vi": {
-      "title": "Microservices at Scale — Technical Mastery Track",
-      "intro": "Mười nhóm vấn đề hay \"cắn\" nhất khi hệ thống lên hàng triệu request, tailored cho fintech / airline booking. Mỗi câu có phần trả lời chính và khối Đào sâu senior.",
-      "tags": [
-        "Cascading failure",
-        "Connection pool",
-        "Outbox / Saga",
-        "Kafka / RabbitMQ",
-        "Caching",
-        "Idempotency",
-        "System design"
-      ]
     },
-    "en": {
-      "title": "Microservices at Scale — Technical Mastery Track",
-      "intro": "The ten problem areas that bite hardest once a system reaches millions of requests, tailored to fintech and airline booking. Every question has a main answer plus a senior deep-dive block.",
-      "tags": [
-        "Cascading failure",
-        "Connection pool",
-        "Outbox / Saga",
-        "Kafka / RabbitMQ",
-        "Caching",
-        "Idempotency",
-        "System design"
-      ]
+    "25": {
+      "topic_type": "microservice",
+      "key": "25-microservice",
+      "vi": {
+        "title": "Microservices at Scale — Technical Mastery Track",
+        "intro": "Mười nhóm vấn đề hay \"cắn\" nhất khi hệ thống lên hàng triệu request, tailored cho fintech / airline booking. Mỗi câu có phần trả lời chính và khối Đào sâu senior.",
+        "tags": [
+          "Cascading failure",
+          "Connection pool",
+          "Outbox / Saga",
+          "Kafka / RabbitMQ",
+          "Caching",
+          "Idempotency",
+          "System design"
+        ],
+        "label": "Microservices at Scale — Technical Mastery Track"
+      },
+      "en": {
+        "title": "Microservices at Scale — Technical Mastery Track",
+        "intro": "The ten problem areas that bite hardest once a system reaches millions of requests, tailored to fintech and airline booking. Every question has a main answer plus a senior deep-dive block.",
+        "tags": [
+          "Cascading failure",
+          "Connection pool",
+          "Outbox / Saga",
+          "Kafka / RabbitMQ",
+          "Caching",
+          "Idempotency",
+          "System design"
+        ],
+        "label": "Microservices at Scale — Technical Mastery Track"
+      }
     }
   }
 }

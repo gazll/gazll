@@ -1,8 +1,14 @@
-/* data/manifest.json lists topics + the microservices entry and points at
-   their content files; data/meta.json holds label/title/intro/tags for both
-   languages. Per-topic *.en.json overlays are optional and partial: whatever
-   they omit falls back to Vietnamese, so English can grow one item at a time
-   without ever leaving a hole in the page. */
+/* data/manifest.json lists every topic (including the Microservices track,
+   topic_type "microservice") and points at its content file; data/meta.json
+   holds label/title/intro/tags for both languages, keyed by the language
+   they actually hold. Each topic's base file (data/topics/NN-slug.json) is
+   English by default; the Vietnamese original always exists at the same
+   path with a `.vi.json` suffix and is the complete, ground-truth content.
+   An item's `translated` flag says whether its text in that file is
+   authentically written in that file's language — the EN base carries the
+   Vietnamese text verbatim (translated: false) until someone actually
+   translates it, so English can be filled in one item at a time without
+   ever leaving a hole in the page. */
 
 const LANG_KEY = 'gazl.contentLang';
 const DEFAULT_LANG = 'en';
@@ -16,7 +22,9 @@ async function fetchJson(path) {
   return res.json();
 }
 
-/** Absent file (no translation yet) is not fatal — it just means no English. */
+/** The .vi.json companion always exists for every topic — this is only
+    optional in the sense that a broken/missing file degrades instead of
+    throwing, not because translation is sparse (VI is always complete). */
 async function fetchOptionalJson(path) {
   try {
     const res = await fetch(path, { cache: 'no-cache' });
@@ -27,32 +35,23 @@ async function fetchOptionalJson(path) {
   }
 }
 
-/** Overlaying in place would destroy the source, so VI could never return. */
-function cloneGroups(groups) {
-  return (groups || []).map(s => ({ ...s, items: (s.items || []).map(it => ({ ...it })) }));
+function cloneSections(sections) {
+  return (sections || []).map(s => ({ ...s, items: (s.items || []).map(it => ({ ...it })) }));
 }
 
 function applyMeta(target, metaEntry, lang) {
   if (!metaEntry) return;
-  const vi = metaEntry.vi || {};
-  const en = lang !== 'vi' ? metaEntry.en : null;
-  const src = { ...vi, ...(en || {}) };
-  for (const k of ['label', 'title', 'intro']) if (src[k]) target[k] = src[k];
-  if (Array.isArray(src.tags) && src.tags.length) target.tags = [...src.tags];
+  const src = metaEntry[lang] || metaEntry.en || metaEntry.vi || {};
+  const fallback = metaEntry.en || metaEntry.vi || {};
+  for (const k of ['label', 'title', 'intro']) target[k] = src[k] || fallback[k];
+  const tags = (Array.isArray(src.tags) && src.tags.length) ? src.tags : fallback.tags;
+  if (Array.isArray(tags)) target.tags = [...tags];
 }
 
-/** groups = a day's `sections` or micro's `chapters` — same shape either way. */
-function overlayGroups(groups, overlayGroupTitles, overlayItems) {
-  groups.forEach((grp, i) => {
-    const t = Array.isArray(overlayGroupTitles) ? overlayGroupTitles[i] : null;
-    if (t) grp.title = t;
-    for (const it of grp.items || []) {
-      const oi = overlayItems && overlayItems[it.id];
-      if (!oi) continue;
-      if (oi.q) it.q = oi.q;
-      if (oi.a) { it.a = oi.a; it.translated = true; }
-    }
-  });
+/** Whether at least one item in `sections` is authentically written in the
+    requested language — drives whether the header switch can offer it. */
+function hasRealTranslation(sections) {
+  return (sections || []).some(s => (s.items || []).some(it => it.translated));
 }
 
 function readLang() {
@@ -64,73 +63,61 @@ function readLang() {
 }
 
 export const Content = {
-  days: [],
-  micro: null,
+  topics: [],
   loaded: false,
   error: null,
 
   lang: readLang(),
 
-  /** Manifest + meta + raw per-topic content, kept so switching language needs no refetch. */
+  /** Manifest + meta + both language files, kept so switching language needs no refetch. */
   _manifest: null,
   _meta: null,
-  _topicContent: null,
-  _microContent: null,
-  _enOverlaysTried: false,
-  _topicEnOverlays: null,
-  _microEnOverlay: null,
+  _en: null,
+  _vi: null,
 
   async load() {
     if (this.loaded) return this;
     this._manifest = await fetchJson('data/manifest.json');
     this._meta = await fetchJson('data/meta.json');
-    const topicRows = this._manifest.topics || [];
-    const contents = await Promise.all(topicRows.map(row => fetchJson('data/' + row.file)));
-    this._topicContent = new Map(topicRows.map((row, i) => [row.n, { row, content: contents[i] }]));
-    this._microContent = await fetchJson('data/' + this._manifest.microservices.file);
-    if (this.lang !== 'vi') await this._loadEnOverlays();
+    const rows = this._manifest.topics || [];
+
+    const [enContents, viContents] = await Promise.all([
+      Promise.all(rows.map(row => fetchJson('data/' + row.file))),
+      Promise.all(rows.map(row => fetchOptionalJson('data/' + row.file.replace(/\.json$/, '.vi.json'))))
+    ]);
+
+    this._en = new Map(rows.map((row, i) => [row.n, { row, content: enContents[i] }]));
+    this._vi = new Map(rows.map((row, i) => [row.n, viContents[i]]));
+
     this._apply();
     this.loaded = true;
     return this;
   },
 
-  async _loadEnOverlays() {
-    if (this._enOverlaysTried) return;
-    this._enOverlaysTried = true;
-    const topicRows = this._manifest.topics || [];
-    const overlays = await Promise.all(topicRows.map(row => {
-      const enFile = row.file.replace(/\.json$/, '.en.json');
-      return fetchOptionalJson('data/' + enFile);
-    }));
-    this._topicEnOverlays = new Map(topicRows.map((row, i) => [row.n, overlays[i]]));
-    const microEnFile = this._manifest.microservices.file.replace(/\.json$/, '.en.json');
-    this._microEnOverlay = await fetchOptionalJson('data/' + microEnFile);
-  },
-
   _apply() {
-    const days = [];
-    for (const [n, { row, content }] of this._topicContent) {
-      const day = { n, group: row.group, tags: [...(content.tags || [])], sections: cloneGroups(content.sections) };
-      applyMeta(day, this._meta.topics[String(n)], this.lang);
-      if (this.lang !== 'vi' && this._topicEnOverlays) {
-        const overlay = this._topicEnOverlays.get(n);
-        if (overlay) overlayGroups(day.sections, overlay.sections, overlay.items);
-      }
-      days.push(day);
+    const topics = [];
+    for (const [n, { row, content: en }] of this._en) {
+      const vi = this._vi.get(n);
+      const sections = cloneSections(this.lang === 'vi' && vi ? vi.sections : en.sections);
+      const topic = {
+        n,
+        topic_type: row.topic_type,
+        tags: [...(en.tags || [])],
+        sections,
+        hasEn: hasRealTranslation(en.sections),
+        hasVi: true // the .vi.json companion is always the complete source
+      };
+      applyMeta(topic, this._meta.topics[String(n)], this.lang);
+      topics.push(topic);
     }
-    days.sort((a, b) => a.n - b.n);
-    this.days = days;
-
-    const micro = { tags: [...(this._microContent.tags || [])], chapters: cloneGroups(this._microContent.chapters) };
-    applyMeta(micro, this._meta.microservices, this.lang);
-    if (this.lang !== 'vi' && this._microEnOverlay) {
-      overlayGroups(micro.chapters, this._microEnOverlay.chapters, this._microEnOverlay.items);
-    }
-    this.micro = micro;
+    topics.sort((a, b) => a.n - b.n);
+    this.topics = topics;
   },
 
+  /** True when the item's text is not authentically written in the current
+      language — i.e. still showing the other language's content verbatim. */
   isFallback(item) {
-    return this.lang === 'en' && !item.translated;
+    return !item.translated;
   },
 
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
@@ -139,28 +126,27 @@ export const Content = {
     if (!LANGS.includes(lang) || lang === this.lang) return;
     this.lang = lang;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
-    if (lang !== 'vi') await this._loadEnOverlays();
     this._apply();
     for (const fn of listeners) { try { fn(this); } catch (e) {} }
   },
 
-  /** Track items only — the denominator of the progress ring. */
-  get dayItemIds() {
+  /** All items across every topic — the denominator of the progress ring. */
+  get topicItemIds() {
     const s = new Set();
-    for (const d of this.days) for (const sec of d.sections) for (const it of sec.items) s.add(it.id);
+    for (const t of this.topics) for (const sec of t.sections) for (const it of sec.items) s.add(it.id);
     return s;
   },
 
-  get totalDayItems() {
-    return this.days.reduce((s, d) => s + d.sections.reduce((a, sec) => a + sec.items.length, 0), 0);
+  get totalTopicItems() {
+    return this.topics.reduce((s, t) => s + t.sections.reduce((a, sec) => a + sec.items.length, 0), 0);
   },
 
-  dayCounts() {
-    return this.days.map(d => ({
-      n: d.n,
-      label: d.label,
-      group: d.group || '',
-      ids: d.sections.flatMap(sec => sec.items.map(it => it.id))
+  topicCounts() {
+    return this.topics.map(t => ({
+      n: t.n,
+      label: t.label,
+      topic_type: t.topic_type || '',
+      ids: t.sections.flatMap(sec => sec.items.map(it => it.id))
     }));
   }
 };

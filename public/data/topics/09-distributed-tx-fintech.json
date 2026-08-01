@@ -1,50 +1,49 @@
 {
-  "n": 9,
   "sections": [
     {
       "title": "Distributed transaction patterns",
       "items": [
         {
-          "id": "9.1",
-          "lvl": "hard",
+          "id": "09-distributed-tx-fintech.distributed-transaction-patterns.q1",
           "q": "Vì sao tránh 2PC trong micro-services?",
           "a": "2PC (prepare → commit qua coordinator) bị:\n- [[r:blocking]]: participant khoá tài nguyên từ prepare tới commit; coordinator chết → kẹt in-doubt vô hạn\n- [[r:availability kém]]: một participant chậm treo cả giao dịch\n- [[r:không scale]]: giữ lock xuyên mạng, coupling chặt\n\n:::tip Chốt\nhệ phân tán hiện đại đổi 'atomic phân tán' lấy [[g:eventual consistency có kiểm soát]] bằng Saga + Outbox + idempotency.\n:::\n\n:::deep\n- pha prepare giữ *lock tài nguyên* tới commit (chặn giao dịch khác); coordinator chết sau prepare → participant kẹt [[r:in-doubt]] (giữ lock vô hạn, không tự quyết) → cần can thiệp tay\n- một participant chậm/lỗi treo cả giao dịch (availability kém, không scale)\n\n2PC chỉ còn hợp trong phạm vi hẹp, đồng nhất (XA giữa DB+JMS trong một service), [[r:không cho luồng nghiệp vụ dài xuyên nhiều service]] như booking OTA.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "9.2",
-          "lvl": "hard",
+          "id": "09-distributed-tx-fintech.distributed-transaction-patterns.q2",
           "q": "Saga: choreography vs orchestration? Compensating transaction?",
           "a": "<figure class='dgm'><svg viewBox='0 0 680 260' xmlns='http://www.w3.org/2000/svg' font-family='IBM Plex Mono, monospace' font-size='11' text-anchor='middle'>\n<text x='170' y='20' fill='#085239' font-weight='600'>ORCHESTRATION</text>\n<rect x='110' y='34' width='120' height='34' rx='6' fill='#E7EAF6' stroke='#3D4E8F'/><text x='170' y='55' fill='#3D4E8F'>Orchestrator</text>\n<g><rect x='30' y='110' width='90' height='30' rx='5' fill='#fff' stroke='#42536C'/><text x='75' y='130'>Debit</text>\n<rect x='130' y='110' width='90' height='30' rx='5' fill='#fff' stroke='#42536C'/><text x='175' y='130'>PSP</text>\n<rect x='230' y='110' width='80' height='30' rx='5' fill='#fff' stroke='#42536C'/><text x='270' y='130'>Credit</text></g>\n<g stroke='#3D4E8F' stroke-width='1.4' marker-end='url(#ar6)'><line x1='150' y1='68' x2='80' y2='108'/><line x1='170' y1='68' x2='175' y2='108'/><line x1='195' y1='68' x2='265' y2='108'/></g>\n<text x='170' y='165' fill='#42536C'>1 nhạc trưởng điều phối &#8594; luồng rõ, dễ giám sát</text>\n<line x1='350' y1='30' x2='350' y2='190' stroke='#C6CFDC' stroke-dasharray='4 4'/>\n<text x='520' y='20' fill='#7d2f24' font-weight='600'>CHOREOGRAPHY</text>\n<g><rect x='400' y='80' width='80' height='30' rx='5' fill='#F6E8E5' stroke='#AE4536'/><text x='440' y='100'>Debit</text>\n<rect x='500' y='80' width='80' height='30' rx='5' fill='#F6E8E5' stroke='#AE4536'/><text x='540' y='100'>PSP</text>\n<rect x='600' y='80' width='60' height='30' rx='5' fill='#F6E8E5' stroke='#AE4536'/><text x='630' y='100'>Credit</text></g>\n<g stroke='#AE4536' stroke-width='1.4' marker-end='url(#ar6b)'><line x1='480' y1='95' x2='498' y2='95'/><line x1='580' y1='95' x2='598' y2='95'/></g>\n<text x='440' y='128' fill='#AE4536'>event</text><text x='540' y='128' fill='#AE4536'>event</text>\n<text x='525' y='165' fill='#42536C'>service phản ứng theo event &#8594; loose coupling</text>\n<text x='340' y='220' fill='#085239'>Lỗi 1 bước &#8594; chạy COMPENSATING tx (bút toán đảo, phải idempotent) thay vì rollback thật</text>\n<defs><marker id='ar6' markerWidth='8' markerHeight='8' refX='7' refY='3' orient='auto'><path d='M0,0 L7,3 L0,6 z' fill='#3D4E8F'/></marker>\n<marker id='ar6b' markerWidth='8' markerHeight='8' refX='7' refY='3' orient='auto'><path d='M0,0 L7,3 L0,6 z' fill='#AE4536'/></marker></defs>\n</svg></figure>\n\n[[g:Saga]]: chia giao dịch dài thành chuỗi local transaction; bước fail → chạy [[g:compensating transaction]] (hoàn tác nghiệp vụ, vd bút toán đảo — không phải rollback DB thật).\n\n- [[b:Choreography]]: service phát/nghe event, không nhạc trưởng — loose coupling nhưng luồng khó nhìn tổng thể\n- [[b:Orchestration]]: orchestrator điều phối từng bước — luồng rõ, dễ giám sát/xử lý lỗi, đổi lại có điểm tập trung\n\nCompensation phải [[o:idempotent]] và chạy được nhiều lần.\n\n:::warn Lưu ý\nSaga = eventual consistency → có khoảng 'không cân'. UI/nghiệp vụ phải chấp nhận trạng thái PENDING, [[r:không cho hành động dựa trên số dư chưa chốt]].\n:::\n\n:::deep\n- cần [[g:saga log/state store]] (orchestrator lưu bước đang ở đâu) để khôi phục sau crash và tiếp tục; mỗi bước + compensation phải idempotent\n- compensation không phải lúc nào cũng khả thi (đã gửi email/issue vé thật) → dùng [[o:pivot transaction]]: sắp các bước 'không hoàn tác được' về sau cùng, sau pivot chỉ tiến không lùi\n\nOTA: book ghế (giữ, hoàn tác được) → charge tiền (hoàn tác = refund) → issue vé qua GDS (khó hoàn tác → đặt cuối). Trạng thái trung gian lộ UI là PENDING/PROCESSING.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "9.3",
-          "lvl": "hard",
+          "id": "09-distributed-tx-fintech.distributed-transaction-patterns.q3",
           "q": "Outbox pattern và vì sao dual-write nguy hiểm?",
-          "a": "<figure class='dgm'><svg viewBox='0 0 680 210' xmlns='http://www.w3.org/2000/svg' font-family='IBM Plex Mono, monospace' font-size='11' text-anchor='middle'>\n<rect x='30' y='40' width='190' height='110' rx='8' fill='#E4F1EB' stroke='#0B6E4F'/>\n<text x='125' y='32' fill='#085239' font-weight='600'>1 LOCAL TRANSACTION</text>\n<rect x='48' y='58' width='154' height='36' rx='5' fill='#fff' stroke='#42536C'/><text x='125' y='80' fill='#14233A'>UPDATE wallet</text>\n<rect x='48' y='102' width='154' height='36' rx='5' fill='#fff' stroke='#42536C'/><text x='125' y='124' fill='#14233A'>INSERT outbox(event)</text>\n<rect x='290' y='70' width='120' height='50' rx='6' fill='#E7EAF6' stroke='#3D4E8F'/><text x='350' y='90' fill='#3D4E8F'>Publisher</text><text x='350' y='106' fill='#42536C'>poll / CDC</text>\n<rect x='470' y='70' width='90' height='50' rx='6' fill='#fff' stroke='#42536C'/><text x='515' y='98' fill='#14233A'>Broker</text>\n<rect x='590' y='70' width='80' height='50' rx='6' fill='#F6E8E5' stroke='#AE4536'/><text x='630' y='90' fill='#7d2f24'>Consumer</text><text x='630' y='106' fill='#AE4536'>idempotent</text>\n<g stroke='#42536C' stroke-width='1.6' marker-end='url(#ar7_93)'>\n<line x1='220' y1='95' x2='288' y2='95'/><line x1='410' y1='95' x2='468' y2='95'/><line x1='560' y1='95' x2='588' y2='95'/></g>\n<text x='340' y='180' fill='#AE4536'>Nguyên tử DB&#8596;event (không dual-write) · at-least-once &#8594; consumer phải dedup</text>\n<defs><marker id='ar7_93' markerWidth='9' markerHeight='9' refX='7' refY='3' orient='auto'><path d='M0,0 L7,3 L0,6 z' fill='#42536C'/></marker></defs>\n</svg></figure>\n\n[[r:Dual write]] (ghi DB + publish broker tách rời) → một bên fail thì lệch: DB nói đã chuyển tiền nhưng service kia không nhận event.\n\n[[g:Outbox]]: ghi event vào bảng outbox *cùng transaction* với nghiệp vụ → nguyên tử; publisher (CDC/polling) đọc outbox và publish (at-least-once → consumer idempotent).\n\n:::tip Liên hệ nền bạn\nPublisher Confirms (broker nhận) + Outbox (nguyên tử DB↔phát) ghép lại mới kín kẽ.\n:::\n\n:::deep\n- dual-write nguy hiểm vì DB + broker/HTTP không có transaction chung → mất đồng bộ khi một bên fail, bug khó phát hiện (chỉ lộ khi lỗi mạng hiếm)\n- Outbox biến nó thành *một* ghi DB-local nguyên tử (state + event cùng tx), đẩy phần 'phát ra ngoài' sang publisher async (retry tới khi gửi được, đánh dấu SENT)\n\nOTA: [[r:tránh `save(booking); kafka.send(event)`]] — send fail sau commit thì ticketing không bao giờ biết booking PAID. Outbox + CDC (Debezium) là cách chuẩn để 'phát event đáng tin' mà không khoá nghiệp vụ chờ broker.\n\n- Chọn *cái gì* được phép chui vào outbox: integration event có hợp đồng công khai và versioning, không phải domain event nội bộ (24.7).\n:::",
-          "translated": false
+          "a": "<figure class='dgm'><svg viewBox='0 0 680 210' xmlns='http://www.w3.org/2000/svg' font-family='IBM Plex Mono, monospace' font-size='11' text-anchor='middle'>\n<rect x='30' y='40' width='190' height='110' rx='8' fill='#E4F1EB' stroke='#0B6E4F'/>\n<text x='125' y='32' fill='#085239' font-weight='600'>1 LOCAL TRANSACTION</text>\n<rect x='48' y='58' width='154' height='36' rx='5' fill='#fff' stroke='#42536C'/><text x='125' y='80' fill='#14233A'>UPDATE wallet</text>\n<rect x='48' y='102' width='154' height='36' rx='5' fill='#fff' stroke='#42536C'/><text x='125' y='124' fill='#14233A'>INSERT outbox(event)</text>\n<rect x='290' y='70' width='120' height='50' rx='6' fill='#E7EAF6' stroke='#3D4E8F'/><text x='350' y='90' fill='#3D4E8F'>Publisher</text><text x='350' y='106' fill='#42536C'>poll / CDC</text>\n<rect x='470' y='70' width='90' height='50' rx='6' fill='#fff' stroke='#42536C'/><text x='515' y='98' fill='#14233A'>Broker</text>\n<rect x='590' y='70' width='80' height='50' rx='6' fill='#F6E8E5' stroke='#AE4536'/><text x='630' y='90' fill='#7d2f24'>Consumer</text><text x='630' y='106' fill='#AE4536'>idempotent</text>\n<g stroke='#42536C' stroke-width='1.6' marker-end='url(#ar7_93)'>\n<line x1='220' y1='95' x2='288' y2='95'/><line x1='410' y1='95' x2='468' y2='95'/><line x1='560' y1='95' x2='588' y2='95'/></g>\n<text x='340' y='180' fill='#AE4536'>Nguyên tử DB&#8596;event (không dual-write) · at-least-once &#8594; consumer phải dedup</text>\n<defs><marker id='ar7_93' markerWidth='9' markerHeight='9' refX='7' refY='3' orient='auto'><path d='M0,0 L7,3 L0,6 z' fill='#42536C'/></marker></defs>\n</svg></figure>\n\n[[r:Dual write]] (ghi DB + publish broker tách rời) → một bên fail thì lệch: DB nói đã chuyển tiền nhưng service kia không nhận event.\n\n[[g:Outbox]]: ghi event vào bảng outbox *cùng transaction* với nghiệp vụ → nguyên tử; publisher (CDC/polling) đọc outbox và publish (at-least-once → consumer idempotent).\n\n:::tip Liên hệ nền bạn\nPublisher Confirms (broker nhận) + Outbox (nguyên tử DB↔phát) ghép lại mới kín kẽ.\n:::\n\n:::deep\n- dual-write nguy hiểm vì DB + broker/HTTP không có transaction chung → mất đồng bộ khi một bên fail, bug khó phát hiện (chỉ lộ khi lỗi mạng hiếm)\n- Outbox biến nó thành *một* ghi DB-local nguyên tử (state + event cùng tx), đẩy phần 'phát ra ngoài' sang publisher async (retry tới khi gửi được, đánh dấu SENT)\n\nOTA: [[r:tránh `save(booking); kafka.send(event)`]] — send fail sau commit thì ticketing không bao giờ biết booking PAID. Outbox + CDC (Debezium) là cách chuẩn để 'phát event đáng tin' mà không khoá nghiệp vụ chờ broker.\n\n- Chọn *cái gì* được phép chui vào outbox: integration event có hợp đồng công khai và versioning, không phải domain event nội bộ (24-domain-driven-design.tactical-modelling-it.q3).\n:::",
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "9.4",
-          "lvl": "hard",
+          "id": "09-distributed-tx-fintech.distributed-transaction-patterns.q4",
           "q": "TCC (Try-Confirm-Cancel) khác Saga thế nào?",
           "a": "TCC chia mỗi thao tác thành 3 pha:\n- [[b:Try]]: giữ chỗ/đặt trước tài nguyên (vd freeze số tiền)\n- [[b:Confirm]]: thực hiện thật trên phần đã giữ\n- [[b:Cancel]]: nhả phần đã giữ nếu fail\n\n<table class=\"cmp\"><thead><tr><th></th><th>Saga</th><th>TCC</th></tr></thead><tbody>\n<tr><td>Cách làm</td><td>làm thật rồi compensate</td><td>reserve trước, confirm sau</td></tr>\n<tr><td>Trạng thái nửa vời</td><td>lộ ra ngoài</td><td>ẩn (chỉ 'đã giữ')</td></tr>\n<tr><td>Cô lập</td><td>yếu hơn</td><td>tốt hơn</td></tr>\n<tr><td>Chi phí</td><td>1 op + 1 compensation</td><td>3 pha idempotent mỗi service</td></tr>\n</tbody></table>\n\n:::deep\n- Saga *compensate sau khi đã làm* (đã trừ tiền rồi mới hoàn); TCC *reserve trước* → tránh lộ trạng thái nửa vời, cô lập tốt hơn\n- đổi lại: mỗi service cài cả 3 pha idempotent + quản 'reservation' (TTL tự nhả nếu treo)\n\nOTA: seat-hold chính là TCC (Try=hold ghế TTL, Confirm=issue vé, Cancel=release); payment = Try=authorize (giữ tiền), Confirm=capture, Cancel=void — đúng mô hình authorize/capture của PSP.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "9.5",
-          "lvl": "hard",
+          "id": "09-distributed-tx-fintech.distributed-transaction-patterns.q5",
           "q": "Hai service phải nhất quán mà không có distributed transaction — các lựa chọn?",
           "a": "Theo thứ tự ưu tiên:\n- [[g:Gộp về một bounded context]]: nếu hai data phải strong consistency (hai chân bút toán) → cùng service/DB, ACID local. [[r:Đừng tách micro-service chỉ vì 'mốt'.]]\n- [[b:Saga + Outbox]] nếu buộc tách: chấp nhận eventual + compensation\n- [[b:Idempotency + retry]] mọi bước\n- [[b:Reconciliation]] định kỳ phát hiện & sửa drift\n\n:::tip Chốt quan trọng\n'ranh giới service nên theo ranh giới consistency'. Hai thứ phải nguyên tử với nhau là tín hiệu chúng thuộc cùng một service.\n:::\n\n:::deep\n- (1) gộp bounded context nếu phải strong consistency (hai chân bút toán, giữ ghế + trừ tồn) → ACID local\n- (2) buộc tách → Saga + Outbox + eventual + compensation\n- (3) idempotency + retry mọi bước; (4) reconciliation định kỳ sửa drift\n\nOTA: 'giữ ghế' + 'trừ inventory' nên cùng service Inventory (atomic); 'booking' + 'payment' tách được (Saga).\n\n[[r:Ranh giới đặt sai là gốc của distributed monolith.]]\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "9.6",
-          "lvl": "core",
+          "id": "09-distributed-tx-fintech.distributed-transaction-patterns.q6",
           "q": "Distributed lock (Redis/Redlock) — khi nào dùng và rủi ro?",
           "a": "Dùng để serialize thao tác xuyên instance (chỉ một worker chạy job): `SET key val NX PX ttl`.\n\n[[r:Rủi ro]]: TTL hết khi xử lý chưa xong → hai bên cùng vào.\n\nKhắc phục:\n- [[g:fencing token]] (số tăng dần, resource từ chối token cũ)\n- giữ critical section ngắn\n\n:::warn Fintech\nđừng dựa CHỈ vào distributed lock cho correctness tiền bạc. Để DB làm trọng tài cuối (unique constraint, optimistic locking, conditional update); [[o:lock chỉ giảm contention]].\n:::\n\n:::deep\n- `SET key val NX PX ttl` cho mutual exclusion xuyên instance\n- [[r:rủi ro chí mạng]]: TTL hết khi xử lý chưa xong → hai bên cùng vào critical section → [[g:fencing token]] (resource từ chối token cũ hơn token đã thấy)\n- Redlock (nhiều node) gây tranh cãi (Kleppmann) — clock skew/GC pause vẫn phá an toàn\n\nFintech: [[r:ĐỪNG dựa chỉ vào lock cho correctness tiền/ghế]] — DB làm trọng tài cuối (unique constraint, optimistic version, conditional update); lock chỉ *giảm contention*. Lock cho 'điều phối', DB cho 'correctness'.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "core"
         }
       ]
     },
@@ -52,46 +51,46 @@
       "title": "Correctness where money is involved",
       "items": [
         {
-          "id": "9.7",
-          "lvl": "hard",
+          "id": "09-distributed-tx-fintech.correctness-where-money-is-involved.q1",
           "q": "Tình huống thực chiến: gọi PSP/ngân hàng timeout, không biết tiền đã trừ chưa?",
           "a": "[[r:Unknown state]] — tuyệt đối không mặc định fail/success.\n\n- gửi PSP kèm [[g:idempotency key]] từ đầu → retry an toàn, không double-charge\n- timeout → đánh dấu `UNKNOWN/PENDING`, [[r:KHÔNG báo user thành công]]\n- [[g:status query/inquiry]] tới PSP hoặc chờ webhook để biết kết quả thật\n- [[g:reconciliation]] đối soát settlement cuối ngày để chốt giao dịch treo; có timeout nghiệp vụ + auto-reversal\n\n:::tip Chốt\n'khi không chắc, đừng đoán — truy vấn lại và đối soát'. Idempotency + reconciliation là lưới an toàn của mọi hệ thanh toán.\n:::\n\n:::deep\n- gọi GDS (Amadeus/Sabre) hay PSP đều có thể timeout ở trạng thái không xác định\n- nguyên tắc bất biến: mọi lệnh ra ngoài mang idempotency key (hoặc dùng booking_id/order_id), lưu `PENDING`, [[r:không bao giờ tự suy ra success]]\n- sau timeout: gọi *retrieve/status API* (GDS truy vấn PNR; PSP inquiry) hoặc chờ webhook; chạy reconciliation đối soát file settlement cuối ngày; có *timeout nghiệp vụ* + auto-void/refund nếu quá hạn\n\nĐây là loại 'real-world challenge' rất hợp kể trong 'dự án thử thách nhất'.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "9.8",
-          "lvl": "hard",
+          "id": "09-distributed-tx-fintech.correctness-where-money-is-involved.q2",
           "q": "Idempotency trong thanh toán: triển khai thế nào cho kín?",
           "a": "Client gửi [[g:Idempotency-Key]] mỗi ý định thanh toán. Server lưu key→kết quả; request trùng trả kết quả cũ, không thực thi lại.\n\n<pre><code><span class=\"k\">INSERT INTO</span> idempotency_keys(key,status,response)\n<span class=\"k\">VALUES</span>(?, <span class=\"s\">'IN_PROGRESS'</span>, <span class=\"k\">NULL</span>);  <span class=\"c\">-- vi phạm unique =&gt; retry</span></code></pre>\n\nLưu key + kết quả trong *cùng tx* với thay đổi nghiệp vụ (hoặc outbox) → không có khe hở 'đã làm nhưng chưa lưu key'. Xử lý trạng thái IN_PROGRESS khi request trùng tới sớm.\n\n:::deep\n- server trong *một transaction*: INSERT key (unique, IN_PROGRESS) → vi phạm unique = request trùng → trả kết quả đã lưu (hoặc 409 nếu đang IN_PROGRESS)\n- thực hiện nghiệp vụ + lưu response gắn key cùng tx (hoặc qua outbox) → [[g:không có khe 'đã làm nhưng chưa lưu key']]\n- key có TTL hợp lý (scope theo endpoint + user)\n\nOTA: mỗi lệnh ra PSP/GDS mang idempotency key (hoặc order_id) → retry an toàn không double-charge/double-issue. Race 'hai request trùng gần đồng thời': cái thứ hai thấy IN_PROGRESS → poll/đợi hoặc trả 409, [[r:không thực thi song song]].\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "9.9",
-          "lvl": "hard",
+          "id": "09-distributed-tx-fintech.correctness-where-money-is-involved.q3",
           "q": "Double-entry bookkeeping — vì sao là chuẩn vàng cho ledger?",
           "a": "Mỗi giao dịch ≥2 bút toán: debit + credit, [[g:tổng = 0]]. Tiền không tự sinh/mất.\n\nLedger [[g:append-only/immutable]]:\n- không UPDATE/DELETE bút toán cũ\n- sửa sai bằng *reversing entry* → audit trail là bản chất\n\nSố dư = tổng entry (hoặc materialized + đối soát). Ràng buộc bất biến `SUM(amount)=0` mỗi giao dịch.\n\n:::tip Chốt\n'ledger là sổ cái bất biến, mọi thay đổi là một entry mới' — câu chốt rất mạnh cho hệ fintech.\n:::\n\n:::deep\n- bảng `ledger_entry(id, txn_id, account_id, direction, amount, currency, created_at)` append-only; ràng buộc `SUM(signed_amount) per txn_id = 0` kiểm ở app + job đối soát\n- số dư: tính on-the-fly (`SUM` theo account) hoặc giữ `account_balance` materialized cập nhật trong cùng tx + đối soát định kỳ\n- [[r:không UPDATE/DELETE entry]] — sửa bằng *reversing entry*; thêm `idempotency_key` unique chống ghi trùng\n- đa tiền tệ: mỗi entry gắn currency + tỉ giá tại thời điểm; [[r:không trộn currency trong một phép cộng]]\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "9.10",
-          "lvl": "hard",
+          "id": "09-distributed-tx-fintech.correctness-where-money-is-involved.q4",
           "q": "Vì sao không dùng float cho tiền? Lưu trữ đúng cách?",
           "a": "Float/double nhị phân không biểu diễn chính xác 0.1/0.2 → [[r:trôi số]] khi cộng dồn.\n\nDùng:\n- `DECIMAL(p,s)` hoặc minor units (cents) dạng BIGINT\n- Java `BigDecimal` khởi tạo từ [[o:String]] (không từ double!)\n- khai rounding mode tường minh (HALF_EVEN)\n- lưu kèm currency code, [[r:không cộng tiền khác đơn vị]]\n\n<pre><code><span class=\"k\">new</span> BigDecimal(<span class=\"s\">\"0.1\"</span>).add(<span class=\"k\">new</span> BigDecimal(<span class=\"s\">\"0.2\"</span>))\n    .setScale(<span class=\"n\">2</span>, RoundingMode.HALF_EVEN); <span class=\"c\">// 0.30</span></code></pre>\n\n:::deep\n- double/float nhị phân không biểu diễn chính xác 0.1/0.2 (IEEE 754) → cộng dồn nhiều giao dịch trôi số → lệch khi đối soát → vi phạm bất biến ledger\n- `BigDecimal` khởi tạo từ *String* (không double!), rounding mode tường minh (`HALF_EVEN` 'banker's rounding' giảm bias), set scale theo currency\n- [[r:`new BigDecimal(0.1)` (double) vẫn dính lỗi]] — phải `new BigDecimal(\"0.1\")`\n\nOTA đa tiền tệ: mỗi `ledger_entry` gắn currency + amount minor-unit; tổng kiểm theo currency; rounding khi đổi tiền phải nhất quán &amp; audit được.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "9.11",
-          "lvl": "hard",
+          "id": "09-distributed-tx-fintech.correctness-where-money-is-involved.q5",
           "q": "Chống double-spend / race trên số dư dưới tải cao?",
           "a": "[[r:Không bao giờ 'đọc số dư rồi trừ ở app']] (race). Để DB nguyên tử hoá:\n\n- [[g:conditional update]]: `UPDATE acc SET balance=balance-? WHERE id=? AND balance>=?` — 0 row = không đủ tiền\n- [[b:optimistic locking]] (cột version) + retry; hoặc [[b:pessimistic]] `SELECT ... FOR UPDATE` khi contention cao\n- ledger append-only: số dư suy ra từ entry, ràng buộc nhất quán ở tầng DB\n\n:::tip Chốt\ncorrectness tiền bạc phải neo vào ràng buộc DB (atomic, unique, conditional), không phải logic app hay lock phân tán.\n:::\n\n:::deep\nPhân loại nghiệp vụ:\n- 'đếm được, không âm' (số dư, ghế, tồn vé) → conditional update / optimistic\n- 'duy nhất' (1 ghế 1 người) → unique constraint trên (flight, seat, status)\n\nOTA seat: `UPDATE seat SET status='HELD', hold_by=?, hold_exp=now()+'7m' WHERE id=? AND status='FREE'` — atomic, 0 row = thua. [[r:Tránh 'SELECT kiểm tra rồi INSERT']] (TOCTOU race).\n\nTải cực cao trên chuyến hot → queue tuần tự per-flight hoặc bucket ghế giảm contention. Idempotency key của request đặt vé chống bấm 'đặt' hai lần.\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "hard"
         },
         {
-          "id": "9.12",
-          "lvl": "ext",
+          "id": "09-distributed-tx-fintech.correctness-where-money-is-involved.q6",
           "q": "Eventual consistency trong fintech: chấp nhận ở đâu, cấm ở đâu?",
           "a": "- [[r:CẤM eventual]] cho: số dư khả dụng để quyết định chi tiêu, hai chân một bút toán, kiểm hạn mức, anti-double-spend\n- [[g:CHẤP NHẬN eventual]] cho: lịch sử giao dịch hiển thị, thông báo, báo cáo/analytics, điểm thưởng\n\nNguyên tắc: bất cứ chỗ nào *ra quyết định tiền bạc* dựa trên data → phải [[g:strong consistency]].\n\n:::deep\n- CẤM eventual: số dư khả dụng để quyết định chi, hai chân một bút toán, kiểm hạn mức/tồn ghế trước khi chốt, anti-double-spend\n- CHẤP NHẬN eventual: lịch sử hiển thị, thông báo, analytics, điểm thưởng, search/availability hiển thị\n\nOTA: hiển thị 'còn 3 ghế' có thể hơi cũ (eventual, cache), nhưng bước *giữ ghế/thanh toán* phải [[g:re-validate atomic với inventory]] (strong) — [[r:đừng để user thanh toán dựa trên 'còn ghế' đã stale]]. Thiết kế UI quanh ranh giới này (PENDING, re-validate ở checkout).\n:::",
-          "translated": false
+          "translated": false,
+          "difficulty": "ext"
         }
       ]
     }
