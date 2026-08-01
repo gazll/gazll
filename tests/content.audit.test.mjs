@@ -41,6 +41,6 @@ test('--stale recognizes high-change standards and tools beyond the original pro
 test('--refs always reports whether unvalidated chapter aliases remain', () => {
   const output = runAudit('--refs');
   assert.match(output, /non-canonical chapter references/i);
-  assert.match(output, /25-microservice|none/i);
+  assert.match(output, /non-canonical chapter references[\s\S]*?\nnone\n/i);
+  assert.doesNotMatch(output, /\bch\.\d+\b/i);
 });
-

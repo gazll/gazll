@@ -69,7 +69,6 @@ test('every bilingual item uses the final four-key schema', () => {
       for (const section of content.sections) {
         for (const item of section.items) {
           assert.deepEqual(Object.keys(item).sort(), ['a', 'difficulty', 'id', 'q'], `${file}: ${item.id}`);
-          assert.equal(Object.hasOwn(item, 'translated'), false, `${file}: ${item.id}`);
         }
       }
     }

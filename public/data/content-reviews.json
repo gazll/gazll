@@ -1,9 +1,21 @@
 {
+  "01-java-core-jvm.memory-execution-model.q1": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Java SE 25 JLS"],
+    "claim_type": "normative",
+    "sources": ["https://docs.oracle.com/javase/specs/jls/se25/html/jls-17.html#jls-17.4.5"]
+  },
   "01-java-core-jvm.memory-execution-model.q3": {
     "reviewed_at": "2026-08-01",
     "target_versions": ["JDK 25"],
     "claim_type": "normative",
     "sources": ["https://openjdk.org/jeps/439", "https://openjdk.org/jeps/189"]
+  },
+  "01-java-core-jvm.memory-execution-model.q5": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 25", "GraalVM Native Image current documentation"],
+    "claim_type": "heuristic",
+    "sources": ["https://github.com/openjdk/jmh", "https://www.graalvm.org/latest/reference-manual/native-image/optimizations-and-performance/PGO/"]
   },
   "01-java-core-jvm.concurrency.q1": {
     "reviewed_at": "2026-08-01",
@@ -41,17 +53,107 @@
     "claim_type": "normative",
     "sources": ["https://spring.io/blog/2025/11/20/spring-boot-4-0-0-available-now/", "https://spring.io/blog/2025/11/13/spring-framework-7-0-general-availability/"]
   },
+  "03-spring-boot-deep-build.auto-configuration-build.q9": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Spring Boot 4.1", "HikariCP 7.x configuration"],
+    "claim_type": "heuristic",
+    "sources": ["https://docs.spring.io/spring-boot/reference/data/sql.html", "https://github.com/brettwooldridge/HikariCP", "https://docs.spring.io/spring-boot/reference/actuator/metrics.html"]
+  },
+  "03-spring-boot-deep-build.auto-configuration-build.q11": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Spring Boot 4.1", "Spring Framework 7.0", "Jakarta EE 11", "Jackson 3", "JDK 25"],
+    "claim_type": "normative",
+    "sources": ["https://docs.spring.io/spring-boot/system-requirements.html", "https://spring.io/blog/2025/11/13/spring-framework-7-0-general-availability/", "https://spring.io/blog/2025/10/07/introducing-jackson-3-support-in-spring/", "https://spring.io/blog/2025/11/12/null-safe-applications-with-spring-boot-4/"]
+  },
+  "03-spring-boot-deep-build.auto-configuration-build.q12": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Spring Boot 4.1", "HikariCP 7.x configuration"],
+    "claim_type": "normative",
+    "sources": ["https://docs.spring.io/spring-boot/reference/data/sql.html", "https://docs.spring.io/spring-boot/api/java/org/springframework/boot/jdbc/autoconfigure/DataSourceAutoConfiguration.html", "https://github.com/brettwooldridge/HikariCP"]
+  },
+  "03-spring-boot-deep-build.auto-configuration-build.q13": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["MySQL 8.4 LTS", "PostgreSQL 18", "Oracle AI Database 26ai"],
+    "claim_type": "normative",
+    "sources": ["https://dev.mysql.com/doc/refman/8.4/en/memory-use.html", "https://dev.mysql.com/doc/refman/8.4/en/sys-memory-by-thread-by-current-bytes.html", "https://www.postgresql.org/docs/18/connect-estab.html", "https://www.postgresql.org/docs/18/runtime-config-connection.html", "https://www.postgresql.org/docs/18/runtime-config-resource.html", "https://docs.oracle.com/en/database/oracle/oracle-database/26/admin/managing-processes.html"]
+  },
+  "03-spring-boot-deep-build.auto-configuration-build.q14": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["HikariCP 7.x", "MySQL Connector/J 9.x", "pgJDBC current", "Oracle JDBC/UCP 26ai"],
+    "claim_type": "heuristic",
+    "sources": ["https://github.com/brettwooldridge/HikariCP", "https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-networking.html", "https://jdbc.postgresql.org/documentation/use/", "https://docs.oracle.com/en/database/oracle/oracle-database/26/jjdbc/JDBC-troubleshooting.html", "https://docs.oracle.com/en/database/oracle/oracle-database/26/jjucp/fast-connection-failover.html", "https://docs.spring.io/spring-boot/reference/actuator/metrics.html"]
+  },
+  "05-db-core-index-lock.transactions-mvcc-locking.q1": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["MySQL 8.4 LTS", "InnoDB"],
+    "claim_type": "normative",
+    "sources": ["https://dev.mysql.com/doc/refman/8.4/en/mysql-releases.html", "https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-isolation-levels.html"]
+  },
   "07-sql-nosql-db-engines.engine-by-engine.q4": {
     "reviewed_at": "2026-08-01",
     "target_versions": ["MongoDB current documentation"],
     "claim_type": "normative",
     "sources": ["https://www.mongodb.com/docs/manual/reference/read-concern/"]
   },
+  "07-sql-nosql-db-engines.engine-by-engine.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["MySQL 8.4 LTS release model"],
+    "claim_type": "normative",
+    "sources": ["https://dev.mysql.com/doc/refman/8.4/en/mysql-releases.html"]
+  },
+  "07-sql-nosql-db-engines.engine-by-engine.q5": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["MongoDB 8.x documentation"],
+    "claim_type": "normative",
+    "sources": ["https://www.mongodb.com/docs/manual/reference/read-concern/", "https://www.mongodb.com/docs/manual/core/read-preference/"]
+  },
+  "08-message-queue.reliability-delivery-semantics.q1": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Apache Kafka 4.1", "RabbitMQ current documentation"],
+    "claim_type": "normative",
+    "sources": ["https://kafka.apache.org/documentation/#semantics", "https://www.rabbitmq.com/docs/confirms"]
+  },
+  "08-message-queue.reliability-delivery-semantics.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["RabbitMQ current documentation"],
+    "claim_type": "normative",
+    "sources": ["https://www.rabbitmq.com/docs/confirms", "https://www.rabbitmq.com/docs/quorum-queues"]
+  },
+  "08-message-queue.reliability-delivery-semantics.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Apache Kafka 4.1"],
+    "claim_type": "normative",
+    "sources": ["https://kafka.apache.org/41/configuration/producer-configs/", "https://kafka.apache.org/documentation/#replication"]
+  },
+  "08-message-queue.reliability-delivery-semantics.q4": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Apache Kafka 4.1", "RabbitMQ current documentation"],
+    "claim_type": "normative",
+    "sources": ["https://kafka.apache.org/41/configuration/producer-configs/", "https://www.rabbitmq.com/docs/consumers#single-active-consumer"]
+  },
   "13-security-oauth2.oauth2-oidc.q2": {
     "reviewed_at": "2026-08-01",
     "target_versions": ["OAuth 2.1 draft-15", "OAuth 2.0 Security BCP"],
     "claim_type": "normative",
     "sources": ["https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/history/", "https://www.rfc-editor.org/rfc/rfc9700.html"]
+  },
+  "13-security-oauth2.oauth2-oidc.q1": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["OAuth 2.1 draft-15", "OAuth 2.0 Security BCP"],
+    "claim_type": "normative",
+    "sources": ["https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-15", "https://www.rfc-editor.org/rfc/rfc9700.html"]
+  },
+  "13-security-oauth2.jwt-tokens.q1": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JWT access-token profile", "OAuth 2.0 Security BCP"],
+    "claim_type": "normative",
+    "sources": ["https://www.rfc-editor.org/rfc/rfc9068.html", "https://www.rfc-editor.org/rfc/rfc9700.html"]
+  },
+  "13-security-oauth2.jwt-tokens.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["OAuth 2.0 Security BCP", "DPoP RFC 9449"],
+    "claim_type": "normative",
+    "sources": ["https://www.rfc-editor.org/rfc/rfc9700.html", "https://www.rfc-editor.org/rfc/rfc9449.html"]
   },
   "13-security-oauth2.designing-the-auth-system.q2": {
     "reviewed_at": "2026-08-01",
@@ -64,6 +166,18 @@
     "target_versions": ["OWASP Top 10:2025", "OWASP API Security Top 10:2023"],
     "claim_type": "normative",
     "sources": ["https://owasp.org/Top10/", "https://owasp.org/API-Security/editions/2023/en/0x11-t10/"]
+  },
+  "13-security-oauth2.designing-the-auth-system.q4": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Kubernetes current documentation", "OWASP Top 10:2025"],
+    "claim_type": "heuristic",
+    "sources": ["https://kubernetes.io/docs/concepts/configuration/secret/", "https://owasp.org/Top10/"]
+  },
+  "13-security-oauth2.designing-the-auth-system.q5": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["WebAuthn Level 3", "OWASP Authentication guidance current"],
+    "claim_type": "heuristic",
+    "sources": ["https://www.w3.org/TR/webauthn-3/", "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"]
   },
   "14-devops-k8s-best-practices.docker-kubernetes.q6": {
     "reviewed_at": "2026-08-01",
@@ -83,11 +197,41 @@
     "claim_type": "heuristic",
     "sources": ["https://docs.spring.io/spring-boot/reference/features/spring-application.html#features.spring-application.virtual-threads", "https://openjdk.org/jeps/491"]
   },
+  "16-project-concurrency-whiteboard.technical-storytelling-fundamentals.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 25"],
+    "claim_type": "heuristic",
+    "sources": ["https://openjdk.org/jeps/505", "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ConcurrentHashMap.html"]
+  },
+  "17-rest-api-design.contracts-errors-lifecycle.q5": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["HTTP Semantics RFC 9110", "HTTP Caching RFC 9111", "RateLimit Internet-Draft 11"],
+    "claim_type": "normative",
+    "sources": ["https://www.rfc-editor.org/rfc/rfc9110.html", "https://www.rfc-editor.org/rfc/rfc9111.html", "https://datatracker.ietf.org/doc/html/draft-ietf-httpapi-ratelimit-headers-11"]
+  },
+  "18-query-optimization.measure-first-reading-the-execution-plan.q5": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["PostgreSQL 18", "SQL Server 2022-2025"],
+    "claim_type": "normative",
+    "sources": ["https://www.postgresql.org/docs/current/runtime-config-query.html", "https://www.postgresql.org/docs/current/sql-explain.html", "https://learn.microsoft.com/en-us/sql/relational-databases/performance/parameter-sensitive-plan-optimization"]
+  },
+  "18-query-optimization.rewriting-the-query-reshaping-the-model.q1": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["PostgreSQL 18", "MySQL 8.4 LTS"],
+    "claim_type": "normative",
+    "sources": ["https://www.postgresql.org/docs/current/indexes-expressional.html", "https://dev.mysql.com/doc/refman/8.4/en/optimization-indexes.html"]
+  },
   "20-observability-sre.the-three-pillars-how-to-measure.q2": {
     "reviewed_at": "2026-08-01",
     "target_versions": ["OpenTelemetry messaging semantic conventions current"],
     "claim_type": "normative",
     "sources": ["https://opentelemetry.io/docs/specs/semconv/messaging/messaging-spans/"]
+  },
+  "20-observability-sre.slos-alerting-incidents.q4": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["OpenTelemetry logs data model current", "SLF4J 2.x"],
+    "claim_type": "heuristic",
+    "sources": ["https://opentelemetry.io/docs/specs/otel/logs/data-model/", "https://www.slf4j.org/apidocs/org/slf4j/MDC.html"]
   },
   "21-linux-production-debug.jvm-network-deep-dive-on-prod.q3": {
     "reviewed_at": "2026-08-01",
@@ -95,11 +239,23 @@
     "claim_type": "heuristic",
     "sources": ["https://github.com/async-profiler/async-profiler", "https://github.com/async-profiler/async-profiler/releases"]
   },
+  "22-low-level-design-ood.patterns-in-interview-code.q5": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["OpenJDK jcstress current"],
+    "claim_type": "heuristic",
+    "sources": ["https://github.com/openjdk/jcstress"]
+  },
   "23-java-concurrency-coding.async-the-modern-toolkit.q4": {
     "reviewed_at": "2026-08-01",
     "target_versions": ["JDK 21-25"],
     "claim_type": "normative",
     "sources": ["https://openjdk.org/jeps/491", "https://openjdk.org/jeps/505", "https://openjdk.org/jeps/506"]
+  },
+  "25-microservice.01-cascading-failure-retry-storm.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["gRPC current documentation", "Resilience4j current documentation"],
+    "claim_type": "heuristic",
+    "sources": ["https://grpc.io/docs/guides/deadlines/", "https://resilience4j.readme.io/docs/timeout"]
   },
   "25-microservice.01-cascading-failure-retry-storm.q3": {
     "reviewed_at": "2026-08-01",
@@ -113,11 +269,29 @@
     "claim_type": "normative",
     "sources": ["https://resilience4j.readme.io/docs/bulkhead", "https://resilience4j.readme.io/docs/timeout"]
   },
+  "25-microservice.01-cascading-failure-retry-storm.q5": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Resilience4j current documentation", "HTTP current semantics"],
+    "claim_type": "heuristic",
+    "sources": ["https://resilience4j.readme.io/docs/retry", "https://www.rfc-editor.org/rfc/rfc9110.html"]
+  },
+  "25-microservice.01-cascading-failure-retry-storm.q6": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Netflix concurrency-limits current", "HTTP current semantics"],
+    "claim_type": "heuristic",
+    "sources": ["https://github.com/Netflix/concurrency-limits", "https://www.rfc-editor.org/rfc/rfc9110.html"]
+  },
   "25-microservice.02-pool-exhaustion-connection-thread.q3": {
     "reviewed_at": "2026-08-01",
     "target_versions": ["HikariCP current documentation"],
     "claim_type": "normative",
     "sources": ["https://github.com/brettwooldridge/HikariCP"]
+  },
+  "25-microservice.02-pool-exhaustion-connection-thread.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["PgBouncer current documentation", "RDS Proxy current documentation"],
+    "claim_type": "heuristic",
+    "sources": ["https://www.pgbouncer.org/features.html", "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy.html"]
   },
   "25-microservice.02-pool-exhaustion-connection-thread.q5": {
     "reviewed_at": "2026-08-01",
@@ -136,5 +310,47 @@
     "target_versions": ["JDK 25"],
     "claim_type": "normative",
     "sources": ["https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ConcurrentSkipListMap.html"]
+  },
+  "25-microservice.04-messaging-event-driven-at-scale.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Apache Kafka 4.1"],
+    "claim_type": "normative",
+    "sources": ["https://kafka.apache.org/41/configuration/producer-configs/"]
+  },
+  "25-microservice.05-caching-pitfalls.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Redis Open Source current documentation"],
+    "claim_type": "heuristic",
+    "sources": ["https://redis.io/docs/latest/develop/data-types/probabilistic/bloom-filter/"]
+  },
+  "25-microservice.06-hot-partition-db-bottleneck.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["PostgreSQL 18 documentation"],
+    "claim_type": "heuristic",
+    "sources": ["https://www.postgresql.org/docs/current/warm-standby.html"]
+  },
+  "25-microservice.07-observability-debugging.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Prometheus current documentation"],
+    "claim_type": "heuristic",
+    "sources": ["https://prometheus.io/docs/practices/histograms/"]
+  },
+  "25-microservice.07-observability-debugging.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["OpenTelemetry current documentation", "Kubernetes current documentation"],
+    "claim_type": "heuristic",
+    "sources": ["https://opentelemetry.io/docs/concepts/sampling/", "https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/"]
+  },
+  "25-microservice.08-operational-concerns.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Kubernetes current documentation"],
+    "claim_type": "heuristic",
+    "sources": ["https://kubernetes.io/docs/concepts/workloads/management/", "https://kubernetes.io/docs/tasks/run-application/update-deployment-rolling/"]
+  },
+  "25-microservice.08-operational-concerns.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Kubernetes autoscaling/v2 current documentation"],
+    "claim_type": "normative",
+    "sources": ["https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/"]
   }
 }

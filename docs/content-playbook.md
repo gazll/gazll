@@ -269,7 +269,7 @@ node tools/add-content.mjs my.patch             # áp dụng
 <pre><code>...</code></pre>
 ```
 
-Ba chế độ đặt block:
+Các chế độ đặt block:
 
 | mode | Chèn vào đâu |
 |---|---|
@@ -288,6 +288,33 @@ When does MongoDB avoid joins, and what consistency trade-offs remain?
 
 @@ answer 07-sql-nosql-db-engines.engine-by-engine.q4 en
 Complete replacement answer…
+```
+
+Để sửa đúng một fragment trong answer mà không copy lại cả field, dùng
+`replace`; đặt old/new fragment hai phía của dòng `=>`. Công cụ sẽ fail nếu
+old fragment không tồn tại hoặc xuất hiện nhiều lần, và sẽ skip khi new
+fragment đã có:
+
+```
+@@ replace 01-java-core-jvm.memory-execution-model.q1 en
+Old exact text
+=>
+New exact text
+```
+
+Để append một item vào section hiện có, dùng mode `item`, thêm
+`core|hard|ext` ở cuối header và đặt câu hỏi ở dòng đầu với tiền tố `? `.
+ID phải là `q` kế tiếp của section; object được ghi ra vẫn giữ đúng bốn field
+`id`, `difficulty`, `q`, `a`:
+
+```
+@@ item 03-spring-boot-deep-build.auto-configuration-build.q11 en ext
+? Which platform generation should a new service target?
+Answer text…
+
+@@ item 03-spring-boot-deep-build.auto-configuration-build.q11 vi ext
+? Dịch vụ mới nên chọn thế hệ platform nào?
+Nội dung trả lời…
 ```
 
 Công cụ này **idempotent** (chạy lại không nhân đôi) và **cảnh báo khi chỉ

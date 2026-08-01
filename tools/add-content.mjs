@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-/* Insert prose/code blocks into existing items, from a patch file.
+/* Insert prose/code blocks or complete new items, from a patch file.
 
    Hand-editing data/topics/*.json is where mistakes happen: the answers are
    single JSON string lines thousands of characters long, and an editor will
    happily reformat the whole tree around your one change. This applies a
-   patch instead, touching only the `a` strings it names.
+   patch instead, touching only the records it names.
 
      node tools/add-content.mjs patch.txt            # apply
      node tools/add-content.mjs patch.txt --dry-run  # show what would change
@@ -26,6 +26,14 @@
      end   very end of the answer, after every callout
      answer    replace the complete answer for that item
      question  replace the complete question for that item
+     replace   replace one exact answer fragment; separate old/new text with
+               a line containing only "=>"
+     item      append a new item; add difficulty to the header and prefix the
+               first content line (the question) with "? "
+
+     @@ item 03-spring-boot-deep-build.auto-configuration-build.q11 en ext
+     ? Which platform generation should a new service target?
+     Answer text starts here.
 
    Re-running is safe: a block already present is skipped, so a patch file can
    be applied twice without duplicating content. Always run
@@ -35,7 +43,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TOPICS = ROOT + 'public/data/topics/';
-const MODES = new Set(['deep', 'body', 'end', 'answer', 'question']);
+const MODES = new Set(['deep', 'body', 'end', 'answer', 'question', 'replace', 'item']);
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
@@ -51,10 +59,10 @@ const blocks = [];
   const lines = readFileSync(patchPath, 'utf8').replace(/\r/g, '').split('\n');
   let cur = null;
   for (const line of lines) {
-    const h = /^@@\s+([\w-]+)\s+(\S+)\s+(en|vi)\s*$/.exec(line);
+    const h = /^@@\s+([\w-]+)\s+(\S+)\s+(en|vi)(?:\s+(core|hard|ext))?\s*$/.exec(line);
     if (h) {
-      if (!MODES.has(h[1])) { console.error(`bad mode "${h[1]}" — use deep|body|end|answer|question`); process.exit(2); }
-      cur = { mode: h[1], id: h[2], lang: h[3], lines: [] };
+      if (!MODES.has(h[1])) { console.error(`bad mode "${h[1]}" — use deep|body|end|answer|question|replace|item`); process.exit(2); }
+      cur = { mode: h[1], id: h[2], lang: h[3], difficulty: h[4], lines: [] };
       blocks.push(cur);
       continue;
     }
@@ -66,6 +74,35 @@ if (!blocks.length) { console.error('patch file has no @@ blocks'); process.exit
 for (const b of blocks) {
   b.text = b.lines.join('\n').trim();
   if (!b.text) { console.error(`empty block for ${b.id} (${b.lang})`); process.exit(2); }
+  if (b.mode === 'item') {
+    if (!b.difficulty) {
+      console.error(`item ${b.id} (${b.lang}) needs difficulty core|hard|ext in its header`);
+      process.exit(2);
+    }
+    const [questionLine, ...answerLines] = b.text.split('\n');
+    if (!questionLine.startsWith('? ') || questionLine.length === 2) {
+      console.error(`item ${b.id} (${b.lang}) must start with one question line prefixed by "? "`);
+      process.exit(2);
+    }
+    const answer = answerLines.join('\n').trim();
+    if (!answer) {
+      console.error(`item ${b.id} (${b.lang}) needs an answer after its question`);
+      process.exit(2);
+    }
+    b.item = { id: b.id, difficulty: b.difficulty, q: questionLine.slice(2), a: answer };
+  } else if (b.difficulty) {
+    console.error(`difficulty is only valid for mode "item": ${b.id} (${b.lang})`);
+    process.exit(2);
+  }
+  if (b.mode === 'replace') {
+    const fragments = b.text.split('\n=>\n');
+    if (fragments.length !== 2 || !fragments[0].trim() || !fragments[1].trim()) {
+      console.error(`replace for ${b.id} (${b.lang}) needs non-empty old/new fragments separated by one "=>" line`);
+      process.exit(2);
+    }
+    b.from = fragments[0].trim();
+    b.to = fragments[1].trim();
+  }
   if (b.mode === 'question' && b.text.includes('\n')) {
     console.error(`question for ${b.id} (${b.lang}) must be one line`);
     process.exit(2);
@@ -103,11 +140,77 @@ for (const b of blocks) {
   }
   const doc = docs.get(path);
 
+  if (b.mode === 'item') {
+    const existing = (doc.sections || []).flatMap(sec => sec.items || []).find(it => it.id === b.id);
+    if (existing) {
+      const fieldsMatch = ['id', 'difficulty', 'q', 'a'].every(field => existing[field] === b.item[field]);
+      if (!fieldsMatch) {
+        console.error(`item "${b.id}" already exists with different content; use answer/question mode for an intentional replacement`);
+        process.exit(1);
+      }
+      console.log(`skip  ${b.id} (${b.lang}) — item already matches`);
+      skipped++;
+      continue;
+    }
+
+    const idMatch = /^(.*\.[^.]+)\.q(\d+)$/.exec(b.id);
+    if (!idMatch) {
+      console.error(`item id "${b.id}" must end in .q<number>`);
+      process.exit(1);
+    }
+    const sectionPrefix = idMatch[1] + '.';
+    const section = (doc.sections || []).find(sec =>
+      (sec.items || []).some(it => it.id.startsWith(sectionPrefix))
+    );
+    if (!section) {
+      console.error(`cannot infer a section for new item "${b.id}"`);
+      process.exit(1);
+    }
+    const existingNumbers = section.items
+      .filter(it => it.id.startsWith(sectionPrefix))
+      .map(it => /^q(\d+)$/.exec(it.id.slice(sectionPrefix.length)))
+      .filter(Boolean)
+      .map(match => Number(match[1]));
+    const nextNumber = Number(idMatch[2]);
+    const maxNumber = Math.max(0, ...existingNumbers);
+    if (nextNumber <= maxNumber) {
+      console.error(`new item "${b.id}" must append after q${maxNumber}`);
+      process.exit(1);
+    }
+
+    section.items.push(b.item);
+    console.log(`apply ${b.id} (${b.lang}) mode=item ${b.item.a.length}c`);
+    applied++;
+    touched.add(path);
+    continue;
+  }
+
   let hits = 0;
   for (const sec of doc.sections || []) {
     for (const it of sec.items || []) {
       if (it.id !== b.id) continue;
       hits++;
+      if (b.mode === 'replace') {
+        const first = it.a.indexOf(b.from);
+        if (first < 0) {
+          if (it.a.includes(b.to)) {
+            console.log(`skip  ${b.id} (${b.lang}) — replacement already present`);
+            skipped++;
+            continue;
+          }
+          console.error(`old fragment not found in ${b.id} (${b.lang})`);
+          process.exit(1);
+        }
+        if (it.a.indexOf(b.from, first + b.from.length) >= 0) {
+          console.error(`old fragment is not unique in ${b.id} (${b.lang})`);
+          process.exit(1);
+        }
+        it.a = it.a.slice(0, first) + b.to + it.a.slice(first + b.from.length);
+        console.log(`apply ${b.id} (${b.lang}) mode=replace ${b.from.length}c→${b.to.length}c`);
+        applied++;
+        touched.add(path);
+        continue;
+      }
       if (b.mode === 'answer' || b.mode === 'question') {
         const field = b.mode === 'answer' ? 'a' : 'q';
         if (it[field] === b.text) {
