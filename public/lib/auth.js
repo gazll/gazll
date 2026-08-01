@@ -103,7 +103,7 @@ export const Auth = {
         client_id: GOOGLE_CLIENT_ID,
         callback: onCredential,
         auto_select: true,             // returning users get signed back in silently
-        cancel_on_tap_outside: false,
+        cancel_on_tap_outside: true,   // false traps clicks under FedCM's native prompt
         use_fedcm_for_prompt: true
       });
       if (!this.token) promptSilently();

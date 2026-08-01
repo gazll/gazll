@@ -204,17 +204,11 @@
   .np-foot{margin:0;padding:12px 18px 16px;border-top:1px solid var(--line);
     font-size:11.5px;line-height:1.5;color:var(--muted)}
 
-  /* ---------- content language switch ----------
-     One shared geometry for BOTH the header switch and every per-card
-     toggle, so they can never drift apart visually — everything below reads
-     these three custom properties rather than repeating pixel values.
-     Neumorphic pill: an inset track plus a raised circular knob carrying the
-     active language's flag, sliding between the two ends. */
+  /* ---------- content language switch ---------- */
+  /* Shared by the header switch and every per-card toggle, so they match exactly. */
   :root{--switch-w:46px; --switch-h:24px; --switch-knob:20px}
 
-  /* EN/VI stay real <button>s (each jumps straight to that language, not a
-     single flip) — .lang-track/.lang-knob are a decorative slider layered
-     on top, driven by data-active on .langswitch (set in paintLangSwitch). */
+  /* EN/VI are real <button>s; .lang-track/.lang-knob are a decorative slider on top. */
   .langswitch{display:inline-flex;align-items:center;gap:8px}
   .langswitch.busy{opacity:.55;pointer-events:none}
   .langswitch .lang-label{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:700;
@@ -228,11 +222,13 @@
     border-radius:999px;background:var(--paper);
     box-shadow:inset 0 1px 3px rgba(20,35,58,.18), inset 0 -1px 1px rgba(255,255,255,.7);
     transition:background .2s ease}
+  /* padding leaves a bezel ring around the flag so it reads as a coin */
   .lang-knob, .qlang-knob{position:absolute;top:50%;left:2px;width:var(--switch-knob);height:var(--switch-knob);
-    border-radius:50%;background:var(--surface);
+    border-radius:50%;background:var(--surface);padding:2px;overflow:hidden;box-sizing:border-box;
     box-shadow:0 2px 5px rgba(20,35,58,.32), 0 1px 2px rgba(20,35,58,.22);
-    display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
     transform:translateY(-50%);transition:transform .2s ease}
+  .lang-knob svg, .qlang-knob svg{width:100%;height:100%;display:block;border-radius:50%}
   .langswitch[data-active="vi"] .lang-knob,
   .qlangbtn[aria-checked="true"] .qlang-knob{
     transform:translateY(-50%) translateX(calc(var(--switch-w) - var(--switch-knob) - 4px))}
@@ -328,10 +324,7 @@
   .section-h::before{content:"";width:14px;height:14px;border-radius:3px;background:linear-gradient(145deg,var(--emerald),var(--emerald-deep));flex:none}
   .section-h .sline{flex:1;height:1px;background:var(--line)}
 
-  /* No overflow:hidden here (kept on .qbody-inner instead, below): an
-     overflow-clipping ancestor stops position:sticky from working at all,
-     and the sticky open-question title below relies on .qcard staying the
-     nearest non-clipping containing block. */
+  /* No overflow:hidden here — an overflow-clipping ancestor breaks position:sticky below. */
   .qcard{border:1px solid var(--line);border-left:3px solid var(--line-strong);background:var(--surface);
     border-radius:10px;margin-bottom:10px;transition:border-color .18s, box-shadow .18s;}
   .qcard.open{border-left-color:var(--emerald);box-shadow:var(--shadow)}
@@ -340,12 +333,7 @@
   .qcard.difficulty-advanced.open{border-left-color:var(--clay)}
   .qhead{width:100%;text-align:left;font:inherit;cursor:pointer;background:none;border:none;display:flex;align-items:flex-start;gap:14px;padding:15px 18px;color:var(--ink);}
   .qhead:focus-visible{outline:2px solid var(--emerald);outline-offset:-2px}
-  /* While a card is open, its question stays pinned as you scroll through the
-     answer, and stops being pinned the moment you scroll past that card's own
-     box (position:sticky's containing block is .qcard) — so it never bleeds
-     into the next question. --hdr-h (kept live by wireHeader in app.js) is 0
-     while the header is headroom-hidden, so the title docks at the very top
-     instead of leaving a gap where the header used to be. */
+  /* Sticks while scrolling through an open card's answer, releases at that card's own bottom edge. */
   .qcard.open .qhead{position:sticky;top:var(--hdr-h,0px);z-index:30;
     background:var(--surface);border-bottom:1px solid var(--line);border-radius:9px 9px 0 0}
   .qid{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--brass);flex:none;padding-top:2px;min-width:38px}
@@ -356,12 +344,7 @@
   .qbadge.core{color:var(--emerald-deep);border-color:#cfe6da;background:var(--emerald-soft)}
   .qbadge.advanced{color:var(--clay);border-color:#e6c6c0;background:var(--clay-soft)}
   .qbadge.extra{color:var(--indigo);border-color:#cdd5ef;background:var(--indigo-soft)}
-  /* Per-item language toggle: shows the OTHER language available for this
-     one card, independent of the header's site-wide EN/VI switch. Same
-     .qlangbtn/.qlang-knob geometry as .lang-track/.lang-knob above — see
-     the shared --switch-* custom properties — just with interaction states
-     (cursor, focus ring) that the header's plain decorative track doesn't
-     need since its real hit targets are the EN/VI buttons beside it. */
+  /* Per-item language toggle; same geometry as .lang-track/.lang-knob above. */
   .qlangbtn{cursor:pointer}
   .qlangbtn:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
   .chev{flex:none;width:20px;height:20px;color:var(--muted);transition:transform .25s}
@@ -369,9 +352,7 @@
 
   .qbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
   .qcard.open .qbody{grid-template-rows:1fr}
-  /* Replaces .qcard's old overflow:hidden for clipping open content (a code
-     block's dark background, etc.) to the card's rounded bottom corners —
-     .qcard itself must stay unclipped for the sticky .qhead above to work. */
+  /* Clips open content to rounded bottom corners, since .qcard itself can't. */
   .qbody-inner{overflow:hidden;min-height:0;border-radius:0 0 9px 9px}
 
   /* Collapsible chapter (view Microservices) */

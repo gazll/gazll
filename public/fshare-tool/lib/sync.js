@@ -70,7 +70,7 @@ export function syncSignIn() {
       client_id: Sync.clientId,
       callback: onCredential,
       auto_select: true,
-      cancel_on_tap_outside: false,
+      cancel_on_tap_outside: true,   // false traps clicks under FedCM's native prompt
       use_fedcm_for_prompt: true
     });
     google.accounts.id.prompt();

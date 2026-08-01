@@ -60,15 +60,11 @@ secret/              GITIGNORED. Personal setup notes and credentials
 
 ## Things that break easily
 
-- **`.qhead` is a `<button>` — nothing inside it can be one too.** HTML
-  forbids nesting `<button>` in `<button>`; a browser encountering that
-  silently closes `.qhead` early, right where the inner one starts, and
-  reparents everything meant to be inside it (badge, chevron, the whole
-  answer body) as trailing siblings instead — with no console error. This is
-  why the per-item language toggle (`.qlangbtn`) is a `<span role="button"
-  tabindex="0">` with its own keydown handler in `wireQcards`, not a real
-  `<button>`. Any other interactive control added inside `.qhead` needs the
-  same treatment.
+- **`.qhead` is a `<button>` — nothing inside it can be one too.** A nested
+  `<button>` makes the browser silently close `.qhead` early, no console
+  error, reparenting badge/chevron/answer as trailing siblings. That's why
+  `.qlangbtn` is a `<span role="switch" tabindex="0">` with its own keydown
+  handler, not a real `<button>`.
 
 - **`lib/markdown.js` — the `SENT` sentinel.** It is
   `String.fromCharCode(0xE000)` on purpose. U+E000 is invisible in an editor,

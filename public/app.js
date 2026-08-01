@@ -25,11 +25,20 @@ let topicItemIds = new Set();
 let typeFilter = 'all';
 let topicQuery = '';
 
-// One flag per language, shown in a language switch's sliding knob. UI
-// chrome (like topic_type/difficulty colours), not study content, so it
-// doesn't go through the VI/EN content switch — see lib/constants.js's file
-// comment on why that split exists.
-const LANG_FLAG = { en: '🇬🇧', vi: '🇻🇳' };
+// Inline SVG, not 🇬🇧/🇻🇳 emoji: Windows renders flag emoji as "GB"/"VN" text everywhere.
+const LANG_FLAG = {
+  en: '<svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
+    + '<rect width="24" height="24" fill="#00247D"/>'
+    + '<g stroke="#FFFFFF" stroke-width="4"><line x1="0" y1="0" x2="24" y2="24"/><line x1="24" y1="0" x2="0" y2="24"/></g>'
+    + '<g stroke="#CF142B" stroke-width="1.6"><line x1="0" y1="0" x2="24" y2="24"/><line x1="24" y1="0" x2="0" y2="24"/></g>'
+    + '<g stroke="#FFFFFF" stroke-width="8"><line x1="12" y1="0" x2="12" y2="24"/><line x1="0" y1="12" x2="24" y2="12"/></g>'
+    + '<g stroke="#CF142B" stroke-width="4"><line x1="12" y1="0" x2="12" y2="24"/><line x1="0" y1="12" x2="24" y2="12"/></g>'
+    + '</svg>',
+  vi: '<svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
+    + '<rect width="24" height="24" fill="#DA251D"/>'
+    + '<polygon fill="#FFCD00" points="12,3 14.06,9.17 20.56,9.22 15.33,13.08 17.29,19.28 12,15.5 6.71,19.28 8.67,13.08 3.44,9.22 9.94,9.17"/>'
+    + '</svg>'
+};
 
 const panel = document.getElementById('panel');
 const dots = document.getElementById('dots');
@@ -144,23 +153,9 @@ function qcard(it) {
   const badge = BADGE[it.difficulty] || '';
   const diffClass = it.difficulty ? (' difficulty-' + it.difficulty) : '';
   const done = Store.reviewed.has(it.id) ? ' done' : '';
-  // The card shows the id's trailing qN, not the whole id: the full string is
-  // the Sheet key, far too long to read, and it pushed the question off-screen.
-  // Derived from the id rather than the array index so the two can never drift.
+  // Show the trailing qN, not the whole id — the full string is the Sheet key, too long to read here.
   const seq = (/\.q(\d+)$/.exec(it.id) || [, '?'])[1];
-  // Per-card language toggle: only offered when a Vietnamese companion
-  // actually exists for this item (itemPair() is null otherwise). A mini
-  // slider switch — knob shows the ACTIVE language's flag, slides left/right
-  // between the two states. role="switch"/aria-checked is the ARIA pattern
-  // for exactly this: a two-state on/off-shaped control.
-  //
-  // Must NOT be a real <button>: it lives inside .qhead, which is itself a
-  // <button> (the disclosure control), and HTML forbids nesting one button
-  // inside another — a browser encountering that silently closes .qhead
-  // early, right where this element starts, and everything meant to be
-  // inside .qhead (badge, chevron, the whole answer body) ends up reparented
-  // outside it instead. A role="switch" span sidesteps that; wireQcards adds
-  // the keyboard handling a real control would have given for free.
+  // Not a <button>: it's inside .qhead, which is one — nested buttons make the browser silently close the outer one.
   const pair = Content.itemPair(it.id);
   const otherLang = Content.lang === 'vi' ? 'en' : 'vi';
   const langBtn = (pair && pair.vi)
@@ -207,7 +202,7 @@ function wireQcards(root, onMark) {
         langBtn.dataset.itemLang = next;
         langBtn.setAttribute('aria-checked', String(next === 'vi'));
         const knob = langBtn.querySelector('.qlang-knob');
-        if (knob) knob.textContent = LANG_FLAG[next];
+        if (knob) knob.innerHTML = LANG_FLAG[next];
         const otherName = next === 'vi' ? 'English' : 'Vietnamese';
         langBtn.title = 'Show this question in ' + otherName;
         langBtn.setAttribute('aria-label', 'Show this question in ' + otherName);
@@ -216,8 +211,7 @@ function wireQcards(root, onMark) {
         e.stopPropagation();   // don't also toggle open/close
         activate();
       });
-      // role="switch" gets none of a real control's keyboard handling for
-      // free (see qcard() for why this can't just be an <input type=checkbox>).
+      // role="switch" has no built-in keyboard handling, unlike a real control.
       langBtn.addEventListener('keydown', e => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault();    // Space must not also scroll the page
@@ -325,7 +319,7 @@ function paintLangSwitch() {
     b.setAttribute('aria-pressed', String(lang === Content.lang));
   });
   const knob = box.querySelector('.lang-knob');
-  if (knob) knob.textContent = LANG_FLAG[Content.lang] || '';
+  if (knob) knob.innerHTML = LANG_FLAG[Content.lang] || '';
 }
 
 function wireLangSwitch() {
@@ -389,10 +383,7 @@ function wireHeader() {
   let dir = 0;           // 1 down, -1 up
   let queued = false;
 
-  // A sticky open-question title (see wireStickyQhead) docks right under
-  // whatever the header's real visible height is right now — 0 while the
-  // header is headroom-hidden, its measured height otherwise. Tracked here
-  // rather than duplicating a second scroll listener.
+  // --hdr-h: the sticky open-question title's top offset — 0 while headroom-hidden, real height otherwise.
   const syncHeaderOffset = () => {
     const h = header.classList.contains('hidden') ? 0 : header.getBoundingClientRect().height;
     document.documentElement.style.setProperty('--hdr-h', h + 'px');
