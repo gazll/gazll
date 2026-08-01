@@ -8,6 +8,7 @@
      node tools/audit-content.mjs            # parity + coverage
      node tools/audit-content.mjs --stale    # + what may have aged out
      node tools/audit-content.mjs --gaps     # + per-item candidates for examples
+     node tools/audit-content.mjs --refs     # + non-canonical chapter aliases
 
    Parity matters because the two language files are edited separately: the
    validator pins section/item counts and ids, but nothing stops one language
@@ -45,6 +46,9 @@ const shape = (a) => ({
   warn: (a.match(/^:::warn/gm) || []).length,
   ref: (a.match(/\[\[/g) || []).length
 });
+
+const hasExplanatoryEvidence = (a) => /<pre>|<table\b|<figure\b/i.test(a);
+const visibleWordCount = (s) => (prose(s).match(/\S+/g) || []).length;
 
 const VI_DIACRITIC = /[àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/i;
 /* English function-words that should not survive in Vietnamese prose.
@@ -99,15 +103,16 @@ head('coverage by topic type');
 for (const t of [...new Set(items.map(i => i.type))].filter(Boolean)) {
   const r = items.filter(i => i.type === t);
   const pct = (n) => `${String(n).padStart(3)} (${String(Math.round(n / r.length * 100)).padStart(2)}%)`;
-  console.log(`${t.padEnd(13)} items=${String(r.length).padStart(3)}  code=${pct(r.filter(i => i.a.includes('<pre>')).length)}  table=${pct(r.filter(i => i.a.includes('<table')).length)}`);
+  console.log(`${t.padEnd(13)} items=${String(r.length).padStart(3)}  code=${pct(r.filter(i => i.a.includes('<pre>')).length)}  table=${pct(r.filter(i => i.a.includes('<table')).length)}  figure=${pct(r.filter(i => i.a.includes('<figure')).length)}`);
 }
 
 if (flag('--gaps')) {
-  head('items without a code block, longest first (example candidates)');
-  items.filter(i => !i.a.includes('<pre>'))
-    .sort((x, y) => y.a.length - x.a.length)
+  head('items without code, table, or figure; longest visible prose first (example candidates)');
+  items.filter(i => !hasExplanatoryEvidence(i.a))
+    .map(i => ({ ...i, visibleWords: visibleWordCount(i.q + ' ' + i.a) }))
+    .sort((x, y) => y.visibleWords - x.visibleWords)
     .slice(0, 40)
-    .forEach(i => console.log(`  ${String(i.a.length).padStart(5)}  ${i.difficulty.padEnd(5)} ${i.id}\n         ${i.q}`));
+    .forEach(i => console.log(`  ${String(i.visibleWords).padStart(5)} words  ${i.difficulty.padEnd(5)} ${i.id}\n              ${i.q}`));
 }
 
 if (flag('--stale')) {
@@ -117,16 +122,28 @@ if (flag('--stale')) {
   head('version- and date-bound claims (review these when revisiting)');
   const YEAR = /\b(20[12]\d)\b/g;
   const VER = /\b(Java|Spring Boot|Spring|Postgres(?:QL)?|MySQL|Kafka|Redis|Mongo(?:DB)?|Kubernetes|K8s|Go|Hibernate|JDK)\s*v?(\d+(?:\.\d+)*)\b/gi;
+  const FAST_MOVING = /\b(OAuth\s*2\.1|OWASP(?:\s+(?:API\s+Security\s+)?Top\s+10)?|OpenTelemetry|OTel|Resilience4j|HikariCP|async-profiler)\b/gi;
   const hits = [];
   for (const i of items) {
-    const p = prose(i.a);
+    const p = prose(i.q + ' ' + i.a);
     const found = new Set();
     for (const m of p.matchAll(VER)) found.add(`${m[1]} ${m[2]}`);
+    for (const m of p.matchAll(FAST_MOVING)) found.add(m[1]);
     for (const m of p.matchAll(YEAR)) found.add(m[1]);
     if (found.size) hits.push({ id: i.id, what: [...found].join(' · ') });
   }
   hits.forEach(h => console.log(`  ${h.id}\n         ${h.what}`));
   console.log(`\n${hits.length} of ${items.length} items carry a version or year.`);
+}
+
+if (flag('--refs')) {
+  head('non-canonical chapter references');
+  const hits = [];
+  for (const i of items) {
+    const aliases = [...new Set([...(i.q + ' ' + i.a).matchAll(/\bch\.\d+\b/gi)].map(m => m[0]))];
+    if (aliases.length) hits.push(`${i.id}: ${aliases.join(' · ')}`);
+  }
+  console.log(hits.length ? hits.map(hit => `  ${hit}`).join('\n') : 'none');
 }
 
 console.log('\nreminder: this tool reports, it never fails. Structural rules live in tools/validate-content.mjs.');

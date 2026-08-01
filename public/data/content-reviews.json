@@ -1,0 +1,122 @@
+{
+  "01-java-core-jvm.memory-execution-model.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 25"],
+    "claim_type": "normative",
+    "sources": ["https://openjdk.org/jeps/439", "https://openjdk.org/jeps/189"]
+  },
+  "01-java-core-jvm.concurrency.q1": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 21-25"],
+    "claim_type": "normative",
+    "sources": ["https://openjdk.org/jeps/491"]
+  },
+  "01-java-core-jvm.concurrency.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 25"],
+    "claim_type": "normative",
+    "sources": ["https://openjdk.org/jeps/506", "https://openjdk.org/jeps/525"]
+  },
+  "02-java-8-25-java-vs-go.release-timeline.q6": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 25"],
+    "claim_type": "normative",
+    "sources": ["https://openjdk.org/projects/jdk/25/", "https://openjdk.org/jeps/506"]
+  },
+  "02-java-8-25-java-vs-go.release-timeline.q7": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 25", "vendor support policies"],
+    "claim_type": "heuristic",
+    "sources": ["https://www.oracle.com/java/technologies/java-se-support-roadmap.html"]
+  },
+  "03-spring-boot-deep-build.auto-configuration-build.q1": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Spring Boot 4", "Spring Framework 7"],
+    "claim_type": "normative",
+    "sources": ["https://spring.io/blog/2025/11/20/spring-boot-4-0-0-available-now/", "https://spring.io/blog/2025/11/13/spring-framework-7-0-general-availability/"]
+  },
+  "07-sql-nosql-db-engines.engine-by-engine.q4": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["MongoDB current documentation"],
+    "claim_type": "normative",
+    "sources": ["https://www.mongodb.com/docs/manual/reference/read-concern/"]
+  },
+  "13-security-oauth2.oauth2-oidc.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["OAuth 2.1 draft-15", "OAuth 2.0 Security BCP"],
+    "claim_type": "normative",
+    "sources": ["https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/history/", "https://www.rfc-editor.org/rfc/rfc9700.html"]
+  },
+  "13-security-oauth2.designing-the-auth-system.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["RFC 8705", "RFC 9449"],
+    "claim_type": "normative",
+    "sources": ["https://www.rfc-editor.org/rfc/rfc8705.html", "https://www.rfc-editor.org/rfc/rfc9449.html"]
+  },
+  "13-security-oauth2.designing-the-auth-system.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["OWASP Top 10:2025", "OWASP API Security Top 10:2023"],
+    "claim_type": "normative",
+    "sources": ["https://owasp.org/Top10/", "https://owasp.org/API-Security/editions/2023/en/0x11-t10/"]
+  },
+  "14-devops-k8s-best-practices.docker-kubernetes.q6": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Kubernetes current documentation"],
+    "claim_type": "normative",
+    "sources": ["https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/"]
+  },
+  "14-devops-k8s-best-practices.ci-cd-2026-best-practices.q6": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Kubernetes current documentation"],
+    "claim_type": "heuristic",
+    "sources": ["https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/"]
+  },
+  "20-observability-sre.the-three-pillars-how-to-measure.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["OpenTelemetry messaging semantic conventions current"],
+    "claim_type": "normative",
+    "sources": ["https://opentelemetry.io/docs/specs/semconv/messaging/messaging-spans/"]
+  },
+  "21-linux-production-debug.jvm-network-deep-dive-on-prod.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["async-profiler 4.x", "JDK 25"],
+    "claim_type": "heuristic",
+    "sources": ["https://github.com/async-profiler/async-profiler", "https://github.com/async-profiler/async-profiler/releases"]
+  },
+  "23-java-concurrency-coding.async-the-modern-toolkit.q4": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 21-25"],
+    "claim_type": "normative",
+    "sources": ["https://openjdk.org/jeps/491"]
+  },
+  "25-microservice.01-cascading-failure-retry-storm.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Resilience4j current documentation"],
+    "claim_type": "normative",
+    "sources": ["https://resilience4j.readme.io/docs/circuitbreaker"]
+  },
+  "25-microservice.01-cascading-failure-retry-storm.q4": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Resilience4j current documentation", "JDK 25"],
+    "claim_type": "normative",
+    "sources": ["https://resilience4j.readme.io/docs/bulkhead", "https://resilience4j.readme.io/docs/timeout"]
+  },
+  "25-microservice.02-pool-exhaustion-connection-thread.q3": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["HikariCP current documentation"],
+    "claim_type": "normative",
+    "sources": ["https://github.com/brettwooldridge/HikariCP"]
+  },
+  "25-microservice.03-distributed-data-consistency.q5": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Apache Kafka 4.1"],
+    "claim_type": "normative",
+    "sources": ["https://kafka.apache.org/41/streams/developer-guide/config-streams/"]
+  },
+  "25-microservice.04-messaging-event-driven-at-scale.q4": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 25"],
+    "claim_type": "normative",
+    "sources": ["https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ConcurrentSkipListMap.html"]
+  }
+}

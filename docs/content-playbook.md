@@ -12,13 +12,14 @@ file này là **thao tác**.
 
 ---
 
-## 0. Bốn lệnh phải thuộc
+## 0. Năm lệnh phải thuộc
 
 ```bash
 node tools/validate-content.mjs --stats   # cấu trúc: sai là FAIL, phải sạch trước khi push
 node tools/audit-content.mjs              # biên tập: parity EN/VI + độ phủ ví dụ
 node tools/audit-content.mjs --stale      # kiến thức nào gắn version/năm → cần review
 node tools/audit-content.mjs --gaps       # mục nào dài mà chưa có ví dụ minh hoạ
+node tools/audit-content.mjs --refs       # alias kiểu ch.12 chưa trỏ tới item_id thật
 ```
 
 Khác nhau chỗ nào: `validate-content.mjs` **fail build** khi cấu trúc sai.
@@ -37,7 +38,8 @@ quyết, vì "nội dung đã đủ hay chưa" là phán đoán, không phải l
 node tools/audit-content.mjs --stale
 ```
 
-Liệt kê mọi mục có gắn số version hoặc năm (hiện tại: 43/324 mục). Đây là
+Liệt kê mọi mục có gắn số version, năm hoặc tên chuẩn/công cụ thay đổi nhanh
+(OAuth, OWASP, OpenTelemetry, Resilience4j, HikariCP, async-profiler). Đây là
 phần rữa trước nhất. Với mỗi mục, tự hỏi:
 
 - Version nêu ra còn là bản người ta thật sự dùng không? (`Spring Boot 3.2`
@@ -45,8 +47,9 @@ phần rữa trước nhất. Với mỗi mục, tự hỏi:
 - Tính năng "preview/incubator" đã final chưa? (`ScopedValue` từng là
   preview, Java 25 đã final → câu chữ phải đổi)
 - Con số benchmark có còn đúng thế hệ phần cứng/runtime hiện tại không?
-- Khuyến nghị đã đảo chiều chưa? (ví dụ OAuth 2.1 yêu cầu PKCE cho **cả**
-  web client — trước đó chỉ khuyến nghị cho mobile/SPA)
+- Khuyến nghị đã đảo chiều chưa? (ví dụ OAuth 2.1 draft hiện yêu cầu PKCE
+  cho **public client** và khuyến nghị cho confidential client; OAuth 2.0
+  Security BCP là nguồn chuẩn đã phát hành, không gọi draft là RFC)
 
 ### 1.2 Có chỗ nào nói mà không cho thấy không?
 
@@ -54,9 +57,9 @@ phần rữa trước nhất. Với mỗi mục, tự hỏi:
 node tools/audit-content.mjs --gaps
 ```
 
-Sắp xếp theo độ dài giảm dần: mục **càng dài mà càng không có code** thì
-càng đáng nghi — giải thích nhiều bằng lời nhưng người đọc chưa nhìn thấy
-thứ thật.
+Sắp xếp theo lượng **văn xuôi người đọc nhìn thấy**: mục càng dài mà không
+có code, bảng hoặc figure thì càng đáng nghi. HTML/tag soup không được tính
+thành độ dài, còn bảng và diagram đã được coi là bằng chứng minh hoạ.
 
 Tiêu chí chọn (dành cho người đã senior — **bỏ qua mấy thứ cơ bản**):
 
@@ -82,6 +85,26 @@ Cross-ref viết là id trong ngoặc đơn, validator kiểm target có thật:
 ```
 ... id có thứ tự thời gian (06-db-scaling.sharding-partitioning.q3).
 ```
+
+Chạy thêm `node tools/audit-content.mjs --refs`. Alias tự do như `(ch.12)`
+không được validator kiểm target, dễ sai sau khi sắp xếp tài liệu; phải thay
+bằng `item_id` bất biến. Mỗi khái niệm nên có **một topic sở hữu phần giải
+thích sâu**, các topic khác tóm tắt theo ngữ cảnh rồi cross-ref sang đó.
+
+### 1.4 Phân loại claim trước khi viết
+
+Mỗi khẳng định quan trọng thuộc một trong ba loại:
+
+| Loại | Cách viết |
+|---|---|
+| `normative` | Chuẩn/API/documentation nói gì; dùng MUST/SHOULD đúng nghĩa và ghi rõ version |
+| `heuristic` | Kinh nghiệm phụ thuộc workload; nêu điều kiện, tín hiệu đo và lúc nào đổi quyết định |
+| `example` | Một phép đo/case study cụ thể; không suy rộng thành chân lý phổ quát |
+
+Con số benchmark chỉ có giá trị khi kèm workload, dữ liệu, phần cứng,
+runtime/config và phương pháp đo. Nếu thiếu provenance, đổi thành quy trình
+đo hoặc ghi rõ đây là ví dụ minh hoạ — không viết `nhanh hơn 4×`, `tốn 70%`
+như một hằng số của công nghệ.
 
 ---
 
@@ -157,6 +180,31 @@ chữ và đụng với class UI (`.f` là form-field của modal interview).
 Nguyên tắc viết code cho tài liệu này: **mã giả là được, chỗ nào code thật
 mà ngắn thì code thật.** Không viết khung sườn thừa. Comment mang phần giải
 thích — người đọc nhìn code là hiểu, không phải đọc đoạn văn bên dưới mới hiểu.
+
+Nếu gọi snippet là code thật, nó phải biên dịch/chạy trên đúng version đã
+nêu hoặc được lấy từ API documentation chính thức. Nếu cố tình lược import,
+error handling hay infrastructure, ghi `pseudocode`/`abridged`; đừng để mã
+trông như copy-paste được nhưng dùng API đã lỗi thời.
+
+### 2.5 Metadata review nằm ngoài schema runtime
+
+Item runtime vẫn đúng **4 khoá**. Provenance của claim dễ lỗi thời ghi riêng
+trong `public/data/content-reviews.json`, keyed bằng chính `item_id`:
+
+```json
+{
+  "13-security-oauth2.oauth2-oidc.q2": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["OAuth 2.1 draft-15", "OAuth 2.0 Security BCP"],
+    "claim_type": "normative",
+    "sources": ["https://www.rfc-editor.org/rfc/rfc9700.html"]
+  }
+}
+```
+
+Chỉ dùng nguồn chính thức/primary cho claim normative. `reviewed_at` cho biết
+lần kiểm chứng cuối, không phải lời hứa nội dung đúng mãi. Review lại khi có
+release/standard/advisory mới, không chỉ đợi lịch sáu tháng.
 
 ---
 
@@ -257,6 +305,9 @@ node tools/validate-content.mjs --stats
 # 2. biên tập — parity EN/VI phải "no drift"
 node tools/audit-content.mjs
 
+# 2b. cross-ref tạm kiểu ch.xx phải là "none"
+node tools/audit-content.mjs --refs
+
 # 3. cú pháp JS (giống CI)
 for f in $(find public -name '*.js'); do node --input-type=module --check < "$f" || echo "FAIL $f"; done
 
@@ -305,7 +356,9 @@ arrowhead của nhau.
 |---|---|
 | Mỗi lần đụng vào nội dung | mục 5 — đủ 6 bước |
 | Có bản Java/Spring LTS mới | `--stale`, rà nhóm `core` + topic 2, 23 |
-| Mỗi ~6 tháng | `--stale` toàn bộ, soát lại benchmark và khuyến nghị bảo mật |
+| Có RFC/draft, OWASP, OTel semantic convention hoặc security advisory mới | rà topic 13, 20 và metadata nguồn liên quan |
+| Có release DB/Kafka/Kubernetes/library vận hành mới | `--stale`, rà claim normative và migration note |
+| Mỗi ~6 tháng | `--stale` toàn bộ, soát benchmark, heuristic và link nguồn |
 | Sau phỏng vấn thật | ghi câu hỏi chưa trả lời tốt → thành mục mới hoặc bồi mục cũ |
 
 Khi cập nhật một sự thật đã đổi: **sửa nội dung, giữ nguyên `id`**. Nếu
@@ -318,6 +371,9 @@ sạch dấu vết.
 ## 7. Checklist rút gọn
 
 - [ ] Đã `grep` xem khái niệm này viết ở đâu chưa → trùng thì cross-ref
+- [ ] Cross-ref dùng `item_id` thật; `--refs` báo `none`
+- [ ] Claim là normative/heuristic/example; benchmark có provenance
+- [ ] Claim dễ lỗi thời đã cập nhật `content-reviews.json`
 - [ ] `id` không đổi, chỉ thêm vào cuối
 - [ ] `<` viết thành `&lt;`, kể cả trong inline code
 - [ ] Không có dòng trắng trong `<pre>`/`<table>`/`<figure>`

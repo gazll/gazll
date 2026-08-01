@@ -163,3 +163,34 @@ test('every item id encodes its own topic key', async () => {
     }
   }
 });
+
+test('content review metadata is keyed by real immutable item ids', async () => {
+  const reviewPath = path.join(pub, 'data/content-reviews.json');
+  const raw = await readFile(reviewPath, 'utf8').catch(() => null);
+  assert.ok(raw, 'public/data/content-reviews.json must exist');
+
+  const reviews = JSON.parse(raw);
+  const ids = new Set(
+    [...TOPIC_FILES.values()].flatMap(content =>
+      content.sections.flatMap(section => section.items.map(item => item.id)))
+  );
+  const entries = Object.entries(reviews);
+  assert.ok(entries.length >= 10, 'the high-risk refresh needs provenance for more than a token sample');
+
+  for (const [id, review] of entries) {
+    assert.ok(ids.has(id), `${id}: review metadata points at no English item`);
+    assert.match(review.reviewed_at, /^\d{4}-\d{2}-\d{2}$/, `${id}: reviewed_at must be YYYY-MM-DD`);
+    assert.ok(
+      ['normative', 'heuristic', 'example'].includes(review.claim_type),
+      `${id}: unsupported claim_type ${review.claim_type}`
+    );
+    assert.ok(Array.isArray(review.target_versions) && review.target_versions.length > 0,
+      `${id}: target_versions must be a non-empty array`);
+    assert.ok(review.target_versions.every(version => typeof version === 'string' && version.length > 0),
+      `${id}: target_versions must contain non-empty strings`);
+    assert.ok(Array.isArray(review.sources) && review.sources.length > 0,
+      `${id}: sources must be a non-empty array`);
+    assert.ok(review.sources.every(source => /^https:\/\//.test(source)),
+      `${id}: every source must be an HTTPS URL`);
+  }
+});
