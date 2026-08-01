@@ -7,7 +7,7 @@
           "id": "25-microservice.01-cascading-failure-retry-storm.q1",
           "q": "Vì sao một service downstream chậm làm sập cả upstream dù CPU chưa cao?",
           "a": "Gốc rễ: [[r:thread/connection bị giam trong lúc chờ downstream]].\n\n- Service A có Tomcat pool 200 thread, mỗi request gọi B\n- B bình thường 20ms → thread giải phóng nhanh (~10.000 req/s)\n- B chậm lên 5s → mỗi thread bị giam 5s → throughput A sụp còn ~40 req/s\n\nA không chết vì CPU mà vì [[r:thread starvation]] — hết đơn vị xử lý đồng thời.\n\n[[r:Retry storm]] chồng lên: A timeout với B rồi retry; B đang lag chứ chưa chết → retry làm B nhận gấp đôi tải → B chết hẳn → A retry điên cuồng → B không phục hồi được dù restart.\n\n:::deep\nTrạng thái này gọi là [[o:metastable failure]]: hệ kẹt ở trạng thái xấu và không tự thoát *dù nguyên nhân ban đầu đã hết*.\n\nHai loop khuếch đại:\n- *retry amplification* — mỗi tầng retry nhân tải, chồng 3 tầng là x8\n- *load-induced slowdown* — càng tải cao càng chậm (GC, lock, context switch) → nhiều timeout hơn → retry nhiều hơn\n\nMuốn thoát phải [[g:chủ động shed tải]], không chỉ đợi tự khôi phục.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.01-cascading-failure-retry-storm.q2",
@@ -25,7 +25,7 @@
           "id": "25-microservice.01-cascading-failure-retry-storm.q4",
           "q": "Bulkhead: semaphore vs thread-pool, với virtual thread?",
           "a": "Bulkhead tách concurrency hoặc execution capacity theo từng downstream để một dependency chậm không nuốt hết tài nguyên chung.\n\nResilience4j có hai cơ chế khác nhau:\n\n- [[b:`SemaphoreBulkhead`]] giới hạn số call đồng thời và chạy trên thread của caller.\n- [[b:`FixedThreadPoolBulkhead`]] submit việc vào fixed pool riêng có bounded queue, cách ly cả thread lẫn queued work.\n\nThread-pool bulkhead [[r:không]] tạo hard execution timeout. Phải ghép `TimeLimiter`/client deadline riêng và bảo đảm cancellation thực sự tác động tới call bên dưới. Với virtual thread, semaphore thường là cách đơn giản hơn để cap downstream concurrency, nhưng executor riêng vẫn hữu ích cho ownership, queueing hoặc legacy isolation — chọn theo failure behavior, không theo trào lưu.\n\n:::deep\nCircuit breaker phản ứng sau khi ghi đủ outcome; bulkhead giới hạn concurrency ngay lập tức. Rate limiter giới hạn số lần bắt đầu theo thời gian; timeout giới hạn thời gian chờ/chạy. Chúng xử lý các chiều khác nhau và phải cùng xuất phát từ một end-to-end deadline cùng overload policy.\n\nĐịnh luật Little, `L = λW`, chỉ cho estimate ban đầu khi hệ ổn định và đơn vị khớp. Dùng arrival rate và phân phối service time quan sát được, chừa headroom cho variance rồi load-test rejection/recovery. Downstream có long-tail mà size theo mean sẽ tạo queue đúng lúc incident.\n\nĐo permitted, rejected, queued, timed-out, cancelled và completed call theo từng dependency. Limit chỉ hữu ích khi rejection map sang response chủ ý như fallback, `429`/`503` hoặc retry có bound — không phải exception loop vô hình.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.01-cascading-failure-retry-storm.q5",
@@ -37,7 +37,7 @@
           "id": "25-microservice.01-cascading-failure-retry-storm.q6",
           "q": "Load shedding — tuyến phòng thủ cuối",
           "a": "[[b:Load shedding]] từ chối phần việc vượt capacity hoặc ít giá trị trước khi nó tiêu thụ scarce resource, nhờ đó giữ useful throughput và latency hữu hạn cho việc đã nhận. Đặt admission tại boundary sớm nhất biết cả cost lẫn priority: gateway, per-endpoint limiter, worker queue hoặc dependency bulkhead.\n\nDùng saturation signal trực tiếp như in-flight work, queue age/depth, permit/connection còn lại và xác suất miss deadline. CPU và p99 hữu ích để xác nhận nhưng có thể phản ứng sau khi queue đã phình. Định nghĩa overload class cùng fairness: reserve capacity cho operation critical, cap noisy tenant và không mặc nhiên tính một request đắt ngang một lookup rẻ chỉ vì cả hai đều là “một request”.\n\n:::tip Rejection contract\nDùng `429` cho client/quota policy và `503` cho service capacity tạm thời khi semantics đó khớp API. Chỉ trả `Retry-After` với retry policy server có thể hỗ trợ; client vẫn cần jitter, deadline và retry budget. Với non-idempotent work, không mời automatic retry nếu chưa có idempotency contract.\n:::\n\n:::deep\nConcurrency/queue limit cố định đơn giản và audit được. Adaptive limiter có thể điều chỉnh theo latency hoặc gradient signal khi cost workload thay đổi, nhưng nó là control loop—không loại bỏ maximum bound, minimum capacity, priority rule hay tuning. Kiểm thử stability, cold start, low traffic, dependency slowdown và correlated burst; expose chosen limit cùng rejection reason.\n\nShedding sau khi work đã vào unbounded queue là quá muộn. Kết hợp admission với bounded queue, cancellation và backpressure để work bị reject/hết hạn giải phóng resource. So sánh incident card này với overload workflow canonical tại (10-system-design-rate-limit.surviving-high-load.q2).\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         }
       ]
     },
@@ -54,7 +54,7 @@
           "id": "25-microservice.02-pool-exhaustion-connection-thread.q2",
           "q": "Tổng connection cross-instance vượt max_connections",
           "a": "Budget tính trên toàn fleet: `max replica × pool size`, cộng job, migration, admin tool và service khác phải nằm dưới DB limit với reserve cho failover/recovery. Autoscaling vì vậy có thể làm cạn connection dù pool từng pod nhìn vẫn khoẻ.\n\nTrước hết kiểm soát demand: cap replica và pool mỗi pod nhất quán, rút ngắn transaction, tách batch traffic, shed excess work và chỉ tăng DB capacity sau khi đo. Connection proxy/pooler như RDS Proxy hoặc PgBouncer là [[o:một lựa chọn]], không phải bắt buộc tự động; nó giúp khi nhiều client connection chủ yếu idle/churn nhưng không tạo thêm query capacity cho DB.\n\n:::deep\nSemantics của proxy rất quan trọng. Session pooling giữ backend connection cho một client session nên multiplex ít hơn. Transaction pooling gán lại backend sau mỗi transaction, vì vậy arbitrary session state — temporary table, `SET` cấp session, một số advisory-lock/listen behavior và assumption của driver — có thể không còn.\n\n“Luôn phải tắt prepared statement” đã cũ và quá rộng. Version/configuration PgBouncer cùng protocol quyết định: release hiện đại có thể track protocol-level named prepared statement khi bật đúng, còn SQL-level `PREPARE`/`DEALLOCATE`, session state, DDL change và từng driver cần compatibility test tường minh. RDS Proxy có thể pin session cho operation cản multiplexing, làm giảm lợi ích.\n\nTest transaction, prepared statement, failover, credential rotation, cancellation, idle/maximum lifetime và observability qua đúng proxy mode trước rollout. Theo dõi client connection, backend connection, pinning/multiplex ratio, wait, transaction latency và rejected connection.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.02-pool-exhaustion-connection-thread.q3",
@@ -66,13 +66,13 @@
           "id": "25-microservice.02-pool-exhaustion-connection-thread.q4",
           "q": "Thread pool: gotcha queueCapacity",
           "a": "Thứ tự thực tế của `ThreadPoolExecutor`: [[g:core → queue → max → reject]] (không phải core → max → queue như trực giác).\n\n<pre><code>running &lt; core?        → tạo thread mới\nelse queue chưa đầy?   → BỎ VÀO QUEUE (không tạo thread!)\nelse thread &lt; max?     → tạo thread mới\nelse                   → REJECT</code></pre>\n\n[[r:Bẫy]]: `queueCapacity` lớn (mặc định `LinkedBlockingQueue` là `Integer.MAX_VALUE`) → queue không bao giờ đầy → pool [[r:không bao giờ vượt corePoolSize]] → `maxPoolSize` vô nghĩa.\n\n→ dùng queue hữu hạn + `CallerRunsPolicy` (backpressure tự nhiên: task chạy trên thread gọi → tự giảm tốc nhận task).\n\n:::deep\nMuốn \"scale thread trước, queue sau\" dùng `SynchronousQueue` hoặc custom queue override `offer()` (cách Tomcat làm với `TaskQueue`).\n\nCallerRunsPolicy trên web server có mặt trái: mượn request thread của Tomcat → giảm thread nhận request mới → backpressure lan ra client (cố ý, nhưng latency-critical path cân nhắc trả 503 nhanh).\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.02-pool-exhaustion-connection-thread.q5",
           "q": "Virtual thread gỡ nút I/O-bound + cạm bẫy",
           "a": "Virtual thread bỏ nhu cầu dùng pool platform thread nhỏ chỉ vì OS thread bị block quá đắt. Nó không bỏ bất kỳ giới hạn downstream nào.\n\n- Operation blocking được hỗ trợ sẽ park và unmount VT để carrier chạy task khác.\n- Trên JDK 21–23, blocking dưới monitor `synchronized` có thể ghim carrier. JDK 24 đã gỡ pinning do monitor; native/foreign call và edge case class initialization vẫn có thể giữ nó.\n- CPU-bound vẫn giới hạn bởi số core.\n- Thread rẻ làm mất admission limit vô tình: hàng nghìn request có thể chờ pool 20 connection hoặc flood partner nếu không bound concurrency tường minh.\n\n:::deep\nĐừng trích “cải thiện 6×” hay một stack cost cố định như chân lý. Đo throughput, RSS, allocation, carrier utilization, pending connection, queue depth và p99 dưới cùng container limit/workload.\n\nDùng một VT cho mỗi task, rồi đặt semaphore hoặc pool thật của resource ở từng dependency khan hiếm. Cho việc chờ một absolute deadline và shed load trước khi queue ăn hết latency budget. Trên JDK 21–23, diagnostic/JFR event pinning cũ có thể giúp; `-Djdk.tracePinnedThreads` bị bỏ ở JDK 24, nên dùng số liệu JFR/thread dump hiện hành.\n\nChi tiết runtime nằm ở (01-java-core-jvm.concurrency.q1), còn API code JDK 25 ở (23-java-concurrency-coding.async-the-modern-toolkit.q4).\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         }
       ]
     },
@@ -83,7 +83,7 @@
           "id": "25-microservice.03-distributed-data-consistency.q1",
           "q": "Dual-write problem — vì sao đoạn này sai tinh vi?",
           "a": "<pre><code>@Transactional\npublic void placeOrder(Order order) {\n    orderRepository.save(order);        // commit vào DB\n    messageBroker.publish(orderEvent);  // publish ra broker\n}</code></pre>\n\nDB + broker [[r:không cùng transaction]]. `@Transactional` chỉ bao DB.\n\n- crash sau commit trước publish → [[r:event mất]]\n- publish xong rồi DB rollback → downstream xử lý order không tồn tại\n\n[[r:Đừng giải bằng 2PC/XA]] (chậm, fragile, blocking lock cross-system).\n\n:::deep\n2PC bị né vì prepare-phase giữ lock trên mọi participant tới commit; coordinator chết giữa chừng → participant kẹt \"in-doubt\", giữ lock vô thời hạn → giết throughput + SPOF.\n\nĐảo thứ tự (publish trước) vẫn sai: vấn đề *không phải thứ tự* mà *thiếu atomicity giữa hai medium*. Chỉ có cách đưa cả hai vào cùng medium giao dịch (DB) rồi relay ra — chính là [[g:Outbox]].\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.03-distributed-data-consistency.q2",
@@ -95,7 +95,7 @@
           "id": "25-microservice.03-distributed-data-consistency.q3",
           "q": "Saga: orchestration vs choreography + cạm bẫy compensation",
           "a": "Chuỗi local transaction, mỗi bước fail chạy [[g:compensating transaction]].\n\n[[b:Choreography]] (event-driven): loose coupling nhưng dễ thành \"pinball\" khó debug — quá 4–5 bước nên chuyển [[b:orchestration]] (state machine: Temporal/Camunda).\n\n[[r:Cạm bẫy compensation ở fintech]]:\n- [[r:Compensation ≠ rollback]]: đã trừ tiền + gửi SMS thì không xóa được SMS → thiết kế semantic hoàn tiền (credit lại), không \"un-debit\"\n- [[r:Pivot transaction]]: qua điểm pivot (đã giải ngân ra ngoài) thì không bù được → sau pivot chỉ retry-forward\n- [[r:Compensation cũng fail]] → phải retry + idempotent\n\n:::deep\n[[g:Semantic lock]]: giữa lúc bước đã chạy và compensation chưa xong, dùng *trạng thái trung gian* rõ (`PENDING_CONFIRM`) thay vì để balance thật sự đổi, chỉ chốt khi cả saga thành công → giảm window không nhất quán mà user nhìn thấy.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.03-distributed-data-consistency.q4",
@@ -107,7 +107,7 @@
           "id": "25-microservice.03-distributed-data-consistency.q5",
           "q": "“Exactly once” bảo đảm điều gì, và boundary của bảo đảm nằm ở đâu?",
           "a": "“Exactly once” chỉ có nghĩa sau khi định nghĩa [[o:scope, observer, failure model và side effect]]. Hứa exactly-once delivery phổ quát là sai, nhưng gọi mọi exactly-once guarantee là myth cũng sai.\n\nKafka có thể cung cấp exactly-once processing trong boundary rõ: idempotent producer và transaction atomically commit consumed offset cùng produced record, còn consumer dùng `read_committed` tránh aborted write. Exactly-once processing mode của Kafka Streams áp dụng trong boundary input/state/output do Kafka quản lý. Nó không tự động bao gồm commit PostgreSQL, email, call payment provider hay REST effect tuỳ ý.\n\nVới effect ngoài transaction boundary đó, crash quanh điểm “effect đã thành công / acknowledgement thất bại” tạo outcome mơ hồ. Dùng local transaction cùng inbox/outbox, operation/event ID ổn định, unique constraint, semantics idempotent ở receiver và reconciliation để delivery lặp vẫn tạo một business outcome.\n\n:::deep\nTách các khái niệm:\n\n- **delivery:** transport đưa record bao nhiêu lần;\n- **processing attempt:** handler code chạy bao nhiêu lần;\n- **business effect:** observer đã công bố nhìn thấy gì trong durable state.\n\nAt-least-once delivery có thể tạo effectively-once business effect khi effect idempotent và deduplication atomic cùng nó. Transactional system có thể cho exactly-once visibility trong boundary của mình dù network vẫn retry message. Hỏi vendor resource nào cùng transaction, failover/fencing hoạt động ra sao, consumer phải config gì và chuyện gì xảy ra khi thêm external effect.\n\nCâu hỏi thiết kế thực dụng là: “Nếu operation chạy hai lần hoặc outcome chưa biết, hệ phát hiện, hội tụ và reconcile thế nào?”\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         }
       ]
     },
@@ -124,7 +124,7 @@
           "id": "25-microservice.04-messaging-event-driven-at-scale.q2",
           "q": "Message ordering khi scale ngang",
           "a": "Ordering là guarantee có scope. Kafka sắp thứ tự record trong một partition; RabbitMQ giữ queue delivery order dưới các điều kiện được tài liệu hóa, nhưng nhiều consumer, redelivery và application concurrency có thể đổi thứ tự side effect hoàn tất. Trước hết định nghĩa business scope—thường là một account/order/aggregate—không phải “mọi event toàn cục”.\n\n- Chọn key ổn định và giữ mọi event chung ordering invariant trên cùng partition/consumer lane. Hot key giới hạn parallelism; đổi partition count hoặc key logic cần migration plan.\n- Với Kafka, producer idempotence giữ order trong configuration được hỗ trợ; retry khi idempotence tắt và có nhiều hơn một in-flight request có thể reorder batch. Không sao chép blanket rule cũ “luôn đặt max in-flight bằng 1”—hãy xác minh contract của client/version.\n- Rebalance hoặc ack/offset failure có thể xử lý lại record. Consumer idempotency giải quyết duplicate nhưng tự nó không từ chối late older event; dùng aggregate version/sequence và atomic conditional update nếu stale event có thể làm hỏng state.\n- Handler song song có thể hoàn tất khác order dù delivery có thứ tự. Chỉ commit/ack sau side effect dự kiến và định nghĩa poison message hoặc slow key ảnh hưởng progress ra sao.\n\n:::deep\nRabbitMQ single-active-consumer có thể serialize consumption với failover; consistent-hash routing có thể shard theo key, nhưng redelivery vẫn cần idempotency. Kafka partition order là broker append order, không nhất thiết là event-time order từ distributed producer. Nếu producer có thể race, cấp sequence tại state owner hoặc để consumer so version.\n\nGlobal total order thường phá throughput nhưng vẫn không làm external side effect atomic. Nêu invariant hẹp rồi test producer retry, rebalance, duplicate, delayed event, key migration và DLQ replay. Chi tiết broker canonical nằm tại (08-message-queue.reliability-delivery-semantics.q4).\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.04-messaging-event-driven-at-scale.q3",
@@ -136,7 +136,7 @@
           "id": "25-microservice.04-messaging-event-driven-at-scale.q4",
           "q": "RabbitMQ Publisher Confirms: 3 mode + ConcurrentSkipListMap",
           "a": "Publisher confirm acknowledge việc publisher→broker được chấp nhận theo queue type và durability config. Ba application pattern thường gặp là synchronous từng message, synchronous theo batch và callback asynchronous; đó là pattern có throughput/failure bookkeeping khác nhau, không phải ba broker guarantee khác nhau.\n\n<pre><code>channel.<span class=\"f\">confirmSelect</span>();\nConcurrentNavigableMap&lt;Long, Message&gt; outstanding = <span class=\"k\">new</span> ConcurrentSkipListMap&lt;&gt;();\nchannel.<span class=\"f\">addConfirmListener</span>(\n    (seqNo, multiple) -&gt; {\n        <span class=\"k\">if</span> (multiple) outstanding.<span class=\"f\">headMap</span>(seqNo, <span class=\"k\">true</span>).<span class=\"f\">clear</span>();\n        <span class=\"k\">else</span> outstanding.<span class=\"f\">remove</span>(seqNo);\n    },\n    (seqNo, multiple) -&gt; retryQueue.<span class=\"f\">addAll</span>(<span class=\"f\">removeNacked</span>(outstanding, seqNo, multiple)));\n<span class=\"c\">// register trước publish; remove/resolve entry nếu chính basicPublish throw</span>\n<span class=\"k\">long</span> seq = channel.<span class=\"f\">getNextPublishSeqNo</span>();\noutstanding.<span class=\"f\">put</span>(seq, message);\nchannel.<span class=\"f\">basicPublish</span>(exchange, key, properties, body);</code></pre>\n\n`multiple=true` acknowledge hoặc reject prefix tới `seqNo`. Skip-list map giúp ordered concurrent prefix lookup, nhưng clear `k` entry [[r:không phải O(log n)]]: tìm range là logarithmic, còn duyệt/xoá các entry đã ack tốn ít nhất O(k) work (cộng implementation overhead mỗi removal).\n\n:::deep\nConfirm không phải end-to-end delivery hay processing acknowledgement. Durability phụ thuộc queue type, replication policy, durable declaration, persistent-message property và broker failure semantics; consumer acknowledgement vẫn riêng. Test node loss, channel close, unroutable message bị return và connection recovery.\n\nAsync mode phải xử lý ack/nack đơn và cumulative, channel shutdown còn unresolved entry, outstanding memory có bound, mandatory-return routing failure, retry backoff và duplicate publication. Giữ callback nhỏ; đưa retry sang executor/queue có kiểm soát và không giả định channel operation tự do thread-safe.\n\nConfirm cũng không giải dual write database→broker. Dùng transactional outbox cho boundary đó (08-message-queue.reliability-delivery-semantics.q7), rồi coi confirm state là bookkeeping của relay.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         }
       ]
     },
@@ -153,7 +153,7 @@
           "id": "25-microservice.05-caching-pitfalls.q2",
           "q": "Hot key",
           "a": "Một key quá nóng dồn vào một node Redis → [[r:nghẽn dù cluster rảnh]] (sharding đặt nó ở một slot).\n\n- [[b:L1 (Caffeine) + L2 (Redis)]]: L1 TTL ngắn chặn phần lớn read khỏi Redis\n- [[b:Key replication nhân tạo]]: ghi `key#1..key#N`, read random → rải tải nhiều slot (phức tạp khi invalidate)\n\n:::deep\nL1+L2+DB là chuẩn production: L1 hit ratio phụ thuộc workload; đo theo key class và tính cả invalidation traffic, memory pressure, cold start cùng chi phí stale read trước khi sizing Redis.\n\n[[r:Chi phí]]: invalidation lan tỏa — data đổi phải xóa L1 trên *mọi* instance (Redis pub/sub, hoặc chấp nhận TTL ngắn). Phát hiện hot key: Redis `--hotkeys`, sampling ở client; hot key xuất hiện đột ngột (flash sale) → cần phát hiện tự động + promote L1 động.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.05-caching-pitfalls.q3",
@@ -176,7 +176,7 @@
           "id": "25-microservice.06-hot-partition-db-bottleneck.q1",
           "q": "Hot partition: shard rồi vẫn lệch",
           "a": "Shard rồi vẫn lệch vì:\n- shard theo [[r:thời gian]] → ghi mới dồn vào shard hiện tại\n- shard theo entity có [[r:whale]] (merchant 40% giao dịch) → shard đó nóng\n- [[r:monotonic key]] → partition đầu/cuối luôn nóng\n\nChọn shard key [[g:phân tán đều + khớp truy vấn]] (hash userId thường hơn timestamp).\n\n:::deep\n[[o:Căng thẳng]]: shard key vừa phân tán đều vừa gom data hay query cùng nhau — hai mục tiêu xung đột.\n\nHash phá range query, range dễ hot → composite `hash(tenant)+time`. Whale entity: tách shard riêng / sub-partition bên trong. Phân bố thường Zipf → phải lường whale, không giả định tải đều.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.06-hot-partition-db-bottleneck.q2",
@@ -211,7 +211,7 @@
           "id": "25-microservice.07-observability-debugging.q3",
           "q": "Sampling & health check",
           "a": "Sampling và health check giải quyết các failure mode khác nhau, và cả hai đều cần policy rõ ràng.\n\n- [[g:Trace sampling]]: head sampling quyết định sớm với chi phí thấp; tail sampling có thể giữ các trace chậm, lỗi hoặc giá trị cao do policy chọn sau khi quan sát đủ span, nhưng cần buffering và consistent routing. Nó không khôi phục được span đã bị loại ở upstream, và giữ mọi error/slow trace không mặc nhiên khả thi về chi phí hay có định nghĩa rõ.\n- [[b:Startup probe]] bảo vệ giai đoạn khởi tạo chậm khỏi liveness failure quá sớm. [[b:Liveness]] hỏi restart process này có giúp ích không. [[b:Readiness]] hỏi instance này có nên nhận traffic mới ngay lúc này không.\n\n:::warn Dependency check là một quyết định điều hướng traffic\nĐưa database hoặc remote dependency vào readiness có thể đúng khi instance thật sự không phục vụ được request hữu ích nào, nhưng cũng có thể loại toàn bộ pod khi dependency dùng chung bị chậm và biến degradation thành outage. Hãy mô hình hóa capability critical/optional, dùng probe timeout có giới hạn và ưu tiên graceful degradation khi product contract cho phép.\n:::\n\n:::deep\nChọn sampling theo traffic volume, giá trị chẩn đoán, privacy, collector capacity và chi phí; theo dõi dropped span cùng decision latency. Đặt threshold và hành vi failure của probe từ số đo startup/recovery thay vì sao chép default.\n\nPhần tracing canonical nằm tại (20-observability-sre.the-three-pillars-how-to-measure.q2); semantics canonical của Kubernetes probe nằm tại (14-devops-k8s-best-practices.docker-kubernetes.q6).\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         }
       ]
     },
@@ -222,7 +222,7 @@
           "id": "25-microservice.08-operational-concerns.q1",
           "q": "API versioning & backward compatibility",
           "a": "Deploy độc lập → luôn có lúc A-v2 nói chuyện B-v1.\n\n- chỉ thêm field optional (consumer cũ bỏ qua)\n- thay đổi phá vỡ → versioning rõ, chạy song song\n- schema DB: [[g:expand-contract]] (thêm cột → ghi cả cũ/mới → backfill → chuyển đọc → xóa cũ), không đổi phá vỡ trong một bước\n\n:::deep\nEvent khó hơn REST vì tồn tại lâu (replay) → [[g:Schema Registry]] (Avro/Protobuf) với compatibility BACKWARD/FORWARD tùy ai deploy trước.\n\nExpand-contract [[r:bắt buộc]] khi rolling (hai version chạy đồng thời trên cùng DB) — đổi tên cột một phát là pod cũ vỡ ngay. Tách qua nhiều release.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.08-operational-concerns.q2",
@@ -234,7 +234,7 @@
           "id": "25-microservice.08-operational-concerns.q3",
           "q": "Autoscaling lag & API gateway",
           "a": "Autoscaling là một control loop có delay. Detection interval, metric lag, scheduling, image pull, startup probe, dependency registration và application warmup đều góp vào [[b:time-to-useful-capacity]]; không có “30–60 giây JVM warmup” phổ quát. Đo distribution trên image, node pool, traffic mix và runtime thật.\n\nScale theo signal sớm nhất nhưng đáng tin cho bottleneck. CPU có thể hữu ích với compute-bound work, còn queue age/depth, in-flight concurrency, request/event arrival rate, pool saturation hoặc predictive schedule có thể đi trước nó trong I/O và bursty workload. Chỉ dùng nhiều signal với control policy đã tài liệu hóa, đồng thời cấu hình scale-up/down rate và stabilization để tránh oscillation.\n\n:::tip Capacity chỉ tới trước traffic khi được thiết kế như vậy\nGiữ headroom cho latency-critical path, pre-scale known event, giảm image/startup work và để readiness biểu diễn service hữu ích—không chỉ là port đã mở. Kubernetes HPA cố ý xử lý metric của pod chưa ready theo hướng thận trọng; căn startup/readiness probe và HPA initialization behavior theo warmup đã đo.\n:::\n\n:::deep\nCRaC checkpoint, CDS và native image có thể giảm một số startup cost nhưng thêm constraint về build/runtime, resource rebinding, profile guidance hoặc compatibility. Benchmark steady-state throughput, memory và restore safety; đây là option, không phải default remedy. Scale-to-zero có thể không phù hợp nếu cold-start latency vi phạm product SLO.\n\nGateway stateless dễ replicate nhưng không thể tạo thêm downstream database/broker capacity. Kết hợp autoscaling với bounded admission, rate limit, backpressure và dependency budget. Test step spike, ramp, slow dependency, cold node, image-cache miss, rollout đồng thời scale và scale-down khi còn long request. Probe semantics canonical nằm tại (14-devops-k8s-best-practices.docker-kubernetes.q6); overload handling tại (10-system-design-rate-limit.surviving-high-load.q2).\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         }
       ]
     },
@@ -251,7 +251,7 @@
           "id": "25-microservice.09-idempotency-the-central-link.q2",
           "q": "Idempotent consumer / inbox pattern",
           "a": "At-least-once + Outbox có thể gửi lặp → consumer dedup bằng `eventId`:\n\n<pre><code>void handle(Event e) {\n    if (!processedEvents.tryInsert(e.getEventId())) return;  // đã xử lý, bỏ qua\n    process(e);\n}</code></pre>\n\n`tryInsert` + `process` lý tưởng [[g:cùng transaction]] (*inbox pattern*), nếu không có khe hở đánh dấu-xong-crash-trước-process.\n\n:::deep\n[[o:Thứ tự quyết định failure mode]]:\n- đánh dấu trước → risk *mất* message\n- process trước → risk *làm lại* (vô hại nếu idempotent)\n\nKhông đặt cùng txn được thì chọn \"process trước\" + idempotent. Dedup store cần TTL đồng bộ với retention/replay window (message kẹt DLQ vài ngày rồi replay mà dedup hết hạn → xử lý lặp).\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.09-idempotency-the-central-link.q3",
@@ -280,19 +280,19 @@
           "id": "25-microservice.10-system-design-putting-it-all-together.q3",
           "q": "Data model & phân mảnh",
           "a": "Mặc định chọn authoritative store đơn giản nhất có thể enforce invariant. Chỉ thêm cache, stream, search index, replica hoặc warehouse cho access pattern, isolation hay retention need đã gọi tên; mỗi derived store cần ownership, freshness semantics, rebuild/reconciliation và failure behavior.\n\n- [[b:Ledger command path]]: append debit/credit entry cân bằng trong một ACID transaction với constraint về currency/amount và uniqueness. Current balance có thể được duy trì transactionally như derived value, nhưng ledger vẫn là nguồn audit; không authorize spend từ eventually consistent cache.\n- [[b:Read model]]: history, search, notification và analytics có thể consume Outbox event và chấp nhận lag đã nêu. Expose freshness/version khi user hoặc operator cần.\n- [[b:Partitioning]]: chọn theo dominant access, invariant và failure domain. Hash `accountId` có thể phân phối account-local read, nhưng transfer chạm hai account, institution/merchant nóng vẫn gây skew, còn regulatory/tenant placement có thể hạn chế routing. Prototype cross-partition behavior trước khi chốt key.\n\n:::deep\nConsistency được chọn theo operation/read model và invariant, không chỉ “theo field”. Cached balance string có thể stale khi hiển thị nhưng debit decision vẫn cần authoritative transactional state. Định nghĩa monotonic/read-your-writes behavior rõ ràng.\n\nSharding thêm routing, resharding, unique-key scope, cross-shard transaction, backup và incident tooling. Trước hết xử lý query/index/schema, bounded connection, partitioning/archival và vertical/replica option phù hợp; chỉ shard khi measured limit yêu cầu. Double-entry design canonical nằm tại (09-distributed-tx-fintech.correctness-where-money-is-involved.q3), concurrency correctness tại (09-distributed-tx-fintech.correctness-where-money-is-involved.q5), và phạm vi eventual consistency tại (09-distributed-tx-fintech.correctness-where-money-is-involved.q6).\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.10-system-design-putting-it-all-together.q4",
           "q": "Bài toán mẫu: thiết kế luồng chuyển tiền end-to-end",
           "a": "Với internal transfer giữa hai account do cùng ledger sở hữu, giữ invariant tiền trong [[g:một ACID double-entry transaction]]. Đừng model debit và credit thành hai saga step: crash ở giữa sẽ tạm tạo hoặc huỷ tiền.\n\n<pre><code>1. Validate POST /transfers và bind Idempotency-Key với tenant + normalized request hash.\n2. Trong một ledger DB transaction:\n     - atomically claim idempotency/business transfer ID;\n     - lock/version các account theo thứ tự deterministic;\n     - append debit và credit entry immutable, cân bằng;\n     - ghi transfer status cùng outbox event;\n     - lưu API result để replay rồi commit.\n3. Outbox relay publish TransferPosted; consumer deduplicate theo eventId.\n4. Notification/search/analytics update async và có thể lag mà không đổi ledger truth.\n5. Chỉ áp deadline, concurrency limit, retry, breaker hoặc fallback khi failure semantics của\n   từng downstream cần; đừng bọc mọi call bằng mọi resilience decorator.\n6. Trace flow nhưng không đặt credential/PII trong trace baggage, và liên tục reconcile\n   ledger balance, transfer state, outbox cùng external statement.</code></pre>\n\nNếu destination là bank/PSP bên ngoài, local transaction ghi một internal obligation/pending state cân bằng cùng outbox. Durable orchestrator sau đó chạy external step với provider idempotency key ổn định, coi timeout là [[o:unknown outcome]], poll/webhook/reconcile rồi ghi compensating hoặc forward recovery entry. Nó không sửa immutable ledger history để giả vờ attempt chưa xảy ra.\n\n:::deep\nCorrectness chain phải tường minh:\n\n- payment idempotency và ambiguous outcome: (09-distributed-tx-fintech.correctness-where-money-is-involved.q1) và (09-distributed-tx-fintech.correctness-where-money-is-involved.q2);\n- balanced ledger model: (09-distributed-tx-fintech.correctness-where-money-is-involved.q3);\n- outbox atomicity: (09-distributed-tx-fintech.distributed-transaction-patterns.q3);\n- idempotent consumer: (08-message-queue.reliability-delivery-semantics.q6);\n- network deadline/retry control: (15-network-i-o-models.threading-network-programming.q5);\n- trace và messaging causality: (20-observability-sre.the-three-pillars-how-to-measure.q2).\n\nCrash-test mọi boundary: trước/sau DB commit, trước/sau broker confirm, delivery duplicate/out-of-order, provider thành công rồi local timeout, process kill trong recovery và stale read. Với mỗi case, nêu durable source of truth và cơ chế hội tụ không tạo double effect.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.10-system-design-putting-it-all-together.q5",
           "q": "Khung đánh đổi — không có kiến trúc đúng",
           "a": "Không có điểm số kiến trúc nếu thiếu objective, workload và failure model đã nêu. Biểu diễn mỗi quyết định theo chuỗi: [[g:constraint → option → evidence → choice → consequence → trigger để review lại]].\n\n- [[b:Consistency/availability khi partition]]: CAP áp dụng khi communication bị partition; chọn operation nào reject/queue và operation nào được trả state stale hay tentative. Ngoài partition, latency, coordination và freshness vẫn trade off, nhưng nói “cả service chọn C hoặc A” là quá thô.\n- [[b:Cost/risk/performance]]: định lượng availability gain, latency, recovery objective, operational skill và failure mode của region, broker, cache hay database mới—không dùng universal cost multiplier.\n- [[b:Simplicity/evolution]]: ưu tiên design nhỏ nhất thỏa invariant và SLO hiện tại, kèm observed threshold để thêm index, replica, partition, shard hoặc region. Một con số TPS tròn không chứng minh một PostgreSQL instance là đủ.\n\n:::deep\nCâu trả lời trưởng thành nêu alternative bị loại và bằng chứng nào sẽ đảo quyết định. Ví dụ: “single-region primary cùng restore/failover đã test thỏa RTO/RPO hiện tại; review active-active khi jurisdiction hoặc measured outage cost yêu cầu.” Sau đó xác định migration compatibility và ownership.\n\nDesign for failure nhưng không cài sẵn mọi failure mechanism. Đo user SLI, saturation, correctness/reconciliation và cost; chạy failure test đại diện. Decision rubric tái sử dụng nằm tại (11-system-design-cases.the-big-prompts.q12), còn quyết định SLO/error budget tại (20-observability-sre.slos-alerting-incidents.q1).\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "25-microservice.10-system-design-putting-it-all-together.q6",

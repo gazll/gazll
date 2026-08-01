@@ -314,9 +314,9 @@
   .qcard{border:1px solid var(--line);border-left:3px solid var(--line-strong);background:var(--surface);
     border-radius:10px;margin-bottom:10px;transition:border-color .18s, box-shadow .18s;overflow:hidden;}
   .qcard.open{border-left-color:var(--emerald);box-shadow:var(--shadow)}
-  .qcard.difficulty-ext{border-left-color:#c2cbea}
-  .qcard.difficulty-ext.open{border-left-color:var(--indigo)}
-  .qcard.difficulty-hard.open{border-left-color:var(--clay)}
+  .qcard.difficulty-extra{border-left-color:#c2cbea}
+  .qcard.difficulty-extra.open{border-left-color:var(--indigo)}
+  .qcard.difficulty-advanced.open{border-left-color:var(--clay)}
   .qhead{width:100%;text-align:left;font:inherit;cursor:pointer;background:none;border:none;display:flex;align-items:flex-start;gap:14px;padding:15px 18px;color:var(--ink);}
   .qhead:focus-visible{outline:2px solid var(--emerald);outline-offset:-2px}
   .qid{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--brass);flex:none;padding-top:2px;min-width:38px}
@@ -324,9 +324,9 @@
   .qtext{flex:1;font-weight:500;font-size:15.5px;line-height:1.45}
   .qmeta{display:flex;align-items:center;gap:10px;flex:none}
   .qbadge{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.4px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-  .qbadge.hard{color:var(--clay);border-color:#e6c6c0;background:var(--clay-soft)}
   .qbadge.core{color:var(--emerald-deep);border-color:#cfe6da;background:var(--emerald-soft)}
-  .qbadge.ext{color:var(--indigo);border-color:#cdd5ef;background:var(--indigo-soft)}
+  .qbadge.advanced{color:var(--clay);border-color:#e6c6c0;background:var(--clay-soft)}
+  .qbadge.extra{color:var(--indigo);border-color:#cdd5ef;background:var(--indigo-soft)}
   .chev{flex:none;width:20px;height:20px;color:var(--muted);transition:transform .25s}
   .qcard.open .chev{transform:rotate(90deg);color:var(--emerald)}
 

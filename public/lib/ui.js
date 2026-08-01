@@ -3,9 +3,9 @@
 export const chevSVG = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>';
 
 export const BADGE = {
-  hard: '<span class="qbadge hard">ADVANCED</span>',
-  core: '<span class="qbadge core">ESSENTIAL</span>',
-  ext: '<span class="qbadge ext">EXTRA</span>'
+  core: '<span class="qbadge core">CORE</span>',
+  advanced: '<span class="qbadge advanced">ADVANCED</span>',
+  extra: '<span class="qbadge extra">EXTRA</span>'
 };
 
 export function debounce(fn, ms) {

@@ -19,7 +19,7 @@
           "id": "07-sql-nosql-db-engines.the-big-picture.q3",
           "q": "ACID vs BASE — đánh đổi triết lý?",
           "a": "- [[b:ACID]] (Atomicity, Consistency, Isolation, Durability): ưu tiên đúng đắn — chuẩn RDBMS, bắt buộc cho ledger\n- [[b:BASE]] (Basically Available, Soft state, Eventual consistency): ưu tiên sẵn sàng & scale, chấp nhận nhất quán cuối — nhiều NoSQL phân tán\n\nĐây là biểu hiện của CAP/PACELC ở tầng triết lý thiết kế.\n\n:::deep\n- ACID = tính chất của *transaction* (đúng đắn); BASE = *triết lý hệ phân tán* (sẵn sàng + nhất quán cuối)\n- [[r:'Eventual consistency' không phải 'sẽ đúng nếu chờ' mơ hồ]] — phải định nghĩa *window hội tụ*, cơ chế giải xung đột (LWW/CRDT/version vector), ranh giới chấp nhận\n\nFintech/OTA — lằn ranh rõ:\n- ledger/số dư/giữ ghế = [[g:ACID]] (Consistency tuyệt đối)\n- lịch sử/loyalty/notification = [[o:BASE]]\n\nCâu khoá: 'chỗ nào RA QUYẾT ĐỊNH tiền dựa trên data?' → chỗ đó phải ACID.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         }
       ]
     },
@@ -30,7 +30,7 @@
           "id": "07-sql-nosql-db-engines.engine-by-engine.q1",
           "q": "Vì sao doanh nghiệp lớn vẫn chuộng Oracle — từ tính năng tới vật lý?",
           "a": "Oracle đắt nhưng được chọn cho hệ lõi nhờ:\n- [[b:RAC]] (Real Application Clusters): nhiều instance chung storage → HA & scale, failover trong suốt\n- [[b:PL/SQL]] mạnh; optimizer chín; partitioning, materialized view, Flashback, Data Guard (DR)\n- quản trị vật lý sâu: tablespace, ASM, redo/undo, RMAN backup\n- [[g:hỗ trợ enterprise + hợp đồng + compliance certification]] — quyết định trong ngân hàng/bảo hiểm\n\n:::tip Chốt\ndoanh nghiệp trả tiền cho HA, tooling vận hành chín, và 'một cổ để nắm' khi sự cố — không chỉ tính năng SQL.\n:::\n\n:::deep\n- [[b:RAC]] (instance chung shared storage qua Cache Fusion) → HA + scale, failover trong suốt\n- [[b:Data Guard]] (DR standby), [[b:RMAN]] backup, [[b:Flashback]] (khôi phục trạng thái quá khứ — vàng cho điều tra tài chính), [[b:ASM]], partitioning &amp; parallel query, optimizer/PLSQL cực chín\n- cốt lõi: [[g:HA + tooling + hợp đồng hỗ trợ + compliance]] — downtime/sai = mất tiền + pháp lý\n\nXu hướng: dịch sang Postgres (chi phí) cho hệ mới, nhưng core banking legacy vẫn Oracle vì rủi ro di trú &amp; tính năng vận hành.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "07-sql-nosql-db-engines.engine-by-engine.q2",
@@ -42,19 +42,19 @@
           "id": "07-sql-nosql-db-engines.engine-by-engine.q3",
           "q": "PostgreSQL khác MySQL ra sao và vì sao đang lên ngôi?",
           "a": "- tuân chuẩn SQL chặt hơn; tính năng nâng cao: [[g:JSONB]] (index được), CTE đệ quy, window function mạnh, partial/expression/GiST/GIN index, materialized view\n- [[g:extension]] phong phú: PostGIS (geo), TimescaleDB (time-series), [[g:pgvector]] (AI embedding) → 'đa năng'\n- MVCC khác MySQL: lưu tuple version trong bảng → cần [[o:VACUUM]] dọn tuple chết\n\n:::tip Chốt\nPostgres thắng khi cần tính năng nâng cao + JSON + extension (nhất là pgvector cho AI). MySQL thắng ở đơn giản & phổ cập.\n:::\n\n:::deep\n- [[b:JSONB]] (binary, index GIN được — hybrid relational+document), CTE đệ quy, window function, partial/expression index\n- [[b:extension]]: PostGIS, TimescaleDB, [[g:pgvector]] (lý do lớn khiến Postgres lên ngôi thời AI)\n- MVCC lưu tuple version *trong bảng* → cần `VACUUM`/autovacuum; không kịp → [[r:table/index bloat]] + transaction ID wraparound (phải vacuum freeze)\n\nOTA: Postgres + pgvector cho gợi ý/tìm kiếm ngữ nghĩa, JSONB cho snapshot kết quả tìm chuyến, PostGIS cho 'sân bay gần bạn'.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "07-sql-nosql-db-engines.engine-by-engine.q4",
           "q": "Khi nào document model của MongoDB giúp đọc hiệu quả, và nó đánh đổi gì?",
           "a": "MongoDB có thể đọc một aggregate đã biết rất hiệu quả khi data được đọc và đổi cùng nhau được embed trong một document có bound. Một indexed lookup khi đó trả cả aggregate mà không cần join phía ứng dụng hay nhiều network round trip. Lợi thế đến từ [[g:data model và locality của access path]], không phải luật MongoDB nhanh hơn SQL.\n\nĐánh đổi phụ thuộc workload:\n\n- embedding có thể lặp data, khiến fan-out update hoặc document growth tốn kém;\n- reference giữ một source of truth nhưng đưa nhiều lần đọc hoặc `$lookup` trở lại;\n- document có giới hạn kích thước, projection rộng sẽ phí cache/network nếu aggregate quá lớn;\n- relational database có thể nhanh tương đương ở indexed point read và thường rõ hơn cho ad-hoc join, constraint, set-based analysis;\n- MongoDB hỗ trợ transaction và consistency cấu hình được; gọi nó là weak-consistency storage bẩm sinh là sai.\n\n:::warn So đúng mô hình tương đương\nĐo cùng business response, index, durability/consistency setting, dataset lớn hơn memory, concurrency và network topology. So một MongoDB read đã denormalize với N SQL query không có index là đo schema/query design, không phải tốc độ database engine.\n:::\n\n:::deep\nWiredTiger cung cấp MVCC, compression, cache management và document-level write concurrency. Hiệu năng vẫn phụ thuộc index selectivity, working-set fit, document shape, update amplification, checkpoint và storage latency.\n\nỨng viên tốt gồm catalog/product view có bound, user preference và immutable snapshot. Money ledger hay inventory vẫn có thể đặt trên MongoDB nếu schema, unique constraint, transaction boundary, write/read concern, audit trail và operational recovery chứng minh được invariant; chọn RDBMS thường đơn giản hơn, nhưng đó là quyết định kỹ thuật chứ không phải nhãn sản phẩm.\n:::",
-          "difficulty": "hard"
+          "difficulty": "advanced"
         },
         {
           "id": "07-sql-nosql-db-engines.engine-by-engine.q5",
           "q": "MongoDB: sharding và mô hình nhất quán?",
           "a": "Sharding và consistency là hai trục thiết kế riêng.\n\n- Shard key quyết định data placement và query có target được một shard không. Đánh giá cardinality, frequency, monotonicity, query routing, zone requirement, document growth và khả năng refine/reshard; key tệ tạo hotspot hoặc scatter-gather.\n- `readPreference` chọn replica-set member được phép phục vụ read. Mặc định là `primary`.\n- `readConcern` điều khiển consistency/isolation. Concern mặc định `local` có thể trả data sau đó bị rollback, kể cả đọc từ primary — vì vậy “mặc định primary nghĩa là strong consistency” là sai.\n- `writeConcern` điều khiển acknowledgement/durability. Majority write kết hợp đúng read concern/session semantics cho guarantee mạnh hơn, đổi bằng availability/latency.\n\n<pre><code><span class=\"c\">// Policy ví dụ cho operation nhạy invariant; phải tune theo contract thật</span>\nsession.<span class=\"f\">withTransaction</span>(work,\n    TransactionOptions.<span class=\"f\">builder</span>()\n        .<span class=\"f\">readConcern</span>(ReadConcern.SNAPSHOT)\n        .<span class=\"f\">writeConcern</span>(WriteConcern.MAJORITY)\n        .<span class=\"f\">readPreference</span>(ReadPreference.primary())\n        .<span class=\"f\">build</span>());</code></pre>\n\n:::deep\nRead `majority` trả majority-committed data nhưng tự nó không có nghĩa “giá trị mới nhất ở bất kỳ đâu”. Read `linearizable` có real-time semantics chặt hơn cho single-document read hợp lệ trên primary và nên kèm `maxTimeMS`. Causally consistent session là công cụ cho guarantee như read-your-own-writes qua các operation liên quan.\n\nMulti-document transaction là cơ chế correctness được hỗ trợ, không phải thứ phải cấm. Nó thêm coordination và có thể giảm throughput, nên giữ ngắn và đo; model bounded aggregate vào một document khi cách đó tự nhiên giữ invariant, còn nếu invariant thật sự xuyên document thì dùng transaction. Né một transaction cần thiết không phải optimization.\n:::",
-          "difficulty": "ext"
+          "difficulty": "extra"
         },
         {
           "id": "07-sql-nosql-db-engines.engine-by-engine.q6",
@@ -66,7 +66,7 @@
           "id": "07-sql-nosql-db-engines.engine-by-engine.q7",
           "q": "Khung quyết định: chọn DB cho một use case cụ thể?",
           "a": "Hỏi tuần tự:\n- data có [[b:quan hệ]] không? cần [[b:ACID mạnh]] không?\n- [[b:access pattern]]: theo key / range / full-text / graph?\n- tỉ lệ đọc/ghi & quy mô? nhất quán strong hay eventual?\n\n**Map nhanh:**\n- ledger/giao dịch → RDBMS (Postgres/MySQL/Oracle)\n- cache/session → Redis\n- catalog/CMS → MongoDB\n- time-series/ghi lớn → Cassandra/Timescale\n- search → Elasticsearch\n- AI embedding → pgvector\n\nThường kết hợp nhiều cái — [[g:polyglot persistence]].\n\n:::deep\nKhung hỏi: (1) quan hệ &amp; cần JOIN? (2) cần ACID mạnh (tiền/giữ chỗ)? (3) access pattern chính? (4) đọc/ghi &amp; quy mô (vượt 1 node?)? (5) strong hay eventual?\n\nMap: ledger/booking → RDBMS; cache/session/seat-hold → Redis; search chuyến/điểm đến → Elasticsearch; clickstream/log lớn → Cassandra/Timescale; AI embedding → pgvector; analytics → cột (ClickHouse/BigQuery).\n\n[[r:Sai lầm]]: ép một DB làm mọi thứ, hoặc thêm DB mới chỉ vì 'mốt' (tăng chi phí vận hành).\n:::",
-          "difficulty": "ext"
+          "difficulty": "extra"
         }
       ]
     }

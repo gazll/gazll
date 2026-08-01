@@ -23,13 +23,15 @@ export const TOPIC_TYPES = [
 ];
 export const TOPIC_TYPE_LABEL = Object.fromEntries(TOPIC_TYPES.map(t => [t.key, t.label]));
 
-/** An item's difficulty. Drives the ESSENTIAL/ADVANCED/EXTRA badge
+/** An item's difficulty. Drives the CORE/ADVANCED/EXTRA badge
     (`BADGE` in lib/ui.js) and the `.difficulty-*` card accent in
     styles.css. Renamed from the old `lvl` field to avoid reading like a
-    second "type" next to topic_type. */
+    second "type" next to topic_type. Keys match their label in lowercase
+    (`core`/`advanced`/`extra`) — the old `hard`/`ext` keys read as a
+    different taxonomy than the badge actually shown. */
 export const DIFFICULTIES = [
-  { key: 'core', label: 'ESSENTIAL', vi: 'Cốt lõi' },
-  { key: 'hard', label: 'ADVANCED', vi: 'Nâng cao' },
-  { key: 'ext', label: 'EXTRA', vi: 'Mở rộng' }
+  { key: 'core', label: 'CORE', vi: 'Cốt lõi' },
+  { key: 'advanced', label: 'ADVANCED', vi: 'Nâng cao' },
+  { key: 'extra', label: 'EXTRA', vi: 'Mở rộng' }
 ];
 export const DIFFICULTY_LABEL = Object.fromEntries(DIFFICULTIES.map(d => [d.key, d.label]));

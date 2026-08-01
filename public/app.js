@@ -138,9 +138,13 @@ function qcard(it) {
   const badge = BADGE[it.difficulty] || '';
   const diffClass = it.difficulty ? (' difficulty-' + it.difficulty) : '';
   const done = Store.reviewed.has(it.id) ? ' done' : '';
+  // The card shows the id's trailing qN, not the whole id: the full string is
+  // the Sheet key, far too long to read, and it pushed the question off-screen.
+  // Derived from the id rather than the array index so the two can never drift.
+  const seq = (/\.q(\d+)$/.exec(it.id) || [, '?'])[1];
   return '<div class="qcard' + diffClass + done + '" data-qid="' + it.id + '">'
     + '<button class="qhead" aria-expanded="false">'
-    + '<span class="qid">' + it.id + '</span>'
+    + '<span class="qid" title="' + it.id + '">Q' + seq + '</span>'
     + '<span class="qtext">' + it.q + '</span>'
     + '<span class="qmeta">' + badge + chevSVG + '</span></button>'
     + '<div class="qbody"><div class="qbody-inner"><div class="answer"><div>'
