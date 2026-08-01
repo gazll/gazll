@@ -25,6 +25,12 @@ let topicItemIds = new Set();
 let typeFilter = 'all';
 let topicQuery = '';
 
+// One flag per language, shown in a language switch's sliding knob. UI
+// chrome (like topic_type/difficulty colours), not study content, so it
+// doesn't go through the VI/EN content switch — see lib/constants.js's file
+// comment on why that split exists.
+const LANG_FLAG = { en: '🇬🇧', vi: '🇻🇳' };
+
 const panel = document.getElementById('panel');
 const dots = document.getElementById('dots');
 
@@ -143,22 +149,26 @@ function qcard(it) {
   // Derived from the id rather than the array index so the two can never drift.
   const seq = (/\.q(\d+)$/.exec(it.id) || [, '?'])[1];
   // Per-card language toggle: only offered when a Vietnamese companion
-  // actually exists for this item (itemPair() is null otherwise).
+  // actually exists for this item (itemPair() is null otherwise). A mini
+  // slider switch — knob shows the ACTIVE language's flag, slides left/right
+  // between the two states. role="switch"/aria-checked is the ARIA pattern
+  // for exactly this: a two-state on/off-shaped control.
   //
   // Must NOT be a real <button>: it lives inside .qhead, which is itself a
   // <button> (the disclosure control), and HTML forbids nesting one button
   // inside another — a browser encountering that silently closes .qhead
   // early, right where this element starts, and everything meant to be
   // inside .qhead (badge, chevron, the whole answer body) ends up reparented
-  // outside it instead. A role="button" span sidesteps that; wireQcards adds
-  // the keyboard handling a real button would have given for free.
+  // outside it instead. A role="switch" span sidesteps that; wireQcards adds
+  // the keyboard handling a real control would have given for free.
   const pair = Content.itemPair(it.id);
   const otherLang = Content.lang === 'vi' ? 'en' : 'vi';
   const langBtn = (pair && pair.vi)
-    ? '<span class="qlangbtn" role="button" tabindex="0" data-item-lang="' + Content.lang + '" '
+    ? '<span class="qlangbtn" role="switch" tabindex="0" data-item-lang="' + Content.lang + '" '
+      + 'aria-checked="' + (Content.lang === 'vi') + '" '
       + 'title="Show this question in ' + (otherLang === 'vi' ? 'Vietnamese' : 'English') + '" '
       + 'aria-label="Show this question in ' + (otherLang === 'vi' ? 'Vietnamese' : 'English') + '">'
-      + otherLang.toUpperCase() + '</span>'
+      + '<span class="qlang-knob">' + LANG_FLAG[Content.lang] + '</span></span>'
     : '';
   return '<div class="qcard' + diffClass + done + '" data-qid="' + it.id + '">'
     + '<button class="qhead" aria-expanded="false">'
@@ -195,7 +205,9 @@ function wireQcards(root, onMark) {
         card.querySelector('.qtext').textContent = nextText.q;
         card.querySelector('.answer-body').innerHTML = renderMarkdown(nextText.a);
         langBtn.dataset.itemLang = next;
-        langBtn.textContent = (next === 'vi' ? 'en' : 'vi').toUpperCase();
+        langBtn.setAttribute('aria-checked', String(next === 'vi'));
+        const knob = langBtn.querySelector('.qlang-knob');
+        if (knob) knob.textContent = LANG_FLAG[next];
         const otherName = next === 'vi' ? 'English' : 'Vietnamese';
         langBtn.title = 'Show this question in ' + otherName;
         langBtn.setAttribute('aria-label', 'Show this question in ' + otherName);
@@ -204,8 +216,8 @@ function wireQcards(root, onMark) {
         e.stopPropagation();   // don't also toggle open/close
         activate();
       });
-      // role="button" gets none of a real <button>'s keyboard handling for
-      // free (see qcard() for why this can't just be a <button>).
+      // role="switch" gets none of a real control's keyboard handling for
+      // free (see qcard() for why this can't just be an <input type=checkbox>).
       langBtn.addEventListener('keydown', e => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault();    // Space must not also scroll the page
@@ -307,10 +319,13 @@ function wireNavPanel() {
 function paintLangSwitch() {
   const box = document.querySelector('.langswitch');
   if (!box) return;
+  box.dataset.active = Content.lang;
   box.querySelectorAll('button[data-lang]').forEach(b => {
     const lang = b.dataset.lang;
     b.setAttribute('aria-pressed', String(lang === Content.lang));
   });
+  const knob = box.querySelector('.lang-knob');
+  if (knob) knob.textContent = LANG_FLAG[Content.lang] || '';
 }
 
 function wireLangSwitch() {

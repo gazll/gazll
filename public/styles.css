@@ -205,18 +205,32 @@
     font-size:11.5px;line-height:1.5;color:var(--muted)}
 
   /* ---------- content language switch ---------- */
-  .langswitch{display:inline-flex;border:1px solid var(--line);border-radius:999px;
-    background:var(--paper);padding:2px;gap:2px}
+  /* EN/VI stay real <button>s (each jumps straight to that language, not a
+     single flip) — .lang-track/.lang-knob are a decorative slider layered
+     on top, driven by data-active on .langswitch (set in paintLangSwitch). */
+  .langswitch{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);
+    border-radius:999px;background:var(--paper);padding:2px 8px}
   .langswitch.busy{opacity:.55;pointer-events:none}
-  .langswitch button{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+  .langswitch .lang-label{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
     letter-spacing:.6px;cursor:pointer;border:0;background:none;color:var(--muted);
-    padding:3px 11px;border-radius:999px;transition:.15s ease}
-  .langswitch button:hover{color:var(--ink)}
-  .langswitch button[aria-pressed="true"]{background:var(--emerald);color:#fff}
-  .langswitch button:focus-visible{outline:2px solid var(--emerald);outline-offset:1px}
+    padding:2px 1px;transition:color .15s ease}
+  .langswitch .lang-label:hover{color:var(--ink)}
+  .langswitch .lang-label[aria-pressed="true"]{color:var(--emerald-deep)}
+  .langswitch .lang-label:focus-visible{outline:2px solid var(--emerald);outline-offset:1px;border-radius:4px}
+  .lang-track{position:relative;flex:none;width:34px;height:18px;border-radius:999px;
+    background:var(--line);transition:background .2s ease}
+  .langswitch[data-active="vi"] .lang-track{background:var(--emerald-soft)}
+  .lang-knob{position:absolute;top:1px;left:1px;width:16px;height:16px;border-radius:50%;
+    background:var(--surface);box-shadow:0 1px 3px rgba(20,35,58,.35);
+    display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;
+    transition:transform .2s ease}
+  .langswitch[data-active="vi"] .lang-knob{transform:translateX(16px)}
   .hdr-lang{flex:none;background:var(--surface)}
-  .hdr-lang button{padding:2px 9px;font-size:10.5px}
-  header.top.collapsed .hdr-lang button{padding:1px 8px}
+  .hdr-lang .lang-label{padding:2px 1px;font-size:10.5px}
+  header.top.collapsed .hdr-lang{padding:2px 6px}
+  header.top.collapsed .lang-track{width:28px;height:15px}
+  header.top.collapsed .lang-knob{width:13px;height:13px;font-size:9px}
+  header.top.collapsed .langswitch[data-active="vi"] .lang-knob{transform:translateX(13px)}
 
   /* header collapse button */
   .hdrtoggle{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
@@ -336,11 +350,19 @@
   .qbadge.extra{color:var(--indigo);border-color:#cdd5ef;background:var(--indigo-soft)}
   /* Per-item language toggle: shows the OTHER language available for this
      one card, independent of the header's site-wide EN/VI switch. */
-  .qlangbtn{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;
-    letter-spacing:.4px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);
-    background:var(--surface);color:var(--teal);cursor:pointer;transition:.15s ease}
-  .qlangbtn:hover{border-color:var(--teal);background:var(--teal-soft)}
+  /* Mini slider switch (track + knob), same visual language as the header's
+     .lang-track/.lang-knob — the knob carries the active language's flag and
+     slides right once aria-checked="true" (Vietnamese showing). */
+  .qlangbtn{position:relative;flex:none;width:28px;height:16px;border-radius:999px;
+    border:1px solid var(--line);background:var(--paper);cursor:pointer;transition:background .15s ease}
+  .qlangbtn:hover{border-color:var(--teal)}
+  .qlangbtn[aria-checked="true"]{background:var(--teal-soft);border-color:var(--teal)}
   .qlangbtn:focus-visible{outline:2px solid var(--emerald);outline-offset:1px}
+  .qlang-knob{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;
+    background:var(--surface);box-shadow:0 1px 2px rgba(20,35,58,.35);
+    display:flex;align-items:center;justify-content:center;font-size:8px;line-height:1;
+    transition:transform .15s ease}
+  .qlangbtn[aria-checked="true"] .qlang-knob{transform:translateX(12px)}
   .chev{flex:none;width:20px;height:20px;color:var(--muted);transition:transform .25s}
   .qcard.open .chev{transform:rotate(90deg);color:var(--emerald)}
 
