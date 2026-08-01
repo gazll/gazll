@@ -53,7 +53,8 @@ public/
     interviews.json     seed entries, merged under everyone's own Sheet rows
 apps-script/Code.gs  the entire backend (Google Sheet as database)
 tests/               security · interviews.merge · auth.state · content.i18n
-tools/               validate-content.mjs
+tools/               validate-content.mjs · audit-content.mjs · add-content.mjs
+docs/content-playbook.md  how to add/update study content end to end
 secret/              GITIGNORED. Personal setup notes and credentials
 ```
 
@@ -243,9 +244,16 @@ Three tests in `tests/security.test.mjs` pin this.
 
 ## Before pushing
 
+Editing study content? `docs/content-playbook.md` is the full procedure —
+investigating what to change, the format rules, the VI/EN contract, and the
+patch tool. The commands below are the subset CI cares about.
+
 ```bash
 # structure of the data/ tree + structural/content statistics
 node tools/validate-content.mjs --stats
+
+# editorial state: EN/VI parity, example coverage (reports, never fails)
+node tools/audit-content.mjs
 
 # same check the CI runs
 for f in $(find public -name '*.js'); do node --input-type=module --check < "$f" || echo "FAIL $f"; done

@@ -791,7 +791,7 @@
       "key": "25-microservice",
       "vi": {
         "title": "Microservices at Scale — Technical Mastery Track",
-        "intro": "Mười nhóm vấn đề hay \"cắn\" nhất khi hệ thống lên hàng triệu request, tailored cho fintech / airline booking. Mỗi câu có phần trả lời chính và khối Đào sâu senior.",
+        "intro": "Mười nhóm vấn đề hay \"cắn\" nhất khi hệ thống lên hàng triệu request, bám sát bối cảnh fintech / airline booking. Mỗi câu có phần trả lời chính và khối Đào sâu senior.",
         "tags": [
           "Cascading failure",
           "Connection pool",
