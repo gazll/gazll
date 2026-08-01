@@ -60,6 +60,16 @@ secret/              GITIGNORED. Personal setup notes and credentials
 
 ## Things that break easily
 
+- **`.qhead` is a `<button>` — nothing inside it can be one too.** HTML
+  forbids nesting `<button>` in `<button>`; a browser encountering that
+  silently closes `.qhead` early, right where the inner one starts, and
+  reparents everything meant to be inside it (badge, chevron, the whole
+  answer body) as trailing siblings instead — with no console error. This is
+  why the per-item language toggle (`.qlangbtn`) is a `<span role="button"
+  tabindex="0">` with its own keydown handler in `wireQcards`, not a real
+  `<button>`. Any other interactive control added inside `.qhead` needs the
+  same treatment.
+
 - **`lib/markdown.js` — the `SENT` sentinel.** It is
   `String.fromCharCode(0xE000)` on purpose. U+E000 is invisible in an editor,
   and if it degrades to an empty string the regex wraps **every number** in
@@ -135,9 +145,6 @@ secret/              GITIGNORED. Personal setup notes and credentials
 - **`api.js` must send `Content-Type: text/plain`.** Apps Script cannot answer
   a preflight OPTIONS. `application/json`, or an `Authorization` header, makes
   the request CORS non-simple and it fails. Hence idToken travels in the body.
-
-- **`.legend` is `display:none` below 760px.** Real buttons belong in
-  `.tb-actions`.
 
 - **Adding a menu is one entry in `VIEWS`.** `sec` picks the nav-panel section
   (`technical` · `tool` · `about`). An entry with `href` is an external

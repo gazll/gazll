@@ -137,8 +137,6 @@ function heatmap(byDay) {
   }
 
   return '<div class="toolbar"><span class="sectioncount">Activity, last ' + WEEKS + ' weeks</span>'
-    // Own class: .legend is hidden below 760px and its span rules would
-    // repaint the colour swatches.
     + '<div class="hm-legend"><span>less</span>'
     + [0, 1, 2, 3, 4].map(l => '<span class="hm-cell lvl-' + l + '"></span>').join('')
     + '<span>more</span></div></div>'

@@ -144,13 +144,21 @@ function qcard(it) {
   const seq = (/\.q(\d+)$/.exec(it.id) || [, '?'])[1];
   // Per-card language toggle: only offered when a Vietnamese companion
   // actually exists for this item (itemPair() is null otherwise).
+  //
+  // Must NOT be a real <button>: it lives inside .qhead, which is itself a
+  // <button> (the disclosure control), and HTML forbids nesting one button
+  // inside another — a browser encountering that silently closes .qhead
+  // early, right where this element starts, and everything meant to be
+  // inside .qhead (badge, chevron, the whole answer body) ends up reparented
+  // outside it instead. A role="button" span sidesteps that; wireQcards adds
+  // the keyboard handling a real button would have given for free.
   const pair = Content.itemPair(it.id);
   const otherLang = Content.lang === 'vi' ? 'en' : 'vi';
   const langBtn = (pair && pair.vi)
-    ? '<button class="qlangbtn" type="button" data-item-lang="' + Content.lang + '" '
+    ? '<span class="qlangbtn" role="button" tabindex="0" data-item-lang="' + Content.lang + '" '
       + 'title="Show this question in ' + (otherLang === 'vi' ? 'Vietnamese' : 'English') + '" '
       + 'aria-label="Show this question in ' + (otherLang === 'vi' ? 'Vietnamese' : 'English') + '">'
-      + otherLang.toUpperCase() + '</button>'
+      + otherLang.toUpperCase() + '</span>'
     : '';
   return '<div class="qcard' + diffClass + done + '" data-qid="' + it.id + '">'
     + '<button class="qhead" aria-expanded="false">'
@@ -177,21 +185,34 @@ function wireQcards(root, onMark) {
     });
 
     const langBtn = card.querySelector('.qlangbtn');
-    if (langBtn) langBtn.addEventListener('click', e => {
-      e.stopPropagation();   // don't also toggle open/close
-      const pair = Content.itemPair(card.dataset.qid);
-      if (!pair) return;
-      const shown = langBtn.dataset.itemLang;
-      const next = shown === 'vi' ? 'en' : 'vi';
-      const nextText = pair[next] || pair.en;   // en always exists
-      card.querySelector('.qtext').textContent = nextText.q;
-      card.querySelector('.answer-body').innerHTML = renderMarkdown(nextText.a);
-      langBtn.dataset.itemLang = next;
-      langBtn.textContent = (next === 'vi' ? 'en' : 'vi').toUpperCase();
-      const otherName = next === 'vi' ? 'English' : 'Vietnamese';
-      langBtn.title = 'Show this question in ' + otherName;
-      langBtn.setAttribute('aria-label', 'Show this question in ' + otherName);
-    });
+    if (langBtn) {
+      const activate = () => {
+        const pair = Content.itemPair(card.dataset.qid);
+        if (!pair) return;
+        const shown = langBtn.dataset.itemLang;
+        const next = shown === 'vi' ? 'en' : 'vi';
+        const nextText = pair[next] || pair.en;   // en always exists
+        card.querySelector('.qtext').textContent = nextText.q;
+        card.querySelector('.answer-body').innerHTML = renderMarkdown(nextText.a);
+        langBtn.dataset.itemLang = next;
+        langBtn.textContent = (next === 'vi' ? 'en' : 'vi').toUpperCase();
+        const otherName = next === 'vi' ? 'English' : 'Vietnamese';
+        langBtn.title = 'Show this question in ' + otherName;
+        langBtn.setAttribute('aria-label', 'Show this question in ' + otherName);
+      };
+      langBtn.addEventListener('click', e => {
+        e.stopPropagation();   // don't also toggle open/close
+        activate();
+      });
+      // role="button" gets none of a real <button>'s keyboard handling for
+      // free (see qcard() for why this can't just be a <button>).
+      langBtn.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();    // Space must not also scroll the page
+        e.stopPropagation();
+        activate();
+      });
+    }
   });
   wireNotes(root);
 }
@@ -606,7 +627,6 @@ function renderDay() {
     + '</div></section>'
     + '<div class="toolbar">'
     + '<span class="sectioncount">' + topicQcount + ' items · ' + t.sections.length + ' sections</span>'
-    + '<div class="legend"><span class="lg-core">ESSENTIAL</span><span class="lg-hard">ADVANCED</span><span class="lg-ext">EXTRA</span></div>'
     + '<div class="tb-actions"><button class="btn-ghost" id="toggleAll">Expand all</button></div>'
     + '</div>' + sectionsHTML;
 

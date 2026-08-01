@@ -55,7 +55,6 @@ function paint(root, repaint) {
     + '<span class="sectioncount">' + cos.length + (cos.length === 1 ? ' company' : ' companies') + breakdown
     + ' · ' + totalQ + (totalQ === 1 ? ' question' : ' questions')
     + (editable ? '' : ' · <span class="ro">read-only</span>') + '</span>'
-    // .tb-actions, not .legend: .legend is display:none below 760px.
     + '<div class="tb-actions">'
     + (editable
       ? '<button class="btn-primary" id="ivAdd">+ Add company</button>'
