@@ -24,6 +24,8 @@
      deep  end of the :::deep block (the usual choice — senior detail)
      body  end of the main body, BEFORE the first ::: callout
      end   very end of the answer, after every callout
+     answer    replace the complete answer for that item
+     question  replace the complete question for that item
 
    Re-running is safe: a block already present is skipped, so a patch file can
    be applied twice without duplicating content. Always run
@@ -33,7 +35,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TOPICS = ROOT + 'public/data/topics/';
-const MODES = new Set(['deep', 'body', 'end']);
+const MODES = new Set(['deep', 'body', 'end', 'answer', 'question']);
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
@@ -49,9 +51,9 @@ const blocks = [];
   const lines = readFileSync(patchPath, 'utf8').replace(/\r/g, '').split('\n');
   let cur = null;
   for (const line of lines) {
-    const h = /^@@\s+(\w+)\s+(\S+)\s+(en|vi)\s*$/.exec(line);
+    const h = /^@@\s+([\w-]+)\s+(\S+)\s+(en|vi)\s*$/.exec(line);
     if (h) {
-      if (!MODES.has(h[1])) { console.error(`bad mode "${h[1]}" — use deep|body|end`); process.exit(2); }
+      if (!MODES.has(h[1])) { console.error(`bad mode "${h[1]}" — use deep|body|end|answer|question`); process.exit(2); }
       cur = { mode: h[1], id: h[2], lang: h[3], lines: [] };
       blocks.push(cur);
       continue;
@@ -64,6 +66,10 @@ if (!blocks.length) { console.error('patch file has no @@ blocks'); process.exit
 for (const b of blocks) {
   b.text = b.lines.join('\n').trim();
   if (!b.text) { console.error(`empty block for ${b.id} (${b.lang})`); process.exit(2); }
+  if (b.mode === 'question' && b.text.includes('\n')) {
+    console.error(`question for ${b.id} (${b.lang}) must be one line`);
+    process.exit(2);
+  }
 }
 
 /* A topic's file stem is the item id's first segment, so the patch never has
@@ -102,6 +108,19 @@ for (const b of blocks) {
     for (const it of sec.items || []) {
       if (it.id !== b.id) continue;
       hits++;
+      if (b.mode === 'answer' || b.mode === 'question') {
+        const field = b.mode === 'answer' ? 'a' : 'q';
+        if (it[field] === b.text) {
+          console.log(`skip  ${b.id} (${b.lang}) — ${field} already matches`);
+          skipped++;
+          continue;
+        }
+        it[field] = b.text;
+        console.log(`apply ${b.id} (${b.lang}) mode=${b.mode} ${b.text.length}c`);
+        applied++;
+        touched.add(path);
+        continue;
+      }
       // Idempotency probe: the block's first line is distinctive enough, and
       // cheaper than diffing the whole answer.
       const probe = b.text.split('\n')[0];

@@ -277,6 +277,19 @@ Ba chế độ đặt block:
 | `body` | cuối phần thân, **trước** callout đầu tiên |
 | `end` | cuối câu trả lời, sau mọi callout |
 
+Khi cần biên tập lại toàn bộ một field, dùng `answer` hoặc `question` thay
+cho mode chèn. `answer` nhận nội dung nhiều dòng tới header kế tiếp;
+`question` bắt buộc đúng một dòng. Cả hai vẫn tìm item bằng immutable id và
+hỗ trợ `--dry-run`:
+
+```
+@@ question 07-sql-nosql-db-engines.engine-by-engine.q4 en
+When does MongoDB avoid joins, and what consistency trade-offs remain?
+
+@@ answer 07-sql-nosql-db-engines.engine-by-engine.q4 en
+Complete replacement answer…
+```
+
 Công cụ này **idempotent** (chạy lại không nhân đôi) và **cảnh báo khi chỉ
 patch một ngôn ngữ**.
 

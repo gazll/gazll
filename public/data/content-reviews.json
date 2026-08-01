@@ -15,7 +15,13 @@
     "reviewed_at": "2026-08-01",
     "target_versions": ["JDK 25"],
     "claim_type": "normative",
-    "sources": ["https://openjdk.org/jeps/506", "https://openjdk.org/jeps/525"]
+    "sources": ["https://openjdk.org/jeps/506", "https://openjdk.org/jeps/505"]
+  },
+  "02-java-8-25-java-vs-go.release-timeline.q5": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 21-25"],
+    "claim_type": "normative",
+    "sources": ["https://openjdk.org/jeps/441", "https://openjdk.org/jeps/444", "https://openjdk.org/jeps/491"]
   },
   "02-java-8-25-java-vs-go.release-timeline.q6": {
     "reviewed_at": "2026-08-01",
@@ -71,6 +77,12 @@
     "claim_type": "heuristic",
     "sources": ["https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/"]
   },
+  "15-network-i-o-models.threading-network-programming.q1": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["Spring Boot 3.2-4.x", "JDK 21-25"],
+    "claim_type": "heuristic",
+    "sources": ["https://docs.spring.io/spring-boot/reference/features/spring-application.html#features.spring-application.virtual-threads", "https://openjdk.org/jeps/491"]
+  },
   "20-observability-sre.the-three-pillars-how-to-measure.q2": {
     "reviewed_at": "2026-08-01",
     "target_versions": ["OpenTelemetry messaging semantic conventions current"],
@@ -87,7 +99,7 @@
     "reviewed_at": "2026-08-01",
     "target_versions": ["JDK 21-25"],
     "claim_type": "normative",
-    "sources": ["https://openjdk.org/jeps/491"]
+    "sources": ["https://openjdk.org/jeps/491", "https://openjdk.org/jeps/505", "https://openjdk.org/jeps/506"]
   },
   "25-microservice.01-cascading-failure-retry-storm.q3": {
     "reviewed_at": "2026-08-01",
@@ -106,6 +118,12 @@
     "target_versions": ["HikariCP current documentation"],
     "claim_type": "normative",
     "sources": ["https://github.com/brettwooldridge/HikariCP"]
+  },
+  "25-microservice.02-pool-exhaustion-connection-thread.q5": {
+    "reviewed_at": "2026-08-01",
+    "target_versions": ["JDK 21-25"],
+    "claim_type": "heuristic",
+    "sources": ["https://openjdk.org/jeps/491"]
   },
   "25-microservice.03-distributed-data-consistency.q5": {
     "reviewed_at": "2026-08-01",
