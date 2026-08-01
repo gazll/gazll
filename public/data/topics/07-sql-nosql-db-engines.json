@@ -7,21 +7,18 @@
           "id": "07-sql-nosql-db-engines.the-big-picture.q1",
           "q": "SQL vs NoSQL — how do you choose based on the problem?",
           "a": "- [[b:SQL (relational)]]: strict schema, strong ACID, complex relationships, flexible querying (JOIN, aggregate) — the standard for financial/transactional data\n- [[b:NoSQL]]: flexible schema, easy horizontal scaling, optimized for a specific access pattern, usually BASE/eventual\n\n<table class=\"cmp\"><thead><tr><th>Criteria</th><th>SQL</th><th>NoSQL</th></tr></thead><tbody>\n<tr><td>Schema</td><td>strict, constrained, migrations</td><td>flexible, schema-on-read</td></tr>\n<tr><td>Consistency</td><td>strong ACID</td><td>BASE/eventual (depends)</td></tr>\n<tr><td>Relations/JOIN</td><td>strong</td><td>weak, favors denormalization</td></tr>\n<tr><td>Scale</td><td>scale-up + replicas; sharding is hard</td><td>horizontal scale-out</td></tr>\n<tr><td>Good fit for</td><td>ledgers, transactions</td><td>catalogs, sessions, logs, time-series</td></tr>\n</tbody></table>\n\nIn practice it's usually [[g:polyglot persistence]]: each service picks the DB that fits its job.\n\n:::deep\nAvoid the binary 'which one is better' — reason in terms of access pattern + consistency requirements.\n\nOTA polyglot: booking/payment use Postgres (ACID), price &amp; availability are cached in Redis, search logs go to Elasticsearch, events go through Kafka.\n:::",
-          "translated": true,
           "difficulty": "core"
         },
         {
           "id": "07-sql-nosql-db-engines.the-big-picture.q2",
           "q": "The types of NoSQL and their typical use cases?",
           "a": "<table class=\"cmp\"><thead><tr><th>Type</th><th>Example</th><th>Use case</th></tr></thead><tbody>\n<tr><td>Document</td><td>MongoDB</td><td>profile/catalog/CMS (nested JSON)</td></tr>\n<tr><td>Key-Value</td><td>Redis, DynamoDB</td><td>cache, session, counter</td></tr>\n<tr><td>Wide-column</td><td>Cassandra, HBase</td><td>heavy writes, time-series, IoT</td></tr>\n<tr><td>Graph</td><td>Neo4j</td><td>social, fraud, recommendation</td></tr>\n</tbody></table>\n\n:::deep\n- [[b:Document]] (Mongo): reads a whole aggregate in one go (itinerary/profile), flexible schema, but cross-document relationships/transactions are weak\n- [[b:Key-Value]] (Redis/DynamoDB): extremely fast by key (cache/session/counter/feature flag); non-key queries are weak\n- [[b:Wide-column]] (Cassandra): massive writes, scales linearly per node, modeled *around the query* (denormalize, no JOIN); tunable consistency\n- [[b:Graph]] (Neo4j): multi-hop relationships (fraud rings, recommendations, connecting-flight itineraries)\n\nOTA: Cassandra/Scylla for clickstream/search logs; Redis for price caching &amp; seat holds; graph for 'find the optimal connecting itinerary'. Choose by access pattern, not by how 'hot' the technology is.\n:::",
-          "translated": true,
           "difficulty": "core"
         },
         {
           "id": "07-sql-nosql-db-engines.the-big-picture.q3",
           "q": "ACID vs BASE — the philosophical trade-off?",
           "a": "- [[b:ACID]] (Atomicity, Consistency, Isolation, Durability): prioritizes correctness — the RDBMS standard, mandatory for ledgers\n- [[b:BASE]] (Basically Available, Soft state, Eventual consistency): prioritizes availability & scale, accepts eventual consistency — common in distributed NoSQL\n\nThis is the design-philosophy-level expression of CAP/PACELC.\n\n:::deep\n- ACID = a property of a *transaction* (correctness); BASE = a *distributed-systems philosophy* (availability + eventual consistency)\n- [[r:'Eventual consistency' is not a vague 'it'll be correct if you wait long enough']] — you must define the *convergence window*, the conflict-resolution mechanism (LWW/CRDT/version vector), and the acceptance boundary\n\nFintech/OTA — a clear dividing line:\n- ledger/balance/seat hold = [[g:ACID]] (absolute consistency)\n- history/loyalty/notifications = [[o:BASE]]\n\nThe key question: 'where does a DECISION about money get made based on this data?' → that part must be ACID.\n:::",
-          "translated": true,
           "difficulty": "hard"
         }
       ]
@@ -33,49 +30,42 @@
           "id": "07-sql-nosql-db-engines.engine-by-engine.q1",
           "q": "Why do large enterprises still favor Oracle — from features down to physical storage?",
           "a": "Oracle is expensive but still chosen for core systems because of:\n- [[b:RAC]] (Real Application Clusters): multiple instances sharing storage → HA & scale, transparent failover\n- powerful [[b:PL/SQL]]; a mature optimizer; partitioning, materialized views, Flashback, Data Guard (DR)\n- deep physical administration: tablespaces, ASM, redo/undo, RMAN backup\n- [[g:enterprise support + contracts + compliance certification]] — decisive in banking/insurance\n\n:::tip Bottom line\nenterprises pay for HA, mature operational tooling, and 'a single throat to choke' when something breaks — not just SQL features.\n:::\n\n:::deep\n- [[b:RAC]] (instances sharing storage via Cache Fusion) → HA + scale, transparent failover\n- [[b:Data Guard]] (DR standby), [[b:RMAN]] backup, [[b:Flashback]] (restore a past state — invaluable for financial investigations), [[b:ASM]], partitioning &amp; parallel query, an extremely mature optimizer/PLSQL\n- the core value: [[g:HA + tooling + support contracts + compliance]] — downtime/errors mean lost money + legal exposure\n\nTrend: new systems shift to Postgres (cost), but legacy core banking stays on Oracle because of migration risk &amp; operational features.\n:::",
-          "translated": true,
           "difficulty": "hard"
         },
         {
           "id": "07-sql-nosql-db-engines.engine-by-engine.q2",
           "q": "MySQL is cheap, but why is it still so widely used? Where does InnoDB shine?",
           "a": "MySQL (with InnoDB) is popular thanks to:\n- free/low cost, simple, a massive ecosystem\n- easy replication, good OLTP performance for the web\n- InnoDB: ACID, MVCC, clustered index, foreign keys, crash recovery\n\n[[r:Historical weakness]]: optimizer & analytics features lag behind Oracle/Postgres — but it's good enough for most needs (why RDS MySQL is so widely used).\n\n:::deep\n- InnoDB: clustered index + MVCC + foreign keys + crash recovery (redo/undo) → ACID OLTP that's good enough for web/SaaS\n- Aurora MySQL separates compute/storage (millisecond replica lag, auto-scaling storage)\n- [[r:weaknesses]]: optimizer &amp; analytics weaker than Postgres (recursive CTEs were weak before 8.0, JSON weaker than JSONB, fewer index types)\n\nOTA: MySQL/Aurora fits low-cost mid-to-large booking/payment systems; if you need strong JSONB/extensions/full-text, lean toward Postgres. '[[g:Cheap but good enough]]' is why it dominates the middle tier.\n:::",
-          "translated": true,
           "difficulty": "core"
         },
         {
           "id": "07-sql-nosql-db-engines.engine-by-engine.q3",
           "q": "How does PostgreSQL differ from MySQL, and why is it on the rise?",
           "a": "- stricter SQL standard compliance; advanced features: [[g:JSONB]] (indexable), recursive CTEs, powerful window functions, partial/expression/GiST/GIN indexes, materialized views\n- a rich set of [[g:extensions]]: PostGIS (geo), TimescaleDB (time-series), [[g:pgvector]] (AI embeddings) → a 'do-it-all' database\n- MVCC works differently from MySQL: stores tuple versions inside the table → needs [[o:VACUUM]] to clean up dead tuples\n\n:::tip Bottom line\nPostgres wins when you need advanced features + JSON + extensions (especially pgvector for AI). MySQL wins on simplicity & ubiquity.\n:::\n\n:::deep\n- [[b:JSONB]] (binary, GIN-indexable — a hybrid relational+document model), recursive CTEs, window functions, partial/expression indexes\n- [[b:extensions]]: PostGIS, TimescaleDB, [[g:pgvector]] (a major reason Postgres is rising in the AI era)\n- MVCC stores tuple versions *inside the table* → requires `VACUUM`/autovacuum; falling behind → [[r:table/index bloat]] + transaction ID wraparound (requires a vacuum freeze)\n\nOTA: Postgres + pgvector for semantic recommendations/search, JSONB for trip-search-result snapshots, PostGIS for 'airports near you'.\n:::",
-          "translated": true,
           "difficulty": "hard"
         },
         {
           "id": "07-sql-nosql-db-engines.engine-by-engine.q4",
           "q": "Why does MongoDB read faster than SQL in many cases? What's the trade-off?",
           "a": "**Why reads are fast:**\n- [[g:document model]]: related data is packed into a single document (denormalized) → one read gets everything, NO JOIN needed\n- [[g:locality]]: a document is stored as a contiguous block → less random I/O; WiredTiger uses compressed caching, a B+Tree index, and document-level concurrency\n- flexible schema, aggregation pipeline tuned for known patterns\n\n**Trade-offs:**\n- denormalization → [[r:duplicated data]], harder to update and prone to drift\n- complex relationships/multi-document transactions are expensive\n- [[r:not a fit for data that needs strong consistency & tight relationships]] like a ledger\n\n:::warn Fair caveat\n'faster' depends on the workload. For the same single-key lookup, an RDBMS index is also very fast. MongoDB clearly wins when the pattern is 'read an entire already-denormalized aggregate'.\n:::\n\n:::deep\n- 'Mongo is faster' is mainly because it *avoids JOINs* + has *locality* (1 document = 1 read), not some magic engine — for the same lookup by PK, Postgres's B+Tree also takes just a few page reads\n- WiredTiger: MVCC + compression (snappy/zstd) + document-level concurrency\n- trade-off: denormalization → repeated, error-prone updates; ad-hoc/complex aggregation is weaker than SQL; multi-document transactions are expensive\n\nOTA: documents fit 'search-result/itinerary snapshots' well; ledger/seat inventory still stays on RDBMS (ACID + unique constraints to prevent double-booking).\n:::",
-          "translated": true,
           "difficulty": "hard"
         },
         {
           "id": "07-sql-nosql-db-engines.engine-by-engine.q5",
           "q": "MongoDB: sharding and the consistency model?",
           "a": "- Mongo shards by [[o:shard key]] (pick the wrong one → hotspots/jumbo chunks); it has config servers + a mongos router\n- consistency: reads from primary by default (strong), can read from secondary (eventual)\n- `writeConcern`/`readConcern` tune durability/freshness\n- multi-document ACID transactions exist from 4.x on, but [[r:should be used sparingly]] — design documents to avoid needing transactions across multiple documents\n\n:::deep\n- shards via a *shard key* (range/hashed); pick the wrong one → [[r:jumbo chunks]]/hotspots (a monotonic key piles onto one shard)\n- architecture: config servers (metadata) + mongos (router) + shards (replica sets)\n- `readConcern` (local/majority/linearizable) &amp; `writeConcern` (`w:majority` is more durable, slower); primary=strong, secondary=eventual\n- multi-document ACID since 4.x but expensive (holds locks/oplog) → [[g:design documents to avoid needing transactions]] (group data that changes together into one document)\n\nOTA: an 'itinerary snapshot' → each booking is a self-contained document; the money ledger still stays on RDBMS.\n:::",
-          "translated": true,
           "difficulty": "ext"
         },
         {
           "id": "07-sql-nosql-db-engines.engine-by-engine.q6",
           "q": "Redis: why is it fast, what data structures does it offer, and how does persistence work?",
           "a": "Redis is fast because it's [[g:in-memory]] + a single-threaded event loop (no lock contention) + data structures tuned for the job.\n\n**Data structures:** string, hash, list, set, sorted set (leaderboards!), stream, bitmap, HyperLogLog.\n\n**Persistence:**\n- [[b:RDB]] (snapshot)\n- [[b:AOF]] (append log)\n\n→ a trade-off between durability and performance.\n\nUsed for: caching, sessions, rate limiting, lightweight queues, distributed locks, leaderboards.\n\n:::deep\n- single-threaded data path → one O(N) command (`KEYS *`, `SMEMBERS` on a large set) [[r:blocks everything]] → avoid it; use the `SCAN` cursor\n- persistence: RDB (loses data between two snapshots) vs AOF (`everysec` is the common balance); use both for high durability\n- HA: Redis Sentinel (failover) or Redis Cluster (16384 hash slots + replicas)\n- [[r:lock/dedup]]: TTL expiring mid-operation → breaks correctness → use a fencing token\n\nOTA: seat-hold TTL (`SET seat NX PX`), short-TTL price/availability caching, token-bucket rate limiting, sorted sets for 'trending routes/inventory counts'.\n\n- This exact TTL mechanism is a common LLD question: implementing your own key-value store with TTL using lazy expiration + sampling, just like Redis does (22-low-level-design-ood.patterns-in-interview-code.q4).\n:::",
-          "translated": true,
           "difficulty": "core"
         },
         {
           "id": "07-sql-nosql-db-engines.engine-by-engine.q7",
           "q": "A decision framework: how do you choose a DB for a specific use case?",
           "a": "Ask in sequence:\n- does the data have [[b:relationships]]? does it need [[b:strong ACID]]?\n- [[b:access pattern]]: by key / range / full-text / graph?\n- read/write ratio & scale? strong or eventual consistency?\n\n**Quick map:**\n- ledger/transactions → RDBMS (Postgres/MySQL/Oracle)\n- cache/session → Redis\n- catalog/CMS → MongoDB\n- time-series/heavy writes → Cassandra/Timescale\n- search → Elasticsearch\n- AI embeddings → pgvector\n\nOften you combine several — [[g:polyglot persistence]].\n\n:::deep\nQuestion framework: (1) relational &amp; needs JOIN? (2) needs strong ACID (money/booking)? (3) primary access pattern? (4) read/write & scale (beyond a single node)? (5) strong or eventual?\n\nMap: ledger/booking → RDBMS; cache/session/seat-hold → Redis; flight/destination search → Elasticsearch; large clickstream/logs → Cassandra/Timescale; AI embeddings → pgvector; analytics → columnar (ClickHouse/BigQuery).\n\n[[r:Mistake]]: forcing one DB to do everything, or adding a new DB just because it's 'trendy' (raises operational cost).\n:::",
-          "translated": true,
           "difficulty": "ext"
         }
       ]

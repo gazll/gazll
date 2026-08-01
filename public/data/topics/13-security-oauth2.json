@@ -7,21 +7,18 @@
           "id": "13-security-oauth2.oauth2-oidc.q1",
           "q": "OAuth2: what are the main roles and grant types?",
           "a": "**Roles:**\n- [[b:Resource Owner]] (user)\n- [[b:Client]] (app)\n- [[b:Authorization Server]] (issues tokens)\n- [[b:Resource Server]] (the protected API)\n\nOAuth2 is about [[g:authorization]], not identity authentication.\n\n**Grant types:**\n- [[b:Authorization Code]] (+PKCE): the standard for web/mobile/SPA\n- [[b:Client Credentials]]: machine-to-machine (service-to-service)\n- [[b:Refresh Token]]: obtains a new access token\n- [[r:Avoid]]: Implicit and Password grant (less secure, deprecated)\n\n:::deep\n- OAuth2 is an *authorization framework*, NOT authentication (that's OIDC)\n- Auth Code + PKCE (web/mobile/SPA — the standard choice), Client Credentials (no user involved), Refresh Token\n- [[r:AVOID]]: Implicit (leaks the token via the URL), Resource Owner Password (the app handles the user's password)\n\nOTA: B2C uses Auth Code+PKCE; server-to-server B2B partners use Client Credentials with a restricted scope; internal services use client-credentials/mTLS. The token audience (`aud`) must match the correct resource server.\n:::",
-          "translated": true,
           "difficulty": "core"
         },
         {
           "id": "13-security-oauth2.oauth2-oidc.q2",
           "q": "How does Authorization Code + PKCE work, and why is PKCE needed?",
           "a": "Flow: the client redirects the user to the Authorization Server to log in & consent → the AS returns an *authorization code* to the redirect URI → the client exchanges the code for a token (back-channel). The code is one-time use and short-lived.\n\n[[g:PKCE]]:\n- the client generates a random `code_verifier` and sends `code_challenge` = hash(verifier) when requesting the code\n- when exchanging for the token, it must present the verifier\n\n→ prevents [[r:authorization code interception]] on public clients (mobile/SPA cannot keep a client secret).\n\n:::deep\n- public clients (mobile/SPA) cannot safely hold a client_secret → with the auth code alone, an attacker who intercepts the code (via a malicious redirect/deep link) can exchange it for a token\n- PKCE: `code_challenge = SHA256(verifier)`; the verifier must be presented at token exchange → the AS checks the match → an intercepted code becomes useless\n\n[[o:PKCE is now recommended for ALL web clients too]] (defense in depth, required by OAuth 2.1). Verify `state` against CSRF, match `redirect_uri` exactly (against open redirect), and codes are single-use.\n:::",
-          "translated": true,
           "difficulty": "hard"
         },
         {
           "id": "13-security-oauth2.oauth2-oidc.q3",
           "q": "What's the difference between OAuth2 and OIDC?",
           "a": "<table class=\"cmp\"><thead><tr><th></th><th>OAuth2</th><th>OIDC</th></tr></thead><tbody>\n<tr><td>Answers</td><td>'what is the app allowed to do'</td><td>'who is the user'</td></tr>\n<tr><td>Token</td><td>Access Token</td><td>+ ID Token (JWT, `sub`, claims)</td></tr>\n<tr><td>Purpose</td><td>authorization</td><td>authentication (+ authorization)</td></tr>\n</tbody></table>\n\nOIDC is built on top of OAuth2, adding the ID Token + the `/userinfo` endpoint. Modern SSO uses OIDC.\n\n:::deep\n- OAuth2 returns an *access token* (what the app is allowed to do) — it does NOT standardize saying who the user is\n- OIDC adds the ID Token (JWT: `sub`, `iss`, `aud`, `email`, `auth_time`), `/userinfo`, discovery via `/.well-known/openid-configuration`, and JWKS\n\n[[r:Common mistake]]: using the *access token* to determine user identity (wrong — the access token is for the resource server); using the ID token to call an API (wrong — the ID token is for the client to know who the user is).\n\nOTA: OIDC for B2C login (via Google/social IdP), access tokens for calling internal services with the appropriate scope.\n:::",
-          "translated": true,
           "difficulty": "core"
         }
       ]
@@ -33,21 +30,18 @@
           "id": "13-security-oauth2.jwt-tokens.q1",
           "q": "What is the JWT structure, and how is it signed and verified?",
           "a": "JWT = `header.payload.signature` (base64url).\n- [[b:Header]]: alg (RS256/ES256)\n- [[b:Payload]]: claims (`sub`, `exp`, `iat`, `iss`, `aud`, scope...)\n- [[b:Signature]]: signs header+payload\n\n**Verification:**\n- check the signature (the AS's public key via the JWKS endpoint)\n- `exp` has not expired\n- `iss`/`aud` are correct\n\nPrefer [[g:asymmetric (RS256/ES256)]] → the resource server only needs the public key.\n\n:::warn Critical pitfall\nnever accept `alg: none`; never blindly trust the `alg` from the header (algorithm confusion); always validate the signature before reading any claim.\n:::\n\n:::deep\nYou must be able to name the JWT vulnerabilities:\n- [[r:alg=none]] — the server must whitelist algorithms\n- [[r:algorithm confusion]] RS256→HS256: signing with HMAC using the public key if the server uses a shared 'verify' → always pin the expected alg\n- not checking `aud`/`iss` → tokens from another service slip through\n- clock skew with `exp` — allow a small tolerance\n\nFetch keys via [[g:JWKS]] + `kid` to rotate keys without downtime. Keep the payload small, [[r:no sensitive data]] (it's just base64, anyone can read it). Short-lived JWT access tokens (a few minutes) compensate for the difficulty of revocation.\n:::",
-          "translated": true,
           "difficulty": "core"
         },
         {
           "id": "13-security-oauth2.jwt-tokens.q2",
           "q": "JWT (stateless) vs opaque token / session — what are the trade-offs?",
           "a": "<table class=\"cmp\"><thead><tr><th></th><th>JWT</th><th>Opaque + introspection</th><th>Session</th></tr></thead><tbody>\n<tr><td>Validate</td><td>locally (no call to the AS)</td><td>asks the AS every time</td><td>server-side state</td></tr>\n<tr><td>Revoke</td><td>hard (still valid until it expires)</td><td>immediate</td><td>easy</td></tr>\n<tr><td>Scale</td><td>good, low latency</td><td>extra round-trip</td><td>needs sticky/shared store</td></tr>\n</tbody></table>\n\n:::tip Bottom line\nJWT trades revocability for scale. Fintech typically uses: short-lived JWT access token + revocable refresh token + blacklist/rotation.\n:::\n\n:::deep\n- need immediate revocation (locking a fraudulent account) → short-lived access token + introspection for sensitive operations, or an opaque token\n- [[g:common hybrid pattern]]: JWT access token for 5–15 minutes (validated locally) + server-side refresh token *rotation* (revocable, reuse detection → revokes the whole family) + `jti` denylist for emergencies\n\n'JWT trades revocability for statelessness/scale; we compensate with a short TTL + revocation at the refresh layer' — [[r:avoid saying 'JWT is always better than sessions']].\n:::",
-          "translated": true,
           "difficulty": "hard"
         },
         {
           "id": "13-security-oauth2.jwt-tokens.q3",
           "q": "Access token vs refresh token, and what's the revocation strategy?",
           "a": "- [[b:Access token]]: short-lived (a few minutes), sent with every request\n- [[b:Refresh token]]: long-lived, used only to obtain a new access token, stored securely (HttpOnly cookie / secure storage)\n\n**Revocation:** JWT access tokens are hard to revoke → keep them short-lived + revoke at the refresh layer.\n\n[[g:Refresh token rotation]]: each refresh issues a new token and invalidates the old one; reuse detection → revokes the whole family.\n\n:::deep\n- store the refresh token in an HttpOnly+Secure cookie / secure storage — [[r:NEVER localStorage, because of XSS]]\n- rotation: detect *reuse* (an old token used again = it was stolen) → revoke the entire token family\n- sensitive operations (password change, withdrawal, changing a high-value ticket) require [[o:re-auth/step-up (MFA)]] even with a valid token\n- `jti` denylist for emergency revocation; a short access TTL is safer but causes more frequent refreshes (load on the AS)\n- [[r:Never log tokens]]: an access token leaking into logs is a credential sitting in ELK for anyone with log-read access, and logs are typically retained far longer than the token's lifetime. Redact at the point you *write* the log, not at the point you view it (20-observability-sre.slos-alerting-incidents.q4).\n:::",
-          "translated": true,
           "difficulty": "core"
         }
       ]
@@ -59,49 +53,42 @@
           "id": "13-security-oauth2.designing-the-auth-system.q1",
           "q": "How would you design the authentication/authorization system for microservices (SSO + gateway)?",
           "a": "Common model:\n- a central [[b:Authorization Server]] (OIDC) issues tokens\n- an [[b:API Gateway]] verifies tokens at the edge (signature/introspection) and attaches identity to the internal request\n- internal services [[o:should still verify the token]] (defense in depth, zero-trust)\n\nAuthorization: RBAC/ABAC; scope/claims carry permissions; service-to-service via mTLS or client credentials.\n\n:::tip Bottom line\nthe gateway centrally validates OAuth/JWT + does protocol translation; but zero-trust says 'nothing on the inside is trusted absolutely' — each service still verifies the request's identity.\n:::\n\n:::deep\n- a central AS (Keycloak/Auth0/Cognito) issues tokens; the gateway validates the token at the edge (JWT signature via JWKS, or introspection) and attaches identity (user id, scope, roles) to the internal request\n- internal services *should still* verify the token (at minimum validate signature + scope); service-to-service: mTLS (who's calling) + client-credentials token (on whose behalf)\n\nOTA: the gateway centralizes auth + rate-limiting + REST→gRPC translation; but the payment/ledger service verifies the token itself + requires step-up for money-moving operations. Token propagation across hops (deadline + identity) needs to stay consistent.\n:::",
-          "translated": true,
           "difficulty": "hard"
         },
         {
           "id": "13-security-oauth2.designing-the-auth-system.q2",
           "q": "What is mTLS, and how is it used for service-to-service authentication?",
           "a": "[[g:mTLS]] (mutual TLS): both sides present a certificate → mutual authentication + encryption.\n\n- microservices: a service mesh (Istio/Linkerd) issues & rotates certs automatically, enabling mTLS between every service with no code changes\n- ensures only legitimate services can call each other, defending against internal man-in-the-middle attacks\n- complements token-level auth: [[b:mTLS = who is calling]]; [[b:token = on whose behalf]]\n\n:::deep\n- mTLS answers 'who is calling' at the transport layer (different from a token, which answers 'on whose behalf' at the app layer)\n- the service mesh issues &amp; rotates certs automatically (SPIFFE/SVID identity) → zero-trust for the internal network, defending against MITM &amp; service impersonation\n- two layers: mTLS = service identity, token/JWT = user/scope context\n\nManaging internal PKI (CA, rotation, revocation) is the hard part — a mesh handles most of it. External B2B partners also commonly use mTLS + IP allowlisting. [[r:Don't hand-roll mTLS if you have a mesh]] (easy to get cert/rotation wrong).\n:::",
-          "translated": true,
           "difficulty": "hard"
         },
         {
           "id": "13-security-oauth2.designing-the-auth-system.q3",
           "q": "OWASP Top 10 in practice: injection, XSS, CSRF — how do you defend against them?",
           "a": "- [[b:SQL injection]] → prepared statements/parameterized queries (never string concatenation); ORMs help but be careful with native queries\n- [[b:XSS]] → escape output, Content-Security-Policy, never render raw HTML from input\n- [[b:CSRF]] → anti-CSRF tokens, SameSite cookies; APIs using Bearer tokens are less exposed than cookie-sessions\n- others: [[b:broken access control]] (check permissions server-side), SSRF, insecure deserialization, dependencies with known CVEs (SCA scanning)\n\n:::deep\n- SQL injection → prepared statements (NEVER string concatenation); native queries must still bind parameters\n- XSS → escape output based on context (HTML/JS/URL), CSP, framework auto-escaping (don't turn it off)\n- CSRF → tokens + `SameSite`; API Bearer tokens (no cookies) are less exposed\n- [[r:Broken access control (OWASP #1)]] → check permissions server-side on every request (IDOR: never trust an id from the client — verify the user owns the resource)\n\nFintech/OTA: [[r:IDOR is extremely dangerous]] (viewing/modifying someone else's booking/payment by changing an id) → always verify ownership; mass assignment (never bind a request directly onto an entity); rate-limiting + WAF. Defense in depth: validate input, least-privilege, encrypt, audit.\n:::",
-          "translated": true,
           "difficulty": "core"
         },
         {
           "id": "13-security-oauth2.designing-the-auth-system.q4",
           "q": "How do you manage secrets properly?",
           "a": "[[r:Never hardcode secrets]] in the repo or the image.\n\n- use a secret manager (Vault, AWS Secrets Manager, K8s Secret + KMS) — inject at runtime via env/volume\n- rotate periodically, least-privilege, encrypt at-rest & in-transit, audit access\n- separate secrets per environment\n- scan the repo for leaked secrets (git-secrets/trufflehog)\n\n:::deep\n- do NOT hardcode in code/repo/Docker image ([[r:image layers retain history → leak]])\n- secret manager → runtime injection; periodic + automatic rotation; least-privilege (each service reads only its own secrets); audit; encrypt at-rest &amp; in-transit\n- [[g:dynamic secrets]] (Vault issues short-lived DB credentials per request → reduces blast radius); envelope encryption (a DEK encrypted by a KEK in the KMS)\n\nOTA/fintech: secrets include DB passwords, PSP/GDS API keys, JWT signing keys → rotating the JWT signing key needs JWKS + `kid` for zero downtime. [[r:Pitfalls]]: secrets in a ConfigMap (unencrypted) instead of a Secret; secrets in logs.\n:::",
-          "translated": true,
           "difficulty": "core"
         },
         {
           "id": "13-security-oauth2.designing-the-auth-system.q5",
           "q": "How do you protect auth endpoints from brute-force/credential stuffing?",
           "a": "- rate limit by IP + by account\n- exponential backoff/temporary lockout; CAPTCHA after N failed attempts\n- detect anomalies (login from an unusual location)\n- store passwords with a slow, salted hash function ([[g:bcrypt/argon2/scrypt]]), [[r:never plain MD5/SHA]]\n- MFA for sensitive operations\n- [[o:don't reveal 'whether the user exists']] through error messages\n\n:::deep\n- rate limit + lockout by IP *and* by account (defends against credential stuffing across many IPs against one account, &amp; brute-force against one account from one IP); exponential backoff; CAPTCHA past a threshold; anomaly detection (unfamiliar location/device → step-up MFA)\n- [[g:argon2id]] (recommended) / bcrypt / scrypt — NEVER plain MD5/SHA (fast, easy to brute-force on GPUs); don't leak 'user exists' via errors/timing (timing-safe)\n\nFintech/OTA: MFA mandatory for sensitive operations; device fingerprinting + risk-based auth; watch for 'impossible travel'. [[r:Pitfall]]: lockout too aggressive → DoS against the real user (an attacker locks out the victim's account) → use CAPTCHA instead of a hard lockout, or lock by IP+account combined.\n:::",
-          "translated": true,
           "difficulty": "hard"
         },
         {
           "id": "13-security-oauth2.designing-the-auth-system.q6",
           "q": "RBAC vs ABAC — which authorization model should you choose?",
           "a": "<table class=\"cmp\"><thead><tr><th></th><th>RBAC</th><th>ABAC</th></tr></thead><tbody>\n<tr><td>Basis</td><td>roles (admin, teller)</td><td>attributes (user, resource, context, time)</td></tr>\n<tr><td>Pros</td><td>simple, easy to manage/audit</td><td>flexible for complex rules</td></tr>\n<tr><td>Cons</td><td>role explosion as rules get complex</td><td>harder to debug/audit</td></tr>\n</tbody></table>\n\nMany systems combine both: RBAC as the base + ABAC for fine-grained rules.\n\n:::deep\n- ABAC example: 'an agent may only approve bookings below their branch's limit during working hours'\n- engines: OPA/Rego, Cedar for policy-as-code decoupled from business logic\n\nOTA: RBAC for customer/agent/admin; ABAC for 'agent from airline X only sees airline X's bookings', 'refunds above a threshold need higher-level approval'. [[o:Check permissions server-side]] (gateway + service), never trust the client; log every sensitive authorization decision (audit).\n:::",
-          "translated": true,
           "difficulty": "ext"
         },
         {
           "id": "13-security-oauth2.designing-the-auth-system.q7",
           "q": "API key vs OAuth token — when do you use which?",
           "a": "<table class=\"cmp\"><thead><tr><th></th><th>API key</th><th>OAuth token</th></tr></thead><tbody>\n<tr><td>Identifies</td><td>an application/partner</td><td>a user/scope</td></tr>\n<tr><td>Granularity</td><td>low</td><td>high (scope)</td></tr>\n<tr><td>Lifetime</td><td>static, long-lived</td><td>short-lived, revocable</td></tr>\n<tr><td>Good for</td><td>partner server-to-server</td><td>acting on behalf of a user</td></tr>\n</tbody></table>\n\n:::deep\n- [[b:API key]]: a secret string identifying an application/partner (not a user), used alongside an IP allowlist + rate limit/quota. [[r:Risk]]: static, long-lived, once leaked it stays usable indefinitely → needs rotation + a restricted scope\n- [[b:OAuth token]]: authorization scoped to a user/scope, short-lived, revocable\n\nOTA/fintech: B2C → OAuth/OIDC; internal services → mTLS + client-credentials; B2B partners → API key + mTLS + quota, or client-credentials with scope.\n\nManaging API keys: [[g:hash them at rest]] (like a password), use a prefix for identification, rotate without downtime (two keys active simultaneously during rotation), audit. [[r:Never embed an API key in a client/mobile app]] (too easy to extract).\n:::",
-          "translated": true,
           "difficulty": "ext"
         }
       ]

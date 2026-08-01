@@ -9,7 +9,7 @@
    UI strings stay English even when the material is Vietnamese — see
    CLAUDE.md. The VI/EN toggle switches content only. */
 import { renderMarkdown, escapeHtml } from './lib/markdown.js';
-import { chevSVG, BADGE, FALLBACK_BADGE, debounce } from './lib/ui.js';
+import { chevSVG, BADGE, debounce } from './lib/ui.js';
 import { Content } from './lib/content.js';
 import { TOPIC_TYPES, TOPIC_TYPE_LABEL } from './lib/constants.js';
 import { Store } from './lib/store.js';
@@ -48,7 +48,7 @@ const GUIDE_MD = [
   '',
   'The study material lives under `data/` (JSON + Markdown): `data/manifest.json` lists every topic — including the Microservices track, filed as topic_type `microservice` like any other — and points at its `data/topics/NN-slug.json` file; `data/meta.json` holds each topic\'s label/title/intro/tags. Supported syntax: **bold**, *italic*, `code`, `-` lists, and three callout blocks — `:::tip Label`, `:::warn Label`, `:::deep`.',
   '',
-  'The interface is always English. The **material** has an `EN`/`VI` switch in the header. Each topic\'s base file (`data/topics/NN-slug.json`) is English by default; the complete Vietnamese original always lives alongside it as `NN-slug.vi.json`. An item\'s `translated` flag says whether its text is authentically written in that file\'s language — until an item is really translated, the English file just carries the Vietnamese text verbatim and is tagged `VI` on the card. The `EN` button greys out for a topic with no real translations yet, since there is nothing English to switch to.',
+  'The interface is always English. The **material** has an `EN`/`VI` switch in the header. Every topic\'s base file (`data/topics/NN-slug.json`) is complete English and every `NN-slug.vi.json` companion is complete Vietnamese. Both are loaded up front, and the header switch selects which complete version to read. If a Vietnamese companion cannot be loaded, VI mode gracefully displays the English base instead of failing.',
   '',
   'Every topic carries a `topic_type` field (`core` · `data` · `design` · `platform` · `algorithm` · `microservice`, from `lib/constants.js`) — that is what drives the filter chips in the topic picker. Every item carries a `difficulty` (`core` · `hard` · `ext`) — the ESSENTIAL/ADVANCED/EXTRA badge.',
   '',
@@ -136,15 +136,13 @@ function wireNotes(root) {
 
 function qcard(it) {
   const badge = BADGE[it.difficulty] || '';
-  // Silent language switches read as a bug; the badge says why.
-  const fallback = Content.isFallback(it) ? FALLBACK_BADGE : '';
   const diffClass = it.difficulty ? (' difficulty-' + it.difficulty) : '';
   const done = Store.reviewed.has(it.id) ? ' done' : '';
   return '<div class="qcard' + diffClass + done + '" data-qid="' + it.id + '">'
     + '<button class="qhead" aria-expanded="false">'
     + '<span class="qid">' + it.id + '</span>'
     + '<span class="qtext">' + it.q + '</span>'
-    + '<span class="qmeta">' + fallback + badge + chevSVG + '</span></button>'
+    + '<span class="qmeta">' + badge + chevSVG + '</span></button>'
     + '<div class="qbody"><div class="qbody-inner"><div class="answer"><div>'
     + renderMarkdown(it.a) + noteBox(it.id)
     + '</div></div></div></div></div>';
@@ -254,22 +252,12 @@ function wireNavPanel() {
 
 /* ---------- content language switch ---------- */
 
-/** Which language(s) the content on screen right now actually has. */
-function activeLangAvailability() {
-  const active = TOPICS[current];
-  if (!active) return { en: true, vi: true };
-  return { en: !!active.hasEn, vi: !!active.hasVi };
-}
-
 function paintLangSwitch() {
   const box = document.querySelector('.langswitch');
   if (!box) return;
-  const avail = activeLangAvailability();
   box.querySelectorAll('button[data-lang]').forEach(b => {
     const lang = b.dataset.lang;
     b.setAttribute('aria-pressed', String(lang === Content.lang));
-    b.disabled = !avail[lang];
-    b.title = b.disabled ? 'Not available for this topic yet' : '';
   });
 }
 
@@ -279,7 +267,7 @@ function wireLangSwitch() {
 
   box.addEventListener('click', async e => {
     const b = e.target.closest('button[data-lang]');
-    if (!b || b.disabled || b.dataset.lang === Content.lang) return;
+    if (!b || b.dataset.lang === Content.lang) return;
     box.classList.add('busy');   // setLang re-applies the overlay
     await Content.setLang(b.dataset.lang);
     box.classList.remove('busy');

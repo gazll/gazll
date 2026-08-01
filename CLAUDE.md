@@ -35,7 +35,7 @@ public/
   lib/
     constants.js     TOPIC_TYPES, DIFFICULTIES — the closed-set identifiers, label source
     markdown.js      renderMarkdown + renderUser (escaping variant)
-    ui.js            chevSVG, BADGE, FALLBACK_BADGE, debounce, localDay
+    ui.js            chevSVG, BADGE, debounce, localDay
     content.js       loads data/manifest.json + meta.json + per-topic files; owns the language
     api.js           transport to Apps Script
     auth.js          Google Identity Services + header avatar/state machine
@@ -48,8 +48,8 @@ public/
   data/
     manifest.json       ordered list of every topic (n, topic_type, file) — 25 rows, Microservices is n=25
     meta.json            label/title/intro/tags/key/topic_type per topic, VI + EN in one file
-    topics/NN-slug.json     English base, one file per topic (324 items total across 25 files)
-    topics/NN-slug.vi.json  the complete Vietnamese original, same shape, every item translated:true
+    topics/NN-slug.json     complete English base, one file per topic (324 items total across 25 files)
+    topics/NN-slug.vi.json  complete Vietnamese companion, same shape and item IDs
     interviews.json     seed entries, merged under everyone's own Sheet rows
 apps-script/Code.gs  the entire backend (Google Sheet as database)
 tests/               security · interviews.merge · auth.state · content.i18n
@@ -175,57 +175,42 @@ secret/              GITIGNORED. Personal setup notes and credentials
 
 ## The VI/EN language split
 
-English is the **default and base** language; Vietnamese is the **complete,
-ground-truth** content that always exists alongside it. `Content.load()`
-fetches both eagerly (`manifest.json`, `meta.json`, every topic's base file,
-and every topic's `.vi.json` companion) so switching language in the header
-never needs a refetch.
+English is the **default and base** language. Every base topic file is
+complete English, and every `.vi.json` companion is complete Vietnamese.
+`Content.load()` fetches both eagerly (`manifest.json`, `meta.json`, every
+topic's base file, and every topic's `.vi.json` companion), so the header
+switch selects the already-loaded language and never needs a refetch.
+If a `.vi.json` companion cannot be loaded, VI mode gracefully displays that
+topic's English base instead of failing.
 
-- **Per-item `translated` flag** — every item in every file carries
-  `translated: true|false`. It means "this item's text is authentically
-  written in this file's language," not "this item has been looked at."
-  A `.vi.json` file is the real, complete Vietnamese original, so every one
-  of its items is `translated: true` by construction. A topic's base
-  (English) file starts with the Vietnamese text copied in verbatim and
-  `translated: false`, until someone actually translates that item — then
-  only that item flips to `true` and gets real English text.
+- **Topic files** — the base and companion use the same section order, item
+  order, and four-key item schema. Their stable item IDs must match exactly;
+  only the Vietnamese/English text differs.
   ```json
   { "sections": [{ "title": "…", "items": [
-    { "id": "01-java-core-jvm.memory-execution-model.q1", "difficulty": "core", "q": "…", "a": "…", "translated": false }
+    { "id": "01-java-core-jvm.memory-execution-model.q1", "difficulty": "core", "q": "…", "a": "…" }
   ] }] }
   ```
-- **Metadata** — `meta.json`'s `topics["N"].vi` / `.en` blocks, key name
-  always matching the language of its value:
+- **Metadata** — `meta.json` has complete `topics["N"].en` and `.vi` blocks
+  for each manifest topic. Each contains `label`, `title`, `intro`, and
+  non-empty `tags`; the key name must match the language of its value.
   ```json
   { "topics": { "1": { "topic_type": "core", "key": "01-java-core-jvm",
                         "vi": { "label": "…", "title": "…", "intro": "…", "tags": ["…"] },
                         "en": { "label": "…", "title": "…", "intro": "…", "tags": ["…"] } } } }
   ```
   `key` is the topic's filename stem (without `.json`) — the id-reference
-  the file names are built from, kept here so lookups don't need to parse
-  paths, and the prefix every item id in that topic starts with.
-- **`Content.isFallback(item)`** is just `!item.translated` — true whenever
-  the text on screen isn't authentically written in the language currently
-  selected. Today that only ever fires in EN (0/324 items are really
-  translated yet), which renders the Vietnamese text with a `VI` badge
-  (`FALLBACK_BADGE`) so the reader knows why it switched language mid-page.
-- **Per-topic `hasEn`/`hasVi`** (on `Content.topics[i]`) says whether that
-  topic has *any* `translated: true` item in that language. `.vi.json`
-  makes `hasVi` always true; `hasEn` is false until a topic gets its first
-  real translation. The header's `EN`/`VI` switch
-  (`wireLangSwitch`/`paintLangSwitch` in `app.js`) disables the button for a
-  language the current topic doesn't have — there is nothing to switch to.
+  the file names are built from, kept here so lookups do not need to parse
+  paths, and the prefix every item ID in that topic starts with.
 - **`_apply()` must keep cloning the source.** Overlaying in place would
   overwrite one language's strings with the other's, and switching back
   would then show the wrong text.
-- **Content is validated, not trusted.** `validate-content.mjs` fails if a
-  topic's `.vi.json` is missing, has a mismatched section count, references
-  an item id that doesn't exist, or isn't `translated: true` throughout — and
-  fails if `meta.json`'s `key` or `topic_type` doesn't match the manifest.
-- Current state: all 25 topics have English metadata (`meta.json`); no item
-  has a real English translation yet (`translated: false` everywhere in the
-  base files) — the EN button is effectively disabled site-wide until that
-  changes one item at a time.
+- **Content is validated, not trusted.** `validate-content.mjs` checks the
+  manifest/meta contract, topic types and difficulties, item schemas and IDs,
+  matching bilingual section/item sequences, markup safety, duplicate IDs,
+  SVG marker uniqueness, and cross-references. With `--stats`, it reports
+  structural/content statistics: topic and difficulty counts, answer lengths,
+  cross-references, thin items, and code/table/SVG usage.
 
 ## Security model
 
@@ -259,7 +244,7 @@ Three tests in `tests/security.test.mjs` pin this.
 ## Before pushing
 
 ```bash
-# structure of the data/ tree + translation progress, and a content report
+# structure of the data/ tree + structural/content statistics
 node tools/validate-content.mjs --stats
 
 # same check the CI runs

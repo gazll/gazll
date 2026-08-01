@@ -8,10 +8,6 @@ export const BADGE = {
   ext: '<span class="qbadge ext">EXTRA</span>'
 };
 
-/** Shown when the reader is in EN but this answer has no English text yet. */
-export const FALLBACK_BADGE =
-  '<span class="qbadge vi" title="Not translated yet — showing the Vietnamese original">VI</span>';
-
 export function debounce(fn, ms) {
   let t = null;
   return (...args) => {

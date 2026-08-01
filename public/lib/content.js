@@ -1,14 +1,10 @@
 /* data/manifest.json lists every topic (including the Microservices track,
    topic_type "microservice") and points at its content file; data/meta.json
-   holds label/title/intro/tags for both languages, keyed by the language
-   they actually hold. Each topic's base file (data/topics/NN-slug.json) is
-   English by default; the Vietnamese original always exists at the same
-   path with a `.vi.json` suffix and is the complete, ground-truth content.
-   An item's `translated` flag says whether its text in that file is
-   authentically written in that file's language — the EN base carries the
-   Vietnamese text verbatim (translated: false) until someone actually
-   translates it, so English can be filled in one item at a time without
-   ever leaving a hole in the page. */
+   holds label/title/intro/tags for both complete language sources. Each
+   topic's base file (data/topics/NN-slug.json) is English by default, and
+   the complete Vietnamese source exists at the same path with a `.vi.json`
+   suffix. Both sources load eagerly, so switching languages never needs a
+   refetch. */
 
 const LANG_KEY = 'gazl.contentLang';
 const DEFAULT_LANG = 'en';
@@ -46,12 +42,6 @@ function applyMeta(target, metaEntry, lang) {
   for (const k of ['label', 'title', 'intro']) target[k] = src[k] || fallback[k];
   const tags = (Array.isArray(src.tags) && src.tags.length) ? src.tags : fallback.tags;
   if (Array.isArray(tags)) target.tags = [...tags];
-}
-
-/** Whether at least one item in `sections` is authentically written in the
-    requested language — drives whether the header switch can offer it. */
-function hasRealTranslation(sections) {
-  return (sections || []).some(s => (s.items || []).some(it => it.translated));
 }
 
 function readLang() {
@@ -103,21 +93,13 @@ export const Content = {
         n,
         topic_type: row.topic_type,
         tags: [...(en.tags || [])],
-        sections,
-        hasEn: hasRealTranslation(en.sections),
-        hasVi: true // the .vi.json companion is always the complete source
+        sections
       };
       applyMeta(topic, this._meta.topics[String(n)], this.lang);
       topics.push(topic);
     }
     topics.sort((a, b) => a.n - b.n);
     this.topics = topics;
-  },
-
-  /** True when the item's text is not authentically written in the current
-      language — i.e. still showing the other language's content verbatim. */
-  isFallback(item) {
-    return !item.translated;
   },
 
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },

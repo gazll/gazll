@@ -60,10 +60,9 @@ for (const { row, content, meta: m } of topics) {
       items.push({ ...it, n: row.n, topic_type: row.topic_type, label: m.vi?.label });
       const id = it.id;
 
-      if (JSON.stringify(Object.keys(it).sort()) !== '["a","difficulty","id","q","translated"]') {
+      if (JSON.stringify(Object.keys(it).sort()) !== '["a","difficulty","id","q"]') {
         err(id, `unexpected keys ${Object.keys(it).sort().join(',')}`);
       }
-      if (typeof it.translated !== 'boolean') err(id, `translated must be a boolean, got ${typeof it.translated}`);
       if (!DIFFICULTY_KEYS.has(it.difficulty)) err(id, `bad difficulty "${it.difficulty}"`);
 
       const match = String(id).match(ID_RE);
@@ -130,16 +129,11 @@ for (const it of items) {
   }
 }
 
-/* ---------- data/meta.json + topics/NN-slug.vi.json — the Vietnamese source ----------
+/* ---------- data/meta.json + topics/NN-slug.vi.json ----------
 
-   Each topic's base file (topics/NN-slug.json) is English by default; the
-   complete Vietnamese original always lives alongside it as the .vi.json
-   companion. An item's `translated` flag says whether its text is
-   authentically written in that file's language, so a base-file item with
-   translated:true is real English, and a .vi.json item is always
-   translated:true (VI is the 100%-complete source). meta.json's `en`/`vi`
-   keys must actually hold the language they claim. */
-let enTopics = 0, enItems = 0;
+   Each English base file has a complete Vietnamese companion. Both item
+   sequences use the same four-key schema and IDs in the same order.
+   meta.json's `en`/`vi` keys must actually hold the language they claim. */
 for (const [n, m] of Object.entries(meta.topics)) {
   const row = manifest.topics.find(r => String(r.n) === n);
   if (!row) { errs.push(`meta.json: topic "${n}" does not exist in manifest`); continue; }
@@ -152,7 +146,6 @@ for (const [n, m] of Object.entries(meta.topics)) {
   else if (`topics/${m.key}.json` !== row.file) {
     errs.push(`meta.json: topic ${n} key "${m.key}" does not match manifest file "${row.file}"`);
   }
-  enTopics++;
 }
 
 for (const { row, content } of topics) {
@@ -161,13 +154,22 @@ for (const { row, content } of topics) {
   if (!Array.isArray(viFile.sections) || viFile.sections.length !== content.sections.length) {
     errs.push(`topic ${row.n}.vi.json: ${(viFile.sections || []).length} sections for ${content.sections.length} in the base file`);
   }
-  for (const sec of viFile.sections || []) {
-    for (const it of sec.items || []) {
-      if (!seen.has(it.id)) { errs.push(`topic ${row.n}.vi.json: item "${it.id}" does not exist`); continue; }
-      if (it.translated !== true) errs.push(`topic ${row.n}.vi.json: item "${it.id}" must be translated:true`);
+  for (const [sectionIndex, sec] of (viFile.sections || []).entries()) {
+    const baseItems = content.sections[sectionIndex]?.items || [];
+    const viItems = sec.items || [];
+    if (viItems.length !== baseItems.length) {
+      errs.push(`topic ${row.n}.vi.json: section ${sectionIndex + 1} has ${viItems.length} items for ${baseItems.length} in the base file`);
+    }
+    for (const [itemIndex, it] of viItems.entries()) {
+      if (JSON.stringify(Object.keys(it).sort()) !== '["a","difficulty","id","q"]') {
+        errs.push(`topic ${row.n}.vi.json: item "${it.id}" unexpected keys ${Object.keys(it).sort().join(',')}`);
+      }
+      const baseItem = baseItems[itemIndex];
+      if (baseItem && it.id !== baseItem.id) {
+        errs.push(`topic ${row.n}.vi.json: section ${sectionIndex + 1} item ${itemIndex + 1} id "${it.id}" does not match base item "${baseItem.id}"`);
+      }
     }
   }
-  for (const sec of content.sections) for (const it of sec.items) if (it.translated) enItems++;
 }
 
 if (errs.length) {
@@ -177,7 +179,6 @@ if (errs.length) {
 }
 
 console.log(`content OK — ${topics.length} topics, ${items.length} items, ${markers.size} SVG markers`);
-console.log(`English translation — ${enTopics}/${topics.length} topics with meta translated, ${enItems}/${items.length} answers translated`);
 
 if (process.argv.includes('--stats')) {
   const by = (fn) => items.reduce((m, i) => (m[fn(i)] = (m[fn(i)] || 0) + 1, m), {});
