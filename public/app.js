@@ -142,14 +142,24 @@ function qcard(it) {
   // the Sheet key, far too long to read, and it pushed the question off-screen.
   // Derived from the id rather than the array index so the two can never drift.
   const seq = (/\.q(\d+)$/.exec(it.id) || [, '?'])[1];
+  // Per-card language toggle: only offered when a Vietnamese companion
+  // actually exists for this item (itemPair() is null otherwise).
+  const pair = Content.itemPair(it.id);
+  const otherLang = Content.lang === 'vi' ? 'en' : 'vi';
+  const langBtn = (pair && pair.vi)
+    ? '<button class="qlangbtn" type="button" data-item-lang="' + Content.lang + '" '
+      + 'title="Show this question in ' + (otherLang === 'vi' ? 'Vietnamese' : 'English') + '" '
+      + 'aria-label="Show this question in ' + (otherLang === 'vi' ? 'Vietnamese' : 'English') + '">'
+      + otherLang.toUpperCase() + '</button>'
+    : '';
   return '<div class="qcard' + diffClass + done + '" data-qid="' + it.id + '">'
     + '<button class="qhead" aria-expanded="false">'
     + '<span class="qid" title="' + it.id + '">Q' + seq + '</span>'
     + '<span class="qtext">' + it.q + '</span>'
-    + '<span class="qmeta">' + badge + chevSVG + '</span></button>'
-    + '<div class="qbody"><div class="qbody-inner"><div class="answer"><div>'
-    + renderMarkdown(it.a) + noteBox(it.id)
-    + '</div></div></div></div></div>';
+    + '<span class="qmeta">' + langBtn + badge + chevSVG + '</span></button>'
+    + '<div class="qbody"><div class="qbody-inner"><div class="answer">'
+    + '<div class="answer-body">' + renderMarkdown(it.a) + '</div>' + noteBox(it.id)
+    + '</div></div></div></div>';
 }
 
 /** Collapse toggling; first open is what marks an item reviewed. */
@@ -164,6 +174,23 @@ function wireQcards(root, onMark) {
         if (Store.markReviewed(card.dataset.qid)) card.classList.add('done');
         if (onMark) onMark();
       }
+    });
+
+    const langBtn = card.querySelector('.qlangbtn');
+    if (langBtn) langBtn.addEventListener('click', e => {
+      e.stopPropagation();   // don't also toggle open/close
+      const pair = Content.itemPair(card.dataset.qid);
+      if (!pair) return;
+      const shown = langBtn.dataset.itemLang;
+      const next = shown === 'vi' ? 'en' : 'vi';
+      const nextText = pair[next] || pair.en;   // en always exists
+      card.querySelector('.qtext').textContent = nextText.q;
+      card.querySelector('.answer-body').innerHTML = renderMarkdown(nextText.a);
+      langBtn.dataset.itemLang = next;
+      langBtn.textContent = (next === 'vi' ? 'en' : 'vi').toUpperCase();
+      const otherName = next === 'vi' ? 'English' : 'Vietnamese';
+      langBtn.title = 'Show this question in ' + otherName;
+      langBtn.setAttribute('aria-label', 'Show this question in ' + otherName);
     });
   });
   wireNotes(root);
@@ -326,6 +353,16 @@ function wireHeader() {
   let dir = 0;           // 1 down, -1 up
   let queued = false;
 
+  // A sticky open-question title (see wireStickyQhead) docks right under
+  // whatever the header's real visible height is right now — 0 while the
+  // header is headroom-hidden, its measured height otherwise. Tracked here
+  // rather than duplicating a second scroll listener.
+  const syncHeaderOffset = () => {
+    const h = header.classList.contains('hidden') ? 0 : header.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--hdr-h', h + 'px');
+  };
+  new ResizeObserver(syncHeaderOffset).observe(header);
+
   const apply = () => {
     queued = false;
     const y = Math.max(0, window.scrollY);
@@ -338,10 +375,12 @@ function wireHeader() {
     if (document.body.classList.contains('topic-open')
       || document.body.classList.contains('nav-open') || y <= TOP_ZONE) {
       header.classList.remove('hidden');
+      syncHeaderOffset();
       return;
     }
     if (dir === 1 && y - anchorY > FLIP_PX) header.classList.add('hidden');
     else if (dir === -1 && anchorY - y > FLIP_PX) header.classList.remove('hidden');
+    syncHeaderOffset();
   };
 
   // Coalesce to one update per frame; scroll can fire far more often than that.

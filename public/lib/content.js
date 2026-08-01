@@ -64,6 +64,7 @@ export const Content = {
   _meta: null,
   _en: null,
   _vi: null,
+  _itemPairs: null,   // id -> {en:{q,a}, vi:{q,a}|null}, for the per-item language toggle
 
   async load() {
     if (this.loaded) return this;
@@ -78,10 +79,37 @@ export const Content = {
 
     this._en = new Map(rows.map((row, i) => [row.n, { row, content: enContents[i] }]));
     this._vi = new Map(rows.map((row, i) => [row.n, viContents[i]]));
+    this._buildItemPairs();
 
     this._apply();
     this.loaded = true;
     return this;
+  },
+
+  /** Built once from the raw per-language sources — independent of the
+      currently active `lang`, so a per-item toggle can show "the other
+      language" for one card without touching the site-wide switch. Matched
+      by section/item position rather than a global id scan: the VI/EN
+      contract guarantees the same section and item order, and matching that
+      way survives an id that (in a mid-edit file) briefly doesn't match. */
+  _buildItemPairs() {
+    const pairs = new Map();
+    for (const [n, { content: en }] of this._en) {
+      const vi = this._vi.get(n);
+      (en.sections || []).forEach((sec, si) => {
+        (sec.items || []).forEach((it, ii) => {
+          const viIt = vi?.sections?.[si]?.items?.[ii];
+          pairs.set(it.id, { en: { q: it.q, a: it.a }, vi: viIt ? { q: viIt.q, a: viIt.a } : null });
+        });
+      });
+    }
+    this._itemPairs = pairs;
+  },
+
+  /** {en, vi} text for one item id, or null if the id is unknown. `vi` is
+      null when that item has no Vietnamese companion. */
+  itemPair(id) {
+    return this._itemPairs ? (this._itemPairs.get(id) || null) : null;
   },
 
   _apply() {

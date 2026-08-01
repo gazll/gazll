@@ -311,14 +311,26 @@
   .section-h::before{content:"";width:14px;height:14px;border-radius:3px;background:linear-gradient(145deg,var(--emerald),var(--emerald-deep));flex:none}
   .section-h .sline{flex:1;height:1px;background:var(--line)}
 
+  /* No overflow:hidden here (kept on .qbody-inner instead, below): an
+     overflow-clipping ancestor stops position:sticky from working at all,
+     and the sticky open-question title below relies on .qcard staying the
+     nearest non-clipping containing block. */
   .qcard{border:1px solid var(--line);border-left:3px solid var(--line-strong);background:var(--surface);
-    border-radius:10px;margin-bottom:10px;transition:border-color .18s, box-shadow .18s;overflow:hidden;}
+    border-radius:10px;margin-bottom:10px;transition:border-color .18s, box-shadow .18s;}
   .qcard.open{border-left-color:var(--emerald);box-shadow:var(--shadow)}
   .qcard.difficulty-extra{border-left-color:#c2cbea}
   .qcard.difficulty-extra.open{border-left-color:var(--indigo)}
   .qcard.difficulty-advanced.open{border-left-color:var(--clay)}
   .qhead{width:100%;text-align:left;font:inherit;cursor:pointer;background:none;border:none;display:flex;align-items:flex-start;gap:14px;padding:15px 18px;color:var(--ink);}
   .qhead:focus-visible{outline:2px solid var(--emerald);outline-offset:-2px}
+  /* While a card is open, its question stays pinned as you scroll through the
+     answer, and stops being pinned the moment you scroll past that card's own
+     box (position:sticky's containing block is .qcard) — so it never bleeds
+     into the next question. --hdr-h (kept live by wireHeader in app.js) is 0
+     while the header is headroom-hidden, so the title docks at the very top
+     instead of leaving a gap where the header used to be. */
+  .qcard.open .qhead{position:sticky;top:var(--hdr-h,0px);z-index:30;
+    background:var(--surface);border-bottom:1px solid var(--line);border-radius:9px 9px 0 0}
   .qid{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--brass);flex:none;padding-top:2px;min-width:38px}
   .qcard.done .qid::after{content:"✓";display:block;font-size:11px;color:var(--emerald);font-weight:700;margin-top:1px;line-height:1}
   .qtext{flex:1;font-weight:500;font-size:15.5px;line-height:1.45}
@@ -327,12 +339,22 @@
   .qbadge.core{color:var(--emerald-deep);border-color:#cfe6da;background:var(--emerald-soft)}
   .qbadge.advanced{color:var(--clay);border-color:#e6c6c0;background:var(--clay-soft)}
   .qbadge.extra{color:var(--indigo);border-color:#cdd5ef;background:var(--indigo-soft)}
+  /* Per-item language toggle: shows the OTHER language available for this
+     one card, independent of the header's site-wide EN/VI switch. */
+  .qlangbtn{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;
+    letter-spacing:.4px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);
+    background:var(--surface);color:var(--teal);cursor:pointer;transition:.15s ease}
+  .qlangbtn:hover{border-color:var(--teal);background:var(--teal-soft)}
+  .qlangbtn:focus-visible{outline:2px solid var(--emerald);outline-offset:1px}
   .chev{flex:none;width:20px;height:20px;color:var(--muted);transition:transform .25s}
   .qcard.open .chev{transform:rotate(90deg);color:var(--emerald)}
 
   .qbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
   .qcard.open .qbody{grid-template-rows:1fr}
-  .qbody-inner{overflow:hidden;min-height:0}
+  /* Replaces .qcard's old overflow:hidden for clipping open content (a code
+     block's dark background, etc.) to the card's rounded bottom corners —
+     .qcard itself must stay unclipped for the sticky .qhead above to work. */
+  .qbody-inner{overflow:hidden;min-height:0;border-radius:0 0 9px 9px}
 
   /* Collapsible chapter (view Microservices) */
   .chapter{border:1px solid var(--line);border-radius:12px;margin:14px 0;background:var(--surface);overflow:hidden;transition:box-shadow .18s}
@@ -356,7 +378,7 @@
   .chapter-body-inner .qcard{margin:10px 14px}
   .chapter-body-inner .qcard:first-child{margin-top:14px}
   .answer{padding:2px 18px 18px 70px;border-top:1px solid var(--line);margin-top:-1px}
-  .answer>div{padding-top:14px}
+  .answer-body{padding-top:14px}
   .answer p{margin:0 0 11px}
   .answer ul,.answer ol{margin:0 0 11px;padding-left:20px}
   .answer li{margin:4px 0}
