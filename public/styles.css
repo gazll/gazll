@@ -336,7 +336,7 @@
   .qcard.done .qid::after{content:"✓";display:block;font-size:11px;color:var(--emerald);font-weight:700;margin-top:1px;line-height:1}
   .qtext{flex:1;font-weight:500;font-size:15.5px;line-height:1.45}
   .qmeta{display:flex;align-items:center;gap:10px;flex:none}
-  .qbadge{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.4px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .qbadge{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.4px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;flex:none}
   .qbadge.core{color:var(--emerald-deep);border-color:#cfe6da;background:var(--emerald-soft)}
   .qbadge.advanced{color:var(--clay);border-color:#e6c6c0;background:var(--clay-soft)}
   .qbadge.extra{color:var(--indigo);border-color:#cdd5ef;background:var(--indigo-soft)}
@@ -470,7 +470,6 @@
     /* question cards */
     .qhead{padding:13px 14px;gap:10px}
     .qtext{font-size:15px}
-    .qmeta .qbadge{display:none}
     .answer{padding:2px 14px 16px 14px}
     /* page (markdown views) */
     .page{padding:20px 18px}

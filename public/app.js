@@ -167,8 +167,9 @@ function qcard(it) {
   return '<div class="qcard' + diffClass + done + '" data-qid="' + it.id + '">'
     + '<button class="qhead" aria-expanded="false">'
     + '<span class="qid" title="' + it.id + '">Q' + seq + '</span>'
+    + badge
     + '<span class="qtext">' + it.q + '</span>'
-    + '<span class="qmeta">' + langBtn + badge + chevSVG + '</span></button>'
+    + '<span class="qmeta">' + langBtn + chevSVG + '</span></button>'
     + '<div class="qbody"><div class="qbody-inner"><div class="answer">'
     + '<div class="answer-body">' + renderMarkdown(it.a) + '</div>' + noteBox(it.id)
     + '</div></div></div></div>';
