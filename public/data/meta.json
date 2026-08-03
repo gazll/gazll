@@ -200,26 +200,32 @@
       "vi": {
         "label": "SQL/NoSQL & DB engines",
         "title": "SQL vs NoSQL — Oracle / MySQL / PostgreSQL / MongoDB",
-        "intro": "Bức tranh toàn cảnh các hệ CSDL: khi nào SQL/NoSQL, vì sao doanh nghiệp chuộng Oracle, MySQL/Postgres đứng đâu, và vì sao MongoDB đọc nhanh — so sánh từ tầng phần mềm tới vật lý.",
+        "intro": "Bức tranh toàn cảnh các hệ CSDL: khi nào SQL/NoSQL, vì sao doanh nghiệp chuộng Oracle, và phần so sánh trực tiếp Oracle–MySQL từ storage vật lý, toàn vẹn dữ liệu, ACID tới CAP.",
         "tags": [
           "SQL vs NoSQL",
           "Oracle RAC/PLSQL",
           "PostgreSQL",
           "MongoDB/WiredTiger",
           "ACID vs BASE",
+          "Oracle vs MySQL",
+          "Data integrity",
+          "CAP (C/A/P)",
           "Redis"
         ]
       },
       "en": {
         "label": "SQL/NoSQL & DB engines",
         "title": "SQL vs NoSQL — Oracle / MySQL / PostgreSQL / MongoDB",
-        "intro": "The whole database landscape: when SQL and when NoSQL, why enterprises stay on Oracle, where MySQL and Postgres sit, and why MongoDB reads fast — compared from the software layer down to the physical one.",
+        "intro": "The whole database landscape: when SQL and when NoSQL, why enterprises stay on Oracle, and a direct Oracle–MySQL comparison from physical storage and data integrity through ACID and CAP.",
         "tags": [
           "SQL vs NoSQL",
           "Oracle RAC/PLSQL",
           "PostgreSQL",
           "MongoDB/WiredTiger",
           "ACID vs BASE",
+          "Oracle vs MySQL",
+          "Data integrity",
+          "CAP (C/A/P)",
           "Redis"
         ]
       }

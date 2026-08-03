@@ -118,6 +118,34 @@
     "claim_type": "normative",
     "sources": ["https://www.mongodb.com/docs/manual/reference/read-concern/", "https://www.mongodb.com/docs/manual/core/read-preference/"]
   },
+  "07-sql-nosql-db-engines.the-big-picture.q4": {
+    "reviewed_at": "2026-08-03",
+    "target_versions": ["Gilbert–Lynch CAP model (2002)", "Brewer CAP clarification"],
+    "claim_type": "normative",
+    "sources": ["https://dl.acm.org/doi/10.1145/564585.564601", "https://sites.cs.ucsb.edu/~rich/class/cs293b-cloud/papers/brewer-cap.pdf"]
+  },
+  "07-sql-nosql-db-engines.engine-by-engine.q8": {
+    "reviewed_at": "2026-08-03",
+    "target_versions": ["Oracle Database Concepts 21c/26ai", "Oracle RAC and Data Guard 26ai", "MySQL 8.4 InnoDB"],
+    "claim_type": "heuristic",
+    "sources": [
+      "https://docs.oracle.com/en/database/oracle/oracle-database/21/cncpt/introduction-to-oracle-database.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/26/racad/introduction-to-oracle-rac.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/26/haovw/oracle-data-guard.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/COMMIT.html",
+      "https://dev.mysql.com/doc/refman/8.4/en/innodb-introduction.html",
+      "https://dev.mysql.com/doc/refman/8.4/en/innodb-redo-log.html",
+      "https://dev.mysql.com/doc/refman/8.4/en/innodb-recovery.html",
+      "https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html",
+      "https://dev.mysql.com/doc/refman/8.4/en/replication-options-binary-log.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/26/sbydb/oracle-data-guard-protection-modes.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/data-concurrency-and-consistency.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/19/cncpt/process-architecture.html",
+      "https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-isolation-levels.html",
+      "https://dev.mysql.com/doc/refman/8.0/en/create-table-check-constraints.html",
+      "https://dev.mysql.com/doc/refman/8.4/en/innodb-doublewrite-buffer.html"
+    ]
+  },
   "08-message-queue.reliability-delivery-semantics.q1": {
     "reviewed_at": "2026-08-01",
     "target_versions": ["Apache Kafka 4.1", "RabbitMQ current documentation"],
