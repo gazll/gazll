@@ -29,6 +29,17 @@
     "claim_type": "normative",
     "sources": ["https://openjdk.org/jeps/506", "https://openjdk.org/jeps/505"]
   },
+  "01-java-core-jvm.collections-data-structures.q5": {
+    "reviewed_at": "2026-08-03",
+    "target_versions": ["JDK 25", "HotSpot 64-bit with compressed oops"],
+    "claim_type": "normative",
+    "sources": [
+      "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashMap.html",
+      "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ConcurrentHashMap.html",
+      "https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/java/util/HashMap.java",
+      "https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/java/util/concurrent/ConcurrentHashMap.java"
+    ]
+  },
   "02-java-8-25-java-vs-go.release-timeline.q5": {
     "reviewed_at": "2026-08-01",
     "target_versions": ["JDK 21-25"],
