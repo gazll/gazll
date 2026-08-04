@@ -25,19 +25,14 @@
     transition:transform .26s ease, box-shadow .2s ease;}
   /* hides on scroll down, returns on scroll up */
   header.top.hidden{transform:translateY(-100%)}
-  /* Nav lives in the drawer now, so the bar is just: menu · brand · account. */
-  .top-inner{max-width:var(--shell);margin:0 auto;padding:12px var(--gutter);display:flex;align-items:center;gap:14px;
-    transition:padding .2s ease;}
-  .brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto}
-  .brandtext{min-width:0}
+  /* Nav lives in the drawer, so the bar is just: menu · topic · account.
+     position:relative so the topic dropdown hangs off this centred column
+     rather than off the full-bleed header. */
+  .top-inner{position:relative;max-width:var(--shell);margin:0 auto;padding:12px var(--gutter);
+    display:flex;align-items:center;gap:14px;transition:padding .2s ease;}
   .seal{flex:none;width:38px;height:38px;border-radius:11px;background:linear-gradient(145deg,var(--emerald),var(--emerald-deep));
     display:grid;place-items:center;color:#fff;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:15px;
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.12), 0 6px 16px -8px var(--emerald);}
-  .brand h1{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:15px;letter-spacing:.2px;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  /* second line is the current view, so the header always says where you are */
-  .brand p{margin:0;font-size:11px;color:var(--muted);font-family:"IBM Plex Mono",monospace;letter-spacing:.5px;
-    text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #viewCrumb{color:var(--emerald-deep);font-weight:600}
   .headright{display:flex;align-items:center;gap:12px;flex:none;margin-left:auto}
   .progress-wrap{display:flex;align-items:center;gap:10px;flex:none}
   .progress-meta{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-soft);text-align:right}
@@ -47,13 +42,10 @@
   .ring::after{content:"";width:30px;height:30px;border-radius:50%;background:var(--paper)}
 
   /* ---------- topic picker ---------- */
-  .topicbar{border-bottom:1px solid var(--line);background:rgba(255,255,255,.4)}
-  /* relative here, not on .topicbar: the dropdown hangs off the centred
-     column, not off the full-bleed bar. */
-  .tb-inner{position:relative;max-width:var(--shell);margin:0 auto;padding:9px var(--gutter);
-    display:flex;align-items:center;gap:10px}
-
-  .topicpick{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:11px;cursor:pointer;font:inherit;
+  /* Sits in .top-inner where the brand used to: on the track the topic IS the
+     page title, so nothing else in the header has to say where you are.
+     max-width is the dropdown's own width, so the two line up as one control. */
+  .topicpick{flex:1 1 auto;min-width:0;max-width:560px;display:flex;align-items:center;gap:11px;cursor:pointer;font:inherit;
     color:inherit;text-align:left;border:1px solid var(--line);background:var(--surface);
     border-radius:11px;padding:7px 12px;transition:.16s ease}
   .topicpick:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
@@ -240,12 +232,9 @@
   .hdrtoggle:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
   header.top.collapsed .hdrtoggle svg{transform:rotate(180deg)}
 
-  /* manually collapsed: a thin bar. The crumb and the topic picker survive —
+  /* manually collapsed: a thin bar. The topic picker survives —
      collapsing is for reading, and you still jump topics while reading. */
   header.top.collapsed .top-inner{padding-top:5px;padding-bottom:5px}
-  header.top.collapsed .brand h1{display:none}
-  header.top.collapsed .seal{width:30px;height:30px;font-size:13px;border-radius:9px}
-  header.top.collapsed .tb-inner{padding-top:5px;padding-bottom:5px}
   header.top.collapsed .topicpick{padding-top:4px;padding-bottom:4px}
   header.top.collapsed .tp-sub{display:none}
   header.top.collapsed .tstep{width:28px;height:28px}
@@ -435,18 +424,15 @@
   /* The drawer holds the nav at every width, so the header only has to shed
      its own ornaments as space runs out. */
   @media (max-width:860px){
-    .brand h1{font-size:14px}
     .hdrtoggle{display:none}          /* collapse-on-scroll already does this job */
   }
   @media (max-width:760px){
     :root{--gutter:14px}
-    .top-inner{padding:10px var(--gutter);gap:10px}
+    /* The picker wraps onto its own full-width line: sharing the row with the
+       account controls leaves it ~90px, which ellipsises every topic label. */
+    .top-inner{padding:10px var(--gutter);gap:10px;flex-wrap:wrap;row-gap:8px}
+    .topicpick{order:3;flex:1 0 100%;max-width:none}
     .progress-meta{display:none}
-    /* the long product title gives way to the current view — more useful here */
-    .brand h1{display:none}
-    .brand p{font-size:12px;text-transform:none;letter-spacing:.2px}
-    #viewCrumb{font-family:"Space Grotesk",sans-serif;font-size:15px;color:var(--ink)}
-    .seal{width:34px;height:34px;font-size:13px}
     .authbtn{width:34px;height:34px}
     .avatar{width:26px;height:26px}
     /* the filter bar scrolls sideways rather than stacking into rows */
@@ -454,7 +440,6 @@
     .groupbar::-webkit-scrollbar{display:none}
     .gchip{flex:0 0 auto}
     /* prev/next drops away: the pager at the foot already does that job */
-    .tb-inner{padding:8px var(--gutter)}
     .tb-steps{display:none}
     .topicmenu{max-width:none}
     .tm-list{max-height:min(62vh,400px)}
@@ -482,11 +467,25 @@
     .pcenter{font-size:12px}
     .pdots{max-width:160px}
   }
+  /* Phones: everything the head carries besides the question is squeezed into
+     one narrow left column or the right edge, so .qtext keeps a readable
+     measure instead of the ~80px it was left with.
+     Scoped to [data-qid] — the interview journal's cards carry no badge. */
+  @media (max-width:600px){
+    /* rows are auto/1fr, not auto/auto: .qtext spans both, and two auto rows
+       would share its height and push the badge away from the qid. */
+    .qcard[data-qid] .qhead{display:grid;grid-template-columns:58px minmax(0,1fr) auto;
+      grid-template-rows:auto 1fr;column-gap:10px;row-gap:5px;align-items:start;padding:12px}
+    .qcard[data-qid] .qid{grid-column:1;grid-row:1;text-align:center;padding-top:1px}
+    .qcard[data-qid] .qbadge{grid-column:1;grid-row:2;width:100%;text-align:center;
+      font-size:9px;letter-spacing:.2px;padding:2px 3px}
+    .qcard[data-qid] .qtext{grid-column:2;grid-row:1/span 2}
+    .qcard[data-qid] .qmeta{grid-column:3;grid-row:1/span 2;align-self:center;gap:8px}
+    /* the flag on the knob already says which language is showing */
+    .qlangbtn .lang-label{display:none}
+  }
   @media (max-width:420px){
     body{font-size:15px}
-    .brand p{display:none}
-    .brand h1{font-size:14px}
-    .seal{width:38px;height:38px;font-size:15px}
     .daynum{font-size:34px}
     .hero h2{font-size:18px}
     .qid{min-width:30px}

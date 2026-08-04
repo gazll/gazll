@@ -433,9 +433,10 @@ function showView(id) {
   document.querySelectorAll('#mainnav .navlink:not(.is-external)')
     .forEach(a => a.setAttribute('aria-current', a.dataset.view === id));
 
+  // The header shows the topic, not the view, so the tab title carries the
+  // view name — the nav panel's aria-current is the other half of that.
   const v0 = VIEWS.find(x => x.id === id);
-  const crumb = document.getElementById('viewCrumb');
-  if (crumb && v0) crumb.textContent = v0.label;
+  if (v0) document.title = v0.label + ' · Backend Engineering';
   const track = document.getElementById('view-track');
   const host = document.getElementById('view-host');
   if (id === 'track') {

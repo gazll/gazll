@@ -153,18 +153,27 @@ secret/              GITIGNORED. Personal setup notes and credentials
   `close()` blurs first, because focus inside a subtree that then becomes
   inert is not moved out on its own.
 
-- **One shell width: `--shell` (+ `--gutter`).** `.top-inner`, `.tb-inner` and
-  `main` all read it, which is the only reason they line up. The topic
-  dropdown is positioned against `.tb-inner`, *not* `.topicbar` — the bar is
+- **One shell width: `--shell` (+ `--gutter`).** `.top-inner` and `main` both
+  read it, which is the only reason they line up. The topic dropdown is
+  positioned against `.top-inner`, *not* `header.top` — the header is
   full-bleed, so anchoring there parks the panel on the window edge while the
   rest of the page stays centred.
+
+- **The header is one row, and the topic picker is its title.** There is no
+  brand block and no second `.topicbar` line: `#topicPick` sits between the
+  nav toggle and `.headright`, carrying `track-only` so it disappears on every
+  other view. Nothing in the header names the current *view* — `showView()`
+  writes that into `document.title`, and the nav panel marks it with
+  `aria-current`. Under 760px `.top-inner` wraps and the picker takes a full
+  line of its own; sharing the row with the account controls leaves it about
+  90px, which ellipsises every topic label.
 
 - **`header.top` is a stacking context** (`position:sticky` + `z-index:50`),
   so anything inside it is trapped below 50 no matter its own `z-index`. That
   is why `.topic-scrim` is `z-index:40`: at 60 it covered the very dropdown it
   was supposed to sit behind.
 
-- **Collapsing the header keeps the topic bar.** Only its second line and the
+- **Collapsing the header keeps the topic picker.** Only `.tp-sub` and the
   step buttons shrink. Collapsing is for reading, and jumping topics is what
   you do while reading.
 
