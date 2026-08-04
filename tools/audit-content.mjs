@@ -156,10 +156,11 @@ if (flag('--dense')) {
      callout line — <pre>/<table>/<svg>/<figure> already break themselves up, so
      they are cut out first rather than counted as relief.
 
-     Both thresholds are read off the corpus, not taste: 350 is the p95 of all
-     3311 runs (4.7% sit above it), 120 the p99 of every table cell carrying
-     no <br>. */
-  const PARA_WALL = 350;
+     Both thresholds are read off the corpus, not taste: 300 is what every run
+     in data/ was brought under (the longest is exactly 300), 120 the p99 of
+     every table cell carrying no <br>. They guard that state — a new answer
+     that drifts back over the line shows up here. */
+  const PARA_WALL = 300;
   const CELL_WALL = 120;
 
   const seen = (s) => String(s)
@@ -181,7 +182,10 @@ if (flag('--dense')) {
       const open = /^:::(deep|tip|warn)\b/.exec(line);
       if (open) { flush(); box = open[1]; continue; }        // the label is a heading, not prose
       if (line.trim() === ':::') { flush(); box = null; continue; }
-      if (!line.trim() || /^\s*(?:[-*]\s|\d+\.\s)/.test(line)) flush();   // a bullet is its own run
+      // Inside tip/warn nothing breaks: the renderer joins the whole box into
+      // one paragraph, so a blank line there is invisible to the reader.
+      const joined = box === 'tip' || box === 'warn';
+      if (!joined && (!line.trim() || /^\s*(?:[-*]\s|\d+\.\s)/.test(line))) flush();   // a bullet is its own run
       buf.push(line);
     }
     flush();

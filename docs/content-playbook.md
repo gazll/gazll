@@ -215,9 +215,11 @@ hoặc một callout. Run dài là thứ làm câu trả lời "dính" lại, kh
 
 | Ngưỡng | Ý nghĩa |
 |---|---|
-| ≤ ~300 ký tự / run | mức dễ đọc; phần thân `07-sql-nosql-db-engines.engine-by-engine.q8` viết theo kiểu này |
-| > 350 ký tự / run | `--dense` gọi là **wall**, cần tách. Mốc này là p95 của toàn bộ 3311 run trong `data/` |
+| ≤ 300 ký tự / run | **bất biến hiện tại của toàn bộ `data/`** — run dài nhất đúng 300 |
+| > 300 ký tự / run | `--dense` gọi là **wall**, cần tách |
 | > 120 ký tự / ô bảng không có `<br>` | ô bảng đang chứa văn xuôi, tách bằng `<b>Nhãn:</b> … <br>` |
+
+Phân bố hiện tại (7254 run): p50 119 · p90 224 · p95 253 · p99 288 · max 300.
 
 Cách tách, theo thứ tự nên thử:
 
@@ -451,7 +453,7 @@ sạch dấu vết.
 - [ ] `<` viết thành `&lt;`, kể cả trong inline code
 - [ ] Không có dòng trắng trong `<pre>`/`<table>`/`<figure>`
 - [ ] `:::tip`/`:::warn` chỉ chứa một đoạn văn — và đủ ngắn để đọc liền (§2.6)
-- [ ] Không có run nào > 350 ký tự; ô bảng dài đã tách bằng `<br>`
+- [ ] Không có run nào > 300 ký tự; ô bảng dài đã tách bằng `<br>`
 - [ ] SVG marker id đặt theo id mục
 - [ ] **Đã sửa cả `.json` và `.vi.json`**
 - [ ] `validate-content.mjs` OK · `audit-content.mjs` no drift
