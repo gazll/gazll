@@ -428,10 +428,7 @@
   }
   @media (max-width:760px){
     :root{--gutter:14px}
-    /* The picker wraps onto its own full-width line: sharing the row with the
-       account controls leaves it ~90px, which ellipsises every topic label. */
-    .top-inner{padding:10px var(--gutter);gap:10px;flex-wrap:wrap;row-gap:8px}
-    .topicpick{order:3;flex:1 0 100%;max-width:none}
+    .top-inner{padding:10px var(--gutter);gap:10px}
     .progress-meta{display:none}
     .authbtn{width:34px;height:34px}
     .avatar{width:26px;height:26px}
@@ -467,11 +464,21 @@
     .pcenter{font-size:12px}
     .pdots{max-width:160px}
   }
-  /* Phones: everything the head carries besides the question is squeezed into
-     one narrow left column or the right edge, so .qtext keeps a readable
-     measure instead of the ~80px it was left with.
-     Scoped to [data-qid] — the interview journal's cards carry no badge. */
   @media (max-width:600px){
+    /* The header stays one row here, so every ornament on the right gives up
+       width for the picker: without this it is left ~100px. The topic name is
+       allowed to ellipsise — the hero right below it says the name in full. */
+    .hdr-lang .lang-label{display:none}   /* the flag knob already says which */
+    .ring{width:30px;height:30px}
+    .ring::after{width:24px;height:24px}
+    .topicpick{gap:8px;padding:6px 10px}
+    .tp-n{font-size:12px;padding:3px 6px}
+    .tp-sub{display:none}                 /* the dropdown rows carry the same counts */
+
+    /* Question heads: everything besides the question is squeezed into one
+       narrow left column or the right edge, so .qtext keeps a readable measure
+       instead of the ~80px it was left with.
+       Scoped to [data-qid] — the interview journal's cards carry no badge. */
     /* rows are auto/1fr, not auto/auto: .qtext spans both, and two auto rows
        would share its height and push the badge away from the qid. */
     .qcard[data-qid] .qhead{display:grid;grid-template-columns:58px minmax(0,1fr) auto;
@@ -486,6 +493,13 @@
   }
   @media (max-width:420px){
     body{font-size:15px}
+    /* Last two ornaments to go, and the least informative ones left: down here
+       both are wordless (the ring has no count, the sync state no label), and
+       Stats plus the account menu state the same thing properly. Their ~57px
+       is what lets the topic name read instead of ellipsising to "Java Cor…".
+       (.syncstate is dropped in the trailing responsive block — its own rule
+       lives after this one and would win.) */
+    .progress-wrap{display:none}
     .daynum{font-size:34px}
     .hero h2{font-size:18px}
     .qid{min-width:30px}
@@ -715,6 +729,8 @@
     .notebox{margin-top:12px}
   }
   @media (max-width:420px){
+    /* the header keeps one row down here; the dot goes so the topic name reads */
+    .syncstate{display:none}
     .stat-row{grid-template-columns:1fr 1fr;gap:8px}
     .stat-tile{padding:12px 14px}
     .stat-value{font-size:22px}

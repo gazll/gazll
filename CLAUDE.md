@@ -164,9 +164,16 @@ secret/              GITIGNORED. Personal setup notes and credentials
   nav toggle and `.headright`, carrying `track-only` so it disappears on every
   other view. Nothing in the header names the current *view* — `showView()`
   writes that into `document.title`, and the nav panel marks it with
-  `aria-current`. Under 760px `.top-inner` wraps and the picker takes a full
-  line of its own; sharing the row with the account controls leaves it about
-  90px, which ellipsises every topic label.
+  `aria-current`.
+
+- **The header stays one row at every width, so it sheds instead of wrapping.**
+  The picker is the only flexible item in `.top-inner`; everything else is a
+  fixed-size control, so each thing dropped goes straight into the topic label.
+  In order: `.hdrtoggle` at 860, `.progress-meta` + `.tb-steps` at 760, the
+  header switch's EN/VI labels + `.tp-sub` at 600, `.progress-wrap` +
+  `.syncstate` at 420. Below ~375px the label ellipsises, which is fine — the
+  hero right underneath names the topic in full. Do not answer a cramped
+  header with `flex-wrap`: that is the two-row layout this replaced.
 
 - **`header.top` is a stacking context** (`position:sticky` + `z-index:50`),
   so anything inside it is trapped below 50 no matter its own `z-index`. That
