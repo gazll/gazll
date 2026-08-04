@@ -563,6 +563,9 @@ function wireTopicPicker() {
   });
   pick.scrim.addEventListener('click', () => closeTopicMenu());
   document.addEventListener('click', e => {
+    // A chip that rebuilt the group bar is detached by the time the click
+    // gets here, so `menu.contains()` says "outside" and shuts the panel.
+    if (!e.target.isConnected) return;
     if (isTopicMenuOpen() && !pick.menu.contains(e.target) && !pick.btn.contains(e.target)) closeTopicMenu();
   });
 
@@ -609,9 +612,14 @@ function buildTypeBar() {
     + TOPIC_TYPES.filter(g => counts[g.key]).map(g => chip(g.key, g.label, counts[g.key])).join('');
 
   bar.querySelectorAll('.gchip').forEach(b => b.addEventListener('click', () => {
-    typeFilter = typeFilter === b.dataset.g ? 'all' : b.dataset.g;
+    const g = b.dataset.g;
+    const hadFocus = bar.contains(document.activeElement);
+    typeFilter = typeFilter === g ? 'all' : g;
     buildTypeBar();
     buildTopicList();
+    // The rebuild threw away the chip that was clicked; without this the
+    // keyboard lands on <body> and the menu's Escape/arrow keys go dead.
+    if (hadFocus) bar.querySelector('[data-g="' + g + '"]')?.focus();
   }));
 }
 
