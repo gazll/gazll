@@ -20,6 +20,7 @@ node tools/audit-content.mjs              # biên tập: parity EN/VI + độ ph
 node tools/audit-content.mjs --stale      # kiến thức nào gắn version/năm → cần review
 node tools/audit-content.mjs --gaps       # mục nào dài mà chưa có ví dụ minh hoạ
 node tools/audit-content.mjs --refs       # alias kiểu ch.12 chưa trỏ tới item_id thật
+node tools/audit-content.mjs --dense      # mục nào dính đoạn → cần xuống dòng (§2.6)
 ```
 
 Khác nhau chỗ nào: `validate-content.mjs` **fail build** khi cấu trúc sai.
@@ -206,6 +207,35 @@ Chỉ dùng nguồn chính thức/primary cho claim normative. `reviewed_at` cho
 lần kiểm chứng cuối, không phải lời hứa nội dung đúng mãi. Review lại khi có
 release/standard/advisory mới, không chỉ đợi lịch sáu tháng.
 
+### 2.6 Đừng để dính đoạn — đơn vị đọc là "run"
+
+Người đọc gặp nội dung theo từng **run**: một đoạn văn, một gạch đầu dòng,
+hoặc một callout. Run dài là thứ làm câu trả lời "dính" lại, không phải tổng
+độ dài của mục.
+
+| Ngưỡng | Ý nghĩa |
+|---|---|
+| ≤ ~300 ký tự / run | mức dễ đọc; phần thân `07-sql-nosql-db-engines.engine-by-engine.q8` viết theo kiểu này |
+| > 350 ký tự / run | `--dense` gọi là **wall**, cần tách. Mốc này là p95 của toàn bộ 3311 run trong `data/` |
+| > 120 ký tự / ô bảng không có `<br>` | ô bảng đang chứa văn xuôi, tách bằng `<b>Nhãn:</b> … <br>` |
+
+Cách tách, theo thứ tự nên thử:
+
+- **Dòng trắng** giữa hai ý — rẻ nhất, hiệu quả nhất.
+- **`**Lead-in:**` rồi list** thay cho chuỗi câu nối bằng dấu phẩy/`and`.
+- **`<br>` + `<b>nhãn</b>` trong `<td>`** thay vì viết văn xuôi trong ô bảng.
+- **Cắt `<pre>` dài thành khối có nhãn**, ngăn bằng dòng `────` — xem lại
+  §2.3b: dòng trắng trong `<pre>` sẽ cắt đứt khối HTML, nên phải dùng nhãn
+  chứ không phải dòng trắng.
+
+> **`:::tip` và `:::warn` không tách được bằng dòng trắng.** Renderer nối mọi
+> dòng bên trong thành một đoạn (§2.3c), nên một `:::warn` 400 ký tự vẫn hiện
+> ra là một khối liền. Chỉ có hai cách: viết ngắn lại, hoặc đưa phần giải
+> thích ra ngoài box. `:::deep` thì render đệ quy nên tách bình thường.
+
+Sửa EN thì **sửa cả VI**: `--dense` in số theo dạng `EN/VI`, hai bên lệch
+nhau là biết đã quên một bên.
+
 ---
 
 ## 3. EN/VI: hai file, một cấu trúc
@@ -348,6 +378,9 @@ node tools/audit-content.mjs
 # 2b. cross-ref tạm kiểu ch.xx phải là "none"
 node tools/audit-content.mjs --refs
 
+# 2c. mục vừa sửa không được nằm trong danh sách wall (§2.6)
+node tools/audit-content.mjs --dense
+
 # 3. cú pháp JS (giống CI)
 for f in $(find public -name '*.js'); do node --input-type=module --check < "$f" || echo "FAIL $f"; done
 
@@ -417,7 +450,8 @@ sạch dấu vết.
 - [ ] `id` không đổi, chỉ thêm vào cuối
 - [ ] `<` viết thành `&lt;`, kể cả trong inline code
 - [ ] Không có dòng trắng trong `<pre>`/`<table>`/`<figure>`
-- [ ] `:::tip`/`:::warn` chỉ chứa một đoạn văn
+- [ ] `:::tip`/`:::warn` chỉ chứa một đoạn văn — và đủ ngắn để đọc liền (§2.6)
+- [ ] Không có run nào > 350 ký tự; ô bảng dài đã tách bằng `<br>`
 - [ ] SVG marker id đặt theo id mục
 - [ ] **Đã sửa cả `.json` và `.vi.json`**
 - [ ] `validate-content.mjs` OK · `audit-content.mjs` no drift

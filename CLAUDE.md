@@ -271,8 +271,10 @@ patch tool. The commands below are the subset CI cares about.
 # structure of the data/ tree + structural/content statistics
 node tools/validate-content.mjs --stats
 
-# editorial state: EN/VI parity, example coverage (reports, never fails)
+# editorial state: EN/VI parity, example coverage, dense answers
+# (reports, never fails)
 node tools/audit-content.mjs
+node tools/audit-content.mjs --dense
 
 # same check the CI runs
 for f in $(find public -name '*.js'); do node --input-type=module --check < "$f" || echo "FAIL $f"; done

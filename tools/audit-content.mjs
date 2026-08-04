@@ -9,6 +9,8 @@
      node tools/audit-content.mjs --stale    # + what may have aged out
      node tools/audit-content.mjs --gaps     # + per-item candidates for examples
      node tools/audit-content.mjs --refs     # + non-canonical chapter aliases
+     node tools/audit-content.mjs --dense    # + answers that read as one block
+     node tools/audit-content.mjs --dense --all   # …every item, not just the walls
 
    Parity matters because the two language files are edited separately: the
    validator pins section/item counts and ids, but nothing stops one language
@@ -67,7 +69,8 @@ for (const f of bases) {
   const info = byKey[key] || {};
 
   en.sections.forEach((s, si) => s.items.forEach((it, ii) => {
-    items.push({ ...it, key, type: info.type, n: info.n });
+    const row = { ...it, key, type: info.type, n: info.n };
+    items.push(row);
 
     const p = prose(it.q + ' ' + it.a);
     if (VI_DIACRITIC.test(p)) {
@@ -77,6 +80,7 @@ for (const f of bases) {
 
     const w = vi?.sections?.[si]?.items?.[ii];
     if (!w) return;
+    row.viA = w.a;
     const a = shape(it.a), b = shape(w.a);
     for (const k of Object.keys(a)) {
       if (a[k] !== b[k]) parity.push(`${it.id}: ${k} en=${a[k]} vi=${b[k]}`);
@@ -144,6 +148,98 @@ if (flag('--refs')) {
     if (aliases.length) hits.push(`${i.id}: ${aliases.join(' · ')}`);
   }
   console.log(hits.length ? hits.map(hit => `  ${hit}`).join('\n') : 'none');
+}
+
+if (flag('--dense')) {
+  /* Readability, measured the way the reader meets the text: as runs of prose
+     with nothing to break the eye. A "run" is one paragraph, one bullet, or one
+     callout line — <pre>/<table>/<svg>/<figure> already break themselves up, so
+     they are cut out first rather than counted as relief.
+
+     Both thresholds are read off the corpus, not taste: 350 is the p95 of all
+     3311 runs (4.7% sit above it), 120 the p99 of every table cell carrying
+     no <br>. */
+  const PARA_WALL = 350;
+  const CELL_WALL = 120;
+
+  const seen = (s) => String(s)
+    .replace(/<[^>]*>/g, '')
+    .replace(/\[\[[a-z]:([^\]]*)\]\]/g, '$1')
+    .replace(/[*`]/g, '')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ').trim();
+
+  /* Each run is labelled with the callout it lives in, because that decides the
+     fix. renderMarkdown joins every line of a :::tip/:::warn into one paragraph,
+     so a blank line inside one changes nothing on screen — those have to be
+     shortened or moved out. Plain prose and :::deep just take the blank line. */
+  const runs = (a) => {
+    const out = [];
+    let box = null, buf = [];
+    const flush = () => { const t = seen(buf.join(' ')); if (t) out.push({ t, box }); buf = []; };
+    for (const line of String(a).replace(/<(pre|table|svg|figure)[\s\S]*?<\/\1>/g, '\n\n').split('\n')) {
+      const open = /^:::(deep|tip|warn)\b/.exec(line);
+      if (open) { flush(); box = open[1]; continue; }        // the label is a heading, not prose
+      if (line.trim() === ':::') { flush(); box = null; continue; }
+      if (!line.trim() || /^\s*(?:[-*]\s|\d+\.\s)/.test(line)) flush();   // a bullet is its own run
+      buf.push(line);
+    }
+    flush();
+    return out;
+  };
+
+  const widestCell = (a) => Math.max(0, ...[...String(a).matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g)]
+    .filter(m => !/<br|<li/i.test(m[1]))          // a cell already broken up is fine
+    .map(m => seen(m[1]).length));
+
+  const measure = (a) => {
+    const r = runs(a);
+    const worst = r.reduce((m, x) => (x.t.length > m.t.length ? x : m), { t: '', box: null });
+    return { para: worst.t.length, box: worst.box, blocks: r.length, cell: widestCell(a) };
+  };
+
+  const rows = items.map(i => ({
+    id: i.id, q: i.q, key: i.key, n: i.n, difficulty: i.difficulty,
+    en: measure(i.a), vi: i.viA ? measure(i.viA) : null
+  }));
+  const wall = (r) => r.en.para > PARA_WALL || r.en.cell > CELL_WALL
+    || (r.vi && (r.vi.para > PARA_WALL || r.vi.cell > CELL_WALL));
+
+  head(`density by topic (a "wall" is one run over ${PARA_WALL} chars, or a table cell over ${CELL_WALL})`);
+  const topics = [...new Set(rows.map(r => r.key))]
+    .map(key => {
+      const r = rows.filter(x => x.key === key);
+      return { key, n: r[0].n, items: r.length, walls: r.filter(wall).length,
+        worst: Math.max(...r.map(x => Math.max(x.en.para, x.vi ? x.vi.para : 0))) };
+    })
+    .sort((a, b) => b.walls - a.walls || b.worst - a.worst);
+  for (const t of topics) {
+    const bar = '█'.repeat(Math.round(t.walls / t.items * 20)).padEnd(20, '·');
+    console.log(`  ${String(t.n).padStart(2)} ${t.key.padEnd(34)} ${bar} ${String(t.walls).padStart(2)}/${String(t.items).padEnd(2)} walls   worst run ${t.worst}`);
+  }
+
+  const listed = flag('--all') ? rows : rows.filter(wall);
+  head(flag('--all')
+    ? `every item, densest first (${rows.length} items)`
+    : `items to break up, densest first (${listed.length} of ${rows.length}; --all lists the rest)`);
+  listed
+    .sort((a, b) => Math.max(b.en.para, b.vi ? b.vi.para : 0) - Math.max(a.en.para, a.vi ? a.vi.para : 0))
+    .forEach(r => {
+      const pair = (f) => `${String(r.en[f]).padStart(4)}/${String(r.vi ? r.vi[f] : '—').padEnd(4)}`;
+      const box = r.en.box || (r.vi && r.vi.box);
+      console.log(`  run ${pair('para')} blocks ${pair('blocks')}`
+        + (r.en.cell > CELL_WALL || (r.vi && r.vi.cell > CELL_WALL) ? `  cell ${pair('cell')}` : '')
+        + (box ? `  in :::${box}${box === 'tip' || box === 'warn' ? ' (cannot be split — shorten it)' : ''}` : ''));
+      console.log(`      ${r.difficulty.padEnd(8)} ${r.id}`);
+      console.log(`      ${r.q}`);
+    });
+
+  const walls = rows.filter(wall);
+  const where = (b) => walls.filter(r => (r.en.box || (r.vi && r.vi.box)) === b).length;
+  console.log(`\n${walls.length} of ${rows.length} items have a wall (EN or VI). Numbers read EN/VI.`);
+  console.log(`worst run sits in: plain prose ${where(null)} · :::deep ${where('deep')} · :::tip ${where('tip')} · :::warn ${where('warn')}`);
+  console.log('Target shape: several short runs, a lead-in in bold, lists instead of sentence chains,');
+  console.log('table cells split with <br> — see 07-sql-nosql-db-engines.engine-by-engine.q8.');
 }
 
 console.log('\nreminder: this tool reports, it never fails. Structural rules live in tools/validate-content.mjs.');
