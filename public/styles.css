@@ -366,6 +366,14 @@
   .answer li{margin:4px 0}
   .answer strong{color:var(--ink);font-weight:600}
   .answer em{color:var(--clay);font-style:normal;font-weight:500}
+  .answer a{color:var(--indigo);text-decoration:underline;text-underline-offset:2px;word-break:break-word}
+  .answer a:hover{color:var(--emerald-deep)}
+  /* "Go solve it" button — sits alone above the answer, so it needs its own bottom margin. */
+  .answer a.extlink{display:inline-flex;align-items:center;gap:6px;margin:0 0 13px;padding:6px 13px;border-radius:8px;
+    border:1px solid #cdd5ef;background:var(--indigo-soft);color:var(--indigo);text-decoration:none;
+    font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;transition:background .15s,border-color .15s}
+  .answer a.extlink:hover{background:var(--emerald-soft);border-color:var(--emerald);color:var(--emerald-deep)}
+  .answer a.extlink:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
   /* inline colored keywords: [[g|r|o|b:text]] */
   .hl-g{color:var(--emerald-deep);font-weight:600}
   .hl-r{color:var(--clay);font-weight:600}

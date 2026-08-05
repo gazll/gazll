@@ -26,7 +26,7 @@ const TOPIC_TYPE_KEYS = new Set(TOPIC_TYPES.map(t => t.key));
 const DIFFICULTY_KEYS = new Set(DIFFICULTIES.map(d => d.key));
 const RAW = 'pre|table|figure';
 // Tags the renderer is expected to emit; anything else means a stray '<'.
-const KNOWN = 'pre|table|figure|code|span|thead|tbody|tr|th|td|b|br|svg|defs|marker|path|rect|text|line|polygon|polyline|circle|g|small|em|i';
+const KNOWN = 'pre|table|figure|code|span|thead|tbody|tr|th|td|a|b|br|svg|defs|marker|path|rect|text|line|polygon|polyline|circle|g|small|em|i';
 // item id: {topic-key}.{section-slug}.q{n} — topic-key/section-slug are
 // slugs (lowercase, hyphenated), the item index is always numeric.
 const ID_RE = /^([a-z0-9-]+)\.([a-z0-9-]+)\.q(\d+)$/;
