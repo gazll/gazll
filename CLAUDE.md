@@ -175,6 +175,8 @@ secret/              GITIGNORED. Personal setup notes and credentials
   or retain contributor sections/images: article attribution is publication date
   plus the original Tiki Engineering URL only. Desktop TOC is the collapsible
   left column; its persisted state must not affect the mobile `<details>` TOC.
+  Each manifest row also owns a local `cover_image` from that article and an
+  explicit `cover_fit` (`cover` or `contain`); card art must reflect its content.
 
 - **Every Pages deploy is one immutable asset version.** `tools/stamp-assets.mjs`
   writes the first 12 characters of `github.sha` plus `deployed_at` to
@@ -205,11 +207,11 @@ secret/              GITIGNORED. Personal setup notes and credentials
 - **The header stays one row at every width, so it sheds instead of wrapping.**
   The picker is the only flexible item in `.top-inner`; everything else is a
   fixed-size control, so each thing dropped goes straight into the topic label.
-  In order: `.hdrtoggle` at 860, `.progress-meta` + `.tb-steps` at 760, the
-  header switch's EN/VI labels + `.tp-sub` at 600, `.progress-wrap` +
-  `.syncstate` at 420. Below ~375px the label ellipsises, which is fine — the
-  hero right underneath names the topic in full. Do not answer a cramped
-  header with `flex-wrap`: that is the two-row layout this replaced.
+  In order: `.progress-meta` + `.tb-steps` at 760, the header switch's EN/VI
+  labels + `.tp-sub` at 600, `.progress-wrap` + `.syncstate` at 420. Below
+  ~375px the label ellipsises, which is fine — the hero right underneath names
+  the topic in full. Do not answer a cramped header with `flex-wrap`: that is
+  the two-row layout this replaced.
 
 - **`header.top` is a stacking context** (`position:sticky` + `z-index:50`),
   so anything inside it is trapped below 50 no matter its own `z-index`. That

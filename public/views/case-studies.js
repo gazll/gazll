@@ -54,8 +54,10 @@ function formatDate(value) {
 }
 
 function renderCard(article, category) {
+  const coverFit = article.cover_fit === 'contain' ? ' contain' : '';
   return '<a class="cs-card" href="#/case-studies/' + encodeURIComponent(article.slug) + '">'
-    + '<span class="cs-card-art" aria-hidden="true"><span></span><span></span><span></span></span>'
+    + '<span class="cs-card-art' + coverFit + '" aria-hidden="true"><img src="'
+    + escapeHtml(article.cover_image) + '" alt="" loading="lazy" decoding="async"></span>'
     + '<span class="cs-card-content">'
     + '<span class="cs-card-kicker">' + text().number + ' ' + numberLabel(article) + ' · '
     + escapeHtml(article.company) + ' · ' + escapeHtml(languageLabel(article)) + '</span>'

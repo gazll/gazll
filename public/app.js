@@ -342,36 +342,10 @@ function wireLangSwitch() {
   paintLangSwitch();
 }
 
-/* ---- Header: collapse toggle (remembered) + hide-on-scroll-down ---- */
+/* ---- Header: hide on scroll down, reveal on scroll up ---- */
 function wireHeader() {
   const header = document.querySelector('header.top');
-  const btn = document.getElementById('hdrToggle');
-  if (!header || !btn) return;
-  const KEY = 'javadoc.header.collapsed';
-
-  const setCollapsed = on => {
-    header.classList.toggle('collapsed', on);
-    btn.setAttribute('aria-expanded', String(!on));
-    const label = on ? 'Expand header' : 'Collapse header';
-    btn.setAttribute('aria-label', label);
-    btn.title = label + ' (H)';
-  };
-  let saved = null;
-  try { saved = localStorage.getItem(KEY); } catch (e) {}
-  setCollapsed(saved === '1');
-  const toggle = () => {
-    const on = !header.classList.contains('collapsed');
-    setCollapsed(on);
-    try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) {}
-  };
-  btn.addEventListener('click', e => { e.stopPropagation(); toggle(); });
-  document.addEventListener('keydown', e => {
-    if (e.key !== 'h' && e.key !== 'H') return;
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    const t = e.target;
-    if (t && t.closest && t.closest('input, textarea, [contenteditable]')) return;
-    toggle();
-  });
+  if (!header) return;
 
   // Headroom: hide going down, reveal going up.
   //

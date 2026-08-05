@@ -31,7 +31,7 @@ async function filesBelow(directory) {
   }))).flat();
 }
 
-test('case studies use stable Topic-style numbering and separate localized metadata', () => {
+test('case studies use stable Topic-style numbering and separate localized metadata', async () => {
   assert.equal(manifest.version, 2);
   assert.equal(meta.version, 1);
   assert.equal(manifest.categories.length, 4);
@@ -68,6 +68,11 @@ test('case studies use stable Topic-style numbering and separate localized metad
     assert.ok(['en', 'vi'].includes(article.original_language));
     assert.ok(article.company);
     assert.equal('author' in article, false, `${article.slug}: author attribution must not be stored`);
+    assert.match(article.cover_image,
+      new RegExp(`^assets/case-studies/${key}/[A-Za-z0-9._-]+\\.(?:png|jpe?g|gif|webp)$`),
+      `${article.slug}: card cover must reuse an image from its own article`);
+    assert.ok(['cover', 'contain'].includes(article.cover_fit), `${article.slug}: invalid cover fit`);
+    await access(path.join(publicRoot, article.cover_image));
     assert.ok(Number.isInteger(article.read_minutes) && article.read_minutes > 0);
     for (const lang of ['en', 'vi']) {
       const localized = meta.articles[String(article.n)][lang];
@@ -207,6 +212,7 @@ test('Experience exposes the global language switch while remaining outside Stud
   assert.match(view, /CaseStudies\.load\(Content\.lang\)/);
   assert.match(view, /renderGuide\(guide\)/);
   assert.match(view, /class="cs-origin"/);
+  assert.match(view, /article\.cover_image/);
   assert.match(view, /TOC_STATE_KEY = 'gazl\.caseTocCollapsed'/);
   assert.ok(view.indexOf("'<aside class=\"cs-toc\"") < view.indexOf("'<article class=\"cs-article-body\""),
     'desktop contents must render to the left of the article body');

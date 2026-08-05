@@ -382,6 +382,9 @@ vào Study Track hay mẫu question/answer:
    publisher và không để asset mồ côi.
 6. Manifest chỉ giữ ngày xuất bản và `source_url` của Tiki Engineering, không
    lưu tên tác giả. Xóa các section/ảnh Contributors khỏi cả hai body.
+7. Mỗi bài khai báo `cover_image` trỏ tới một hình có thật trong chính thư mục
+   asset của bài. Dùng `cover_fit: "contain"` cho sơ đồ cần thấy trọn vẹn và
+   `"cover"` cho ảnh/artwork có thể crop; không dùng một thumbnail chung.
 
 `tests/case-studies.test.mjs` khóa các quy tắc trên, đồng thời kiểm tra đủ 94
 hình hiện tại trong cả hai nguồn. Header EN/VI dùng chung `Content.lang`; không

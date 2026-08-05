@@ -222,28 +222,6 @@
     transform:translateY(-50%) translateX(calc(var(--switch-w) - var(--switch-knob) - 4px))}
 
   .hdr-lang{flex:none}
-  header.top.collapsed .lang-track{transform:scale(.82);transform-origin:left center}
-
-  /* header collapse button */
-  .hdrtoggle{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
-    color:var(--ink-soft);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;transition:.15s ease}
-  .hdrtoggle svg{width:17px;height:17px;transition:transform .22s ease}
-  .hdrtoggle:hover{border-color:var(--line-strong);color:var(--emerald)}
-  .hdrtoggle:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
-  header.top.collapsed .hdrtoggle svg{transform:rotate(180deg)}
-
-  /* manually collapsed: a thin bar. The topic picker survives —
-     collapsing is for reading, and you still jump topics while reading. */
-  header.top.collapsed .top-inner{padding-top:5px;padding-bottom:5px}
-  header.top.collapsed .topicpick{padding-top:4px;padding-bottom:4px}
-  header.top.collapsed .tp-sub{display:none}
-  header.top.collapsed .tstep{width:28px;height:28px}
-  header.top.collapsed .progress-meta{display:none}
-  header.top.collapsed .ring{width:28px;height:28px}
-  header.top.collapsed .ring::after{width:22px;height:22px}
-  header.top.collapsed .navtoggle{width:34px;height:34px}
-  header.top.collapsed .authbtn{width:32px;height:32px}
-  header.top.collapsed .avatar{width:24px;height:24px}
 
   main{max-width:var(--shell);margin:0 auto;padding:30px var(--gutter) 90px}
 
@@ -298,13 +276,11 @@
   .cs-card:hover{transform:translateY(-2px);border-color:#b7d9ca;box-shadow:0 16px 34px -22px rgba(20,35,58,.45)}
   .cs-card:focus-visible{outline:2px solid var(--emerald);outline-offset:3px}
   .cs-card-art{position:relative;align-self:stretch;min-height:116px;border:1px solid #cfe6da;border-radius:11px;
-    background:linear-gradient(145deg,#F8FCFA,var(--emerald-soft));overflow:hidden}
-  .cs-card-art::before,.cs-card-art::after,.cs-card-art span{content:"";position:absolute;border:1.5px solid var(--emerald);background:#fff;border-radius:5px}
-  .cs-card-art::before{width:34px;height:25px;left:13px;top:18px}
-  .cs-card-art::after{width:34px;height:25px;right:13px;bottom:18px}
-  .cs-card-art span:nth-child(1){width:34px;height:25px;right:13px;top:18px}
-  .cs-card-art span:nth-child(2){width:34px;height:25px;left:13px;bottom:18px}
-  .cs-card-art span:nth-child(3){width:25px;height:25px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;background:var(--emerald)}
+    background:linear-gradient(145deg,#f8fcfa,var(--emerald-soft));overflow:hidden}
+  .cs-card-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.9) contrast(.98);
+    transition:transform .3s ease,filter .3s ease}
+  .cs-card-art.contain img{inset:7px;width:calc(100% - 14px);height:calc(100% - 14px);object-fit:contain}
+  .cs-card:hover .cs-card-art img{transform:scale(1.045);filter:saturate(1.04) contrast(1)}
   .cs-card-content{min-width:0;display:flex;flex-direction:column}
   .cs-card-kicker{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.65px;text-transform:uppercase;color:var(--emerald);margin-bottom:5px}
   .cs-card-content strong{font-family:"Space Grotesk",sans-serif;font-size:20px;line-height:1.25;color:var(--ink)}
@@ -593,9 +569,6 @@
   /* ============ RESPONSIVE / MOBILE ============ */
   /* The drawer holds the nav at every width, so the header only has to shed
      its own ornaments as space runs out. */
-  @media (max-width:860px){
-    .hdrtoggle{display:none}          /* collapse-on-scroll already does this job */
-  }
   @media (max-width:760px){
     :root{--gutter:14px}
     .top-inner{padding:10px var(--gutter);gap:10px}
@@ -630,8 +603,6 @@
     .cs-card-grid{grid-template-columns:1fr}
     .cs-card{grid-template-columns:84px minmax(0,1fr) auto;padding:14px;gap:13px}
     .cs-card-art{min-height:100px}
-    .cs-card-art::before,.cs-card-art span:nth-child(1){top:14px}
-    .cs-card-art::after,.cs-card-art span:nth-child(2){bottom:14px}
     .cs-card-content strong{font-size:18px}
     .cs-article-head{padding:2px 2px 0}
     .cs-article-head h1{font-size:36px}

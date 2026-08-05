@@ -24,6 +24,8 @@
       "published_at": "2020-11-12",
       "read_minutes": 13,
       "original_language": "en",
+      "cover_image": "assets/case-studies/01-arcturus-inventory-processing-system/02-processing-model.jpeg",
+      "cover_fit": "cover",
       "source_url": "https://engineering.tiki.vn/arcturus-inventory-processing-system/"
     },
     {
@@ -35,6 +37,8 @@
       "published_at": "2021-09-01",
       "read_minutes": 17,
       "original_language": "en",
+      "cover_image": "assets/case-studies/02-a-b-testing-in-tiki-search/04-figure.png",
+      "cover_fit": "cover",
       "source_url": "https://engineering.tiki.vn/a-b-testing-in-tiki-search/"
     },
     {
@@ -46,6 +50,8 @@
       "published_at": "2020-08-14",
       "read_minutes": 14,
       "original_language": "vi",
+      "cover_image": "assets/case-studies/03-tiki-scale-in-10-years/01-figure.png",
+      "cover_fit": "cover",
       "source_url": "https://engineering.tiki.vn/tiki-scale-in-10-years/"
     },
     {
@@ -57,6 +63,8 @@
       "published_at": "2020-01-18",
       "read_minutes": 5,
       "original_language": "en",
+      "cover_image": "assets/case-studies/04-o1-android-build-time-at-tiki/01-figure.jpeg",
+      "cover_fit": "cover",
       "source_url": "https://engineering.tiki.vn/o1-android-build-time-at-tiki/"
     },
     {
@@ -68,6 +76,8 @@
       "published_at": "2020-01-04",
       "read_minutes": 9,
       "original_language": "vi",
+      "cover_image": "assets/case-studies/05-scale-and-whats-next/01-figure.png",
+      "cover_fit": "contain",
       "source_url": "https://engineering.tiki.vn/scale-and-whats-next/"
     },
     {
@@ -79,6 +89,8 @@
       "published_at": "2019-12-15",
       "read_minutes": 6,
       "original_language": "vi",
+      "cover_image": "assets/case-studies/06-tai-sao-tiki-chon-react-native/01-figure.jpeg",
+      "cover_fit": "cover",
       "source_url": "https://engineering.tiki.vn/tai-sao-tiki-chon-react-native/"
     },
     {
@@ -90,6 +102,8 @@
       "published_at": "2019-11-18",
       "read_minutes": 7,
       "original_language": "en",
+      "cover_image": "assets/case-studies/07-into-the-demand-forecast-of-tiki-operations/01-figure.png",
+      "cover_fit": "cover",
       "source_url": "https://engineering.tiki.vn/into-the-demand-forecast-of-tiki-operations/"
     },
     {
@@ -101,6 +115,8 @@
       "published_at": "2019-10-09",
       "read_minutes": 6,
       "original_language": "en",
+      "cover_image": "assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/01-figure.png",
+      "cover_fit": "cover",
       "source_url": "https://engineering.tiki.vn/applying-machine-learning-to-solve-brand-logo-detection-problem/"
     },
     {
@@ -112,6 +128,8 @@
       "published_at": "2019-09-23",
       "read_minutes": 7,
       "original_language": "en",
+      "cover_image": "assets/case-studies/09-pegasus-catalog-product-api-architecture/08-figure.png",
+      "cover_fit": "contain",
       "source_url": "https://engineering.tiki.vn/pegasus-catalog-product-api-architecture/"
     },
     {
@@ -123,6 +141,8 @@
       "published_at": "2018-08-06",
       "read_minutes": 12,
       "original_language": "vi",
+      "cover_image": "assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/05-figure.png",
+      "cover_fit": "contain",
       "source_url": "https://engineering.tiki.vn/xac-thuc-va-phan-quyen-trong-microservices/"
     },
     {
@@ -134,6 +154,8 @@
       "published_at": "2020-04-25",
       "read_minutes": 9,
       "original_language": "en",
+      "cover_image": "assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/01-figure.jpeg",
+      "cover_fit": "contain",
       "source_url": "https://engineering.tiki.vn/how-to-handle-hot-deals-at-the-peak-time/"
     }
   ]
