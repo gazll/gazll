@@ -45,12 +45,16 @@ public/
     interviews.js    interview journal CRUD (<dialog>)
     stats.js         streak + heatmap + per-topic progress
     admin.js         all-user overview (admin role only)
+    case-studies.js  long-form case-study library + article reader/lightbox
   data/
     manifest.json       ordered list of every topic (n, topic_type, file) — 25 rows, Microservices is n=25
     meta.json            label/title/intro/tags/key/topic_type per topic, VI + EN in one file
     topics/NN-slug.json     complete English base, one file per topic (324 items total across 25 files)
     topics/NN-slug.vi.json  complete Vietnamese companion, same shape and item IDs
+    case-studies/manifest.json  case-study categories, metadata, source and body paths
+    case-studies/articles/*.html trusted local long-form article fragments
     interviews.json     seed entries, merged under everyone's own Sheet rows
+  assets/case-studies/  local article figures; never hotlinked from a publisher
 apps-script/Code.gs  the entire backend (Google Sheet as database)
 tests/               security · interviews.merge · auth.state · content.i18n
 tools/               validate-content.mjs · audit-content.mjs · add-content.mjs
@@ -143,10 +147,19 @@ secret/              GITIGNORED. Personal setup notes and credentials
   the request CORS non-simple and it fails. Hence idToken travels in the body.
 
 - **Adding a menu is one entry in `VIEWS`.** `sec` picks the nav-panel section
-  (`technical` · `tool` · `about`). An entry with `href` is an external
+  (`technical` · `experience` · `tool` · `about`). An entry with `href` is an external
   destination: it renders as a new-tab link and `currentViewId()` refuses to
   route to it, so a hash matching its id falls back to the track. That is how
   sibling apps under `public/` (e.g. `fshare-tool/`) join the menu.
+
+- **Case studies are not Study Track topics.** They do not have item ids,
+  difficulty, reviewed state or notes, and never change the progress
+  denominator. `views/case-studies.js` reads its own manifest and trusted HTML
+  fragments. Article figures live under `assets/case-studies/` because the CSP
+  deliberately permits local images, not publisher hotlinks. The router passes
+  trailing hash segments to views, so an article gets a bookmarkable URL such
+  as `#/case-studies/arcturus-inventory-processing-system` while the panel keeps
+  `Case Studies` selected.
 
 - **The nav panel is `inert` while closed.** Without it the off-screen links
   stay in the tab order — the drawer is moved by `transform`, not `display`.

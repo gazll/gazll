@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "systems-architecture",
+      "label": "Systems & Architecture at Scale",
+      "description": "Production architectures shaped by correctness, traffic, integration and operational constraints."
+    },
+    {
+      "id": "data-ml-experimentation",
+      "label": "Data, ML & Experimentation",
+      "description": "How teams turn data, statistical methods and machine learning into production decisions."
+    },
+    {
+      "id": "mobile-developer-productivity",
+      "label": "Mobile & Developer Productivity",
+      "description": "Platform choices and engineering practices that change how product teams ship."
+    },
+    {
+      "id": "engineering-evolution",
+      "label": "Engineering Evolution",
+      "description": "Stories about growing a technology organization and deciding what comes next."
+    }
+  ],
+  "articles": [
+    {
+      "slug": "arcturus-inventory-processing-system",
+      "title": "Arcturus — Inventory Processing System",
+      "company": "Tiki Engineering",
+      "author": "Nghĩa Lê",
+      "published_at": "2020-11-12",
+      "read_minutes": 13,
+      "language": "en",
+      "language_label": "English original",
+      "category": "systems-architecture",
+      "category_label": "Systems & Architecture at Scale",
+      "excerpt": "How Tiki rebuilt inventory processing around an ordered command queue, in-memory state and asynchronous persistence to survive peak-sale traffic without overselling.",
+      "tags": [
+        "Inventory",
+        "Eventual consistency",
+        "Kafka",
+        "L-Max Disruptor",
+        "High concurrency"
+      ],
+      "source_url": "https://engineering.tiki.vn/arcturus-inventory-processing-system/",
+      "body_file": "data/case-studies/articles/arcturus-inventory-processing-system.html"
+    }
+  ]
+}

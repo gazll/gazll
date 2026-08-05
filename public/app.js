@@ -17,6 +17,7 @@ import { Auth, mountAuthUI } from './lib/auth.js';
 import { renderInterviews, mountInterviews } from './views/interviews.js';
 import { renderStats, mountStats } from './views/stats.js';
 import { renderAdmin, mountAdmin } from './views/admin.js';
+import { renderCaseStudies, mountCaseStudies } from './views/case-studies.js';
 
 let TOPICS = [];
 let current = 0;
@@ -45,7 +46,7 @@ const dots = document.getElementById('dots');
 
 /* ---------- Views / navigation ---------- */
 const GUIDE_MD = [
-  'This is an **all-in-one** site. The ☰ button opens the **navigation panel**, grouped into `Technical` (study & practice), `Tools` (standalone utilities) and `Other`. Every view has its own URL (e.g. `#/guide`), so any of them can be shared or bookmarked.',
+  'This is an **all-in-one** site. The ☰ button opens the **navigation panel**, grouped into `Technical` (study & practice), `Experience` (real-world case studies), `Tools` (standalone utilities) and `Other`. Every view has its own URL (e.g. `#/guide`), so any of them can be shared or bookmarked.',
   '',
   ':::tip Adding a menu entry',
   'Open `app.js` and push one object into the `VIEWS` array — nothing else needs touching. The `sec` field decides which section of the panel it lands in.',
@@ -74,6 +75,7 @@ const GUIDE_MD = [
 /* Nav panel sections, in display order. `key` matches the `sec` of a view. */
 const NAV_SECTIONS = [
   { key: 'technical', label: 'Technical' },
+  { key: 'experience', label: 'Experience' },
   { key: 'tool', label: 'Tools' },
   { key: 'about', label: 'Other' }
 ];
@@ -93,6 +95,9 @@ const VIEWS = [
   { id: 'admin', sec: 'technical', label: 'Admin', desc: 'All-user overview', icon: 'admin',
     render: renderAdmin, mount: mountAdmin, when: () => Auth.isAdmin },
 
+  { id: 'case-studies', sec: 'experience', label: 'Case Studies', desc: 'Real systems, trade-offs & growth', icon: 'case',
+    render: renderCaseStudies, mount: mountCaseStudies },
+
   { id: 'fshare', sec: 'tool', label: 'Fshare Bulk Copy', desc: 'Collect download links in bulk',
     icon: 'tool', href: 'fshare-tool/' },
 
@@ -106,6 +111,7 @@ const ICONS = {
   journal: '<path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h5"/>',
   stats: '<path d="M5 19V10M12 19V5M19 19v-6"/>',
   admin: '<path d="M12 3l7 3v5c0 4.2-2.8 7.6-7 10-4.2-2.4-7-5.8-7-10V6z"/>',
+  case: '<path d="M5 5h14v14H5z"/><path d="M8 9h8M8 13h5M9 5V3h6v2"/>',
   tool: '<path d="M14.5 3.5a5 5 0 0 0-6.1 6.7L3.5 15v5.5H9l4.8-4.9a5 5 0 0 0 6.7-6.1L17 12l-2.5-.5L14 9z"/>',
   guide: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.2 3.1c-.6.3-.8.7-.8 1.4"/><path d="M12 17h.01"/>'
 };
@@ -418,13 +424,22 @@ function wireHeader() {
 }
 
 function isTrackActive() { return document.body.classList.contains('view-track'); }
-function currentViewId() {
-  const id = location.hash.replace(/^#\/?/, '');
-  return routableViews().some(v => v.id === id) ? id : 'track';
+function currentRoute() {
+  const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  const id = parts[0];
+  return routableViews().some(v => v.id === id)
+    ? { id, parts: parts.slice(1) }
+    : { id: 'track', parts: [] };
 }
-function route() { showView(currentViewId()); }
+function currentViewId() {
+  return currentRoute().id;
+}
+function route() {
+  const currentRouteState = currentRoute();
+  showView(currentRouteState.id, currentRouteState.parts);
+}
 
-function showView(id) {
+function showView(id, routeParts = []) {
   // Swap only the view-* class; `nav-open` and anything else stays put.
   document.body.classList.forEach(c => { if (c.startsWith('view-')) document.body.classList.remove(c); });
   document.body.classList.add('view-' + id);
@@ -445,9 +460,9 @@ function showView(id) {
     track.hidden = true; host.hidden = false;
     const v = VIEWS.find(x => x.id === id);
     if (v && v.md) host.innerHTML = '<div class="page">' + renderMarkdown(v.md) + '</div>';
-    else if (v && v.render) host.innerHTML = v.render();
+    else if (v && v.render) host.innerHTML = v.render(routeParts);
     else host.innerHTML = '';
-    if (v && v.mount) v.mount(host);
+    if (v && v.mount) v.mount(host, routeParts);
   }
   paintLangSwitch();
   window.scrollTo({ top: 0 });
