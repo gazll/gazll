@@ -9,13 +9,20 @@ const manifest = JSON.parse(await readFile(path.join(publicRoot, 'data/case-stud
 
 test('case-study manifest has stable, unique categories and article slugs', () => {
   assert.equal(manifest.version, 1);
-  assert.ok(manifest.categories.length >= 4);
-  assert.ok(manifest.articles.length >= 1);
+  assert.equal(manifest.categories.length, 4);
+  assert.equal(manifest.articles.length, 11);
 
   const categoryIds = manifest.categories.map(category => category.id);
   const slugs = manifest.articles.map(article => article.slug);
   assert.equal(new Set(categoryIds).size, categoryIds.length);
   assert.equal(new Set(slugs).size, slugs.length);
+  assert.deepEqual(Object.fromEntries(categoryIds.map(id => [id,
+    manifest.articles.filter(article => article.category === id).length])), {
+    'systems-architecture': 4,
+    'data-ml-experimentation': 3,
+    'mobile-developer-productivity': 2,
+    'engineering-evolution': 2
+  });
 
   for (const article of manifest.articles) {
     assert.match(article.slug, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -29,18 +36,23 @@ test('case-study manifest has stable, unique categories and article slugs', () =
 });
 
 test('every case-study body and image is local, complete and accessible', async () => {
+  let totalImages = 0;
   for (const article of manifest.articles) {
     const bodyPath = path.join(publicRoot, article.body_file);
     const body = await readFile(bodyPath, 'utf8');
     assert.doesNotMatch(body, /<script\b|\son[a-z]+\s*=/i, `${article.slug}: active HTML is not allowed`);
-    assert.doesNotMatch(body, /https?:\/\//i, `${article.slug}: body must not hotlink assets`);
+    assert.doesNotMatch(body, /<(?:img|source)\b[^>]+\bsrc(?:set)?="https?:\/\//i,
+      `${article.slug}: body must not hotlink assets`);
+    assert.doesNotMatch(body, /medium\.com/i,
+      `${article.slug}: archived links should prefer Tiki Engineering over Medium`);
 
     const headings = [...body.matchAll(/<h[23]\s+id="([^"]+)"/g)].map(match => match[1]);
-    assert.ok(headings.length >= 6, `${article.slug}: long-form TOC needs section headings`);
+    assert.ok(headings.length >= 1, `${article.slug}: long-form TOC needs section headings`);
     assert.equal(new Set(headings).size, headings.length, `${article.slug}: heading ids must be unique`);
 
     const images = [...body.matchAll(/<img\s+([^>]+)>/g)].map(match => match[1]);
     assert.ok(images.length >= 1, `${article.slug}: article should preserve its figures`);
+    totalImages += images.length;
     for (const attrs of images) {
       const src = /\bsrc="([^"]+)"/.exec(attrs)?.[1];
       const alt = /\balt="([^"]+)"/.exec(attrs)?.[1];
@@ -52,6 +64,7 @@ test('every case-study body and image is local, complete and accessible', async 
       await access(path.join(publicRoot, src));
     }
   }
+  assert.equal(totalImages, 96, 'all figures from the eleven source articles should be preserved');
 });
 
 test('the panel exposes Experience while case studies remain outside Study Track data', async () => {

@@ -1,0 +1,146 @@
+<p>TIKI is the trusted ecommerce platform where thousand sellers sell million products. We commit to provide the best quality of service and only authentic products. But day by day, we grow faster and faster… and can not scale without the support of machine. We have to build a process to combine both human and machine to verify our products. Detecting the brand/logo of a product is one step that helps us to prevent the fake products. It is also the first time , we apply AI/Machine Learning to solve the scale problem.</p>
+<h2 id="1-problem-introduction"><strong>1. Problem introduction</strong></h2>
+<p>Brand/Logo detection is an automatic verification method which can partially free human force from manual verification. Whenever a request is posted by any seller, the associated images are forwarded to our verification system (hereon called <strong>bot</strong>), and our bot should be able to return the predicted brand.</p>
+<p>The main role of bot is to provide early information for the rejection of violated requests. According to our rejection reasons, logo violation is defined as: “<em>Hình ảnh có chứa logo thương hiệu không khớp với thương hiệu của sản phẩm</em>”.</p>
+<h2 id="2-technical-approach"><strong>2. Technical approach</strong></h2>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
+    <img src="assets/case-studies/brand-logo/01-figure.png" width="1024" height="768" loading="lazy" decoding="async" alt="Figure 1 for 2. Technical approach">
+  </button>
+  <figcaption>Figure 1 · 2. Technical approach</figcaption>
+</figure>
+<p><strong><em>Figure 1. Detection schema.</em></strong></p>
+<p>This problem might be solved by several approaches. At first glance, we can potentially cast this problem to classification problem where the input is the entire image and the output is its corresponding brand. This solution unfortunately does not work well in practice because <em>products of different brands are hardly distinguishable, e.g. glasses</em>, shoes.</p>
+<p>What actually do distinguish products of different brands? It is brand logo!!! The problem therefore can be nicely cast to logo detection and prediction. Our detection scheme includes two phases:</p>
+<ul>
+  <li><strong>Localization phase</strong>. We train darknet which is a well-known implementation of YOLO v3 architecture. Darknet can simultaneously localize the potential logo area, and predict its brand. While darknet is good at localization task, it exposes unsatisfactory performance on prediction task. Therefore, we re-use its localization result but does not rely on its prediction brand.</li>
+</ul>
+<p><strong>Prediction phase</strong>. We train Resnet (Residual network) on localization results of Darknet to pursue more accurate classification results.</p>
+<h2 id="3-dataset-descriptions"><strong>3. Dataset descriptions</strong></h2>
+<p>The set of considered seven brands includes: Apple, Adidas, Lego, Nike, Kingston, Calvin Klein, Bosch. Datasets used for training Darknet and Resnet are described in the following:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
+    <img src="assets/case-studies/brand-logo/02-figure.png" width="1282" height="1036" loading="lazy" decoding="async" alt="Figure 2 for 3. Dataset descriptions">
+  </button>
+  <figcaption>Figure 2 · 3. Dataset descriptions</figcaption>
+</figure>
+<p>To monitor the training process, we split each training set into training and validation subsets. In the case of Darknet, 20 images / brand → 140 images in tocal are served as the validation set. In the case of Resnet, 10% of the dataset → 1403 images in total are served as the validation set.</p>
+<h2 id="4-evaluation-methods"><strong>4. Evaluation methods</strong></h2>
+<p>Since Darknet and Resnet are performing different tasks, evaluating them requires slightly different metrics, precisely:</p>
+<ul>
+  <li>Evaluating Darknet</li>
+</ul>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
+    <img src="assets/case-studies/brand-logo/03-figure.png" width="1320" height="626" loading="lazy" decoding="async" alt="Figure 3 for 4. Evaluation methods">
+  </button>
+  <figcaption>Figure 3 · 4. Evaluation methods</figcaption>
+</figure>
+<ul>
+  <li>Evaluating Darknet + Resnet</li>
+</ul>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
+    <img src="assets/case-studies/brand-logo/04-figure.png" width="1276" height="342" loading="lazy" decoding="async" alt="Figure 4 for 4. Evaluation methods">
+  </button>
+  <figcaption>Figure 4 · 4. Evaluation methods</figcaption>
+</figure>
+<h2 id="5-performance-of-darknet"><strong>5. Performance of Darknet</strong></h2>
+<p>We validate Darknet on the holdout validation set including 20 images / brand → 140 images in total. Darknet achieves a <strong>91.73% mAP</strong> at IOU threshold 0.5. Intuitively speaking, <strong>91.73%</strong> of logo areas are localized and predicted correctly (<em>correctly</em> here means more than <strong>50%</strong> area of the true bounding box are localized and assigned to the correct brand). Some good examples are shown in the following:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
+    <img src="assets/case-studies/brand-logo/05-figure.png" width="1296" height="1316" loading="lazy" decoding="async" alt="Figure 5 for 5. Performance of Darknet">
+  </button>
+  <figcaption>Figure 5 · 5. Performance of Darknet</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
+    <img src="assets/case-studies/brand-logo/06-figure.png" width="1030" height="1292" loading="lazy" decoding="async" alt="Figure 6 for 5. Performance of Darknet">
+  </button>
+  <figcaption>Figure 6 · 5. Performance of Darknet</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 7 at full size">
+    <img src="assets/case-studies/brand-logo/07-figure.png" width="1032" height="1228" loading="lazy" decoding="async" alt="Figure 7 for 5. Performance of Darknet">
+  </button>
+  <figcaption>Figure 7 · 5. Performance of Darknet</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 8 at full size">
+    <img src="assets/case-studies/brand-logo/08-figure.png" width="1282" height="750" loading="lazy" decoding="async" alt="Figure 8 for 5. Performance of Darknet">
+  </button>
+  <figcaption>Figure 8 · 5. Performance of Darknet</figcaption>
+</figure>
+<p>While at the moment we are targeting only seven brands, we expect Darknet to be robust on an open set scenario where unknown brands appear. For this reason, we further test Darknet on 10,000 unknown images (having no logo or logo outside the set of seven brands) on production environment. On this set, Darknet makes <strong>2.18%</strong> mistake by assigning <strong>218</strong> unknown images to seven brands. Some bad examples are shown in the following.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 9 at full size">
+    <img src="assets/case-studies/brand-logo/09-figure.png" width="1284" height="728" loading="lazy" decoding="async" alt="Figure 9 for 5. Performance of Darknet">
+  </button>
+  <figcaption>Figure 9 · 5. Performance of Darknet</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 10 at full size">
+    <img src="assets/case-studies/brand-logo/10-figure.png" width="1016" height="1354" loading="lazy" decoding="async" alt="Figure 10 for 5. Performance of Darknet">
+  </button>
+  <figcaption>Figure 10 · 5. Performance of Darknet</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 11 at full size">
+    <img src="assets/case-studies/brand-logo/11-figure.png" width="1282" height="718" loading="lazy" decoding="async" alt="Figure 11 for 5. Performance of Darknet">
+  </button>
+  <figcaption>Figure 11 · 5. Performance of Darknet</figcaption>
+</figure>
+<p>Performance of Darknet on 11,313 unknown images and 1,844 images belonging to seven brands is shown in the following.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 12 at full size">
+    <img src="assets/case-studies/brand-logo/12-figure.png" width="1086" height="490" loading="lazy" decoding="async" alt="Figure 12 for 5. Performance of Darknet">
+  </button>
+  <figcaption>Figure 12 · 5. Performance of Darknet</figcaption>
+</figure>
+<p>Average precision, recall, and F1-score are <strong>88.70%</strong>, <strong>93.02%</strong>, and <strong>90.62%</strong>, respectively.</p>
+<h2 id="6-performance-of-darknet-resnet-the-entire-system"><strong>6. Performance of Darknet + Resnet (the entire system).</strong></h2>
+<p>Replicating the same evaluation on 10,000 unknown images on production, the entire system Darknet + Resnet reduces mistake of Darknet from <strong>2.18%</strong> to <strong>0.26%</strong>. It means only 26 images out of 10,000 are wrongly assigned to seven brands.</p>
+<p>Finally, we compute the performance of the entire system on the mixture of 11,313 unknown images and 1,844 images belonging to seven brands, shown in the following table.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 13 at full size">
+    <img src="assets/case-studies/brand-logo/13-figure.png" width="1078" height="478" loading="lazy" decoding="async" alt="Figure 13 for 6. Performance of Darknet + Resnet (the entire system).">
+  </button>
+  <figcaption>Figure 13 · 6. Performance of Darknet + Resnet (the entire system).</figcaption>
+</figure>
+<p>Average precision, recall, and F1-score are <strong>95.68%</strong>, <strong>92.27%</strong>, and <strong>94.01%</strong>, respectively. By looking closely into the two tables, the combination of Darknet + Resnet improves recall of unknown brands, and precision of seven brands.</p>
+<p>The following confusion matrix shows how models are confused among classes.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 14 at full size">
+    <img src="assets/case-studies/brand-logo/14-figure.png" width="1408" height="778" loading="lazy" decoding="async" alt="Figure 14 for 6. Performance of Darknet + Resnet (the entire system).">
+  </button>
+  <figcaption>Figure 14 · 6. Performance of Darknet + Resnet (the entire system).</figcaption>
+</figure>
+<h2 id="7-effectiveness-on-production"><strong>7. Effectiveness on production.</strong></h2>
+<p>We further investigate the effectiveness of the entire system on request level rather than image level. Specifically, we would like to count how many predictions coincide with human decisions. We employ two basic rules counting number of correct predictions made by bot in the following:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 15 at full size">
+    <img src="assets/case-studies/brand-logo/15-figure.png" width="1284" height="332" loading="lazy" decoding="async" alt="Figure 15 for 7. Effectiveness on production.">
+  </button>
+  <figcaption>Figure 15 · 7. Effectiveness on production.</figcaption>
+</figure>
+<p>We crawled requests in the last three months, and report the number of bot corrections according to two cases `approved` and `rejected` related to seven brands in Figure 3.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 16 at full size">
+    <img src="assets/case-studies/brand-logo/16-figure.png" width="1340" height="852" loading="lazy" decoding="async" alt="Figure 16 for 7. Effectiveness on production.">
+  </button>
+  <figcaption>Figure 16 · 7. Effectiveness on production.</figcaption>
+</figure>
+<p>For approval, bot made very good decisions compared to humans. For rejections, bot ability is rather limited. The main reason is that famous brand logos have been remade with different styles or materials and there are several replications among images that bot is unable to detect.</p>
+<h2 id="8-conclusions"><strong>8. Conclusions</strong></h2>
+<p>Pros:</p>
+<ul>
+  <li>Our brand recognition system based on logo detection and classification is highly accurate in classification task. More specifically, we observe very small misclassification error.</li>
+  <li>We can deploy this system as a recommender for content QC. Our system will suggest illegal images immediately for content QC to take quick rejection.</li>
+</ul>
+<p>Cons:</p>
+<ul>
+  <li>The logo detection rate, according to our test, is still modest. The products do not belong to our seven brands, but contain their logos. Some images are manipulated by sellers mainly to remove logos. In such cases, content QC took rejection action but our system did not because logos are corrupted.</li>
+</ul>
+<h2 id="contributors"><strong>Contributors:</strong></h2>
+<p>Tín Phan — PhD in Machine Learning/Senior AI Engineer</p>
+<p>Bằng Võ — AI Engineer</p>

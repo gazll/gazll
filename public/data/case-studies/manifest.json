@@ -44,6 +44,226 @@
       ],
       "source_url": "https://engineering.tiki.vn/arcturus-inventory-processing-system/",
       "body_file": "data/case-studies/articles/arcturus-inventory-processing-system.html"
+    },
+    {
+      "slug": "a-b-testing-in-tiki-search",
+      "title": "A/B testing in Tiki Search",
+      "company": "Tiki Engineering",
+      "author": "Sergey Bochenkov",
+      "published_at": "2021-09-01",
+      "read_minutes": 17,
+      "language": "en",
+      "language_label": "English original",
+      "category": "data-ml-experimentation",
+      "category_label": "Data, ML & Experimentation",
+      "excerpt": "How Tiki Search simulates realistic CTR distributions to compare statistical tests, control false positives and choose an experiment decision method for its own data.",
+      "tags": [
+        "A/B testing",
+        "Search ranking",
+        "Statistical tests",
+        "CTR",
+        "Bucketing"
+      ],
+      "source_url": "https://engineering.tiki.vn/a-b-testing-in-tiki-search/",
+      "body_file": "data/case-studies/articles/a-b-testing-in-tiki-search.html"
+    },
+    {
+      "slug": "tiki-scale-in-10-years",
+      "title": "TIKI @ Scale in 10 Years.",
+      "company": "Tiki Engineering",
+      "author": "Nghĩa Lê",
+      "published_at": "2020-08-14",
+      "read_minutes": 14,
+      "language": "vi",
+      "language_label": "Bản gốc tiếng Việt",
+      "category": "engineering-evolution",
+      "category_label": "Engineering Evolution",
+      "excerpt": "A ten-year retrospective on Tiki's product, architecture, teams and technology organization—from an online bookstore to a multi-platform commerce company.",
+      "tags": [
+        "Engineering growth",
+        "Organization",
+        "Architecture evolution",
+        "E-commerce",
+        "Company history"
+      ],
+      "source_url": "https://engineering.tiki.vn/tiki-scale-in-10-years/",
+      "body_file": "data/case-studies/articles/tiki-scale-in-10-years.html"
+    },
+    {
+      "slug": "o1-android-build-time-at-tiki",
+      "title": "O(1) Android build time at Tiki",
+      "company": "Tiki Engineering",
+      "author": "Tuan Kiet",
+      "published_at": "2020-01-18",
+      "read_minutes": 5,
+      "language": "en",
+      "language_label": "English original",
+      "category": "mobile-developer-productivity",
+      "category_label": "Mobile & Developer Productivity",
+      "excerpt": "How Tiki's Android team excludes unrelated feature modules, supplies fake source sets and uses deep links to keep local build time independent of project size.",
+      "tags": [
+        "Android",
+        "Gradle",
+        "Build performance",
+        "Modularization",
+        "Developer experience"
+      ],
+      "source_url": "https://engineering.tiki.vn/o1-android-build-time-at-tiki/",
+      "body_file": "data/case-studies/articles/o1-android-build-time-at-tiki.html"
+    },
+    {
+      "slug": "scale-and-whats-next",
+      "title": "SCALE, AND WHAT’S NEXT",
+      "company": "Tiki Engineering",
+      "author": "simzen85",
+      "published_at": "2020-01-04",
+      "read_minutes": 9,
+      "language": "vi",
+      "language_label": "Bản gốc tiếng Việt",
+      "category": "engineering-evolution",
+      "category_label": "Engineering Evolution",
+      "excerpt": "A candid reflection on what scaling means for traffic, teams, systems and engineering judgment—and why the next constraint is often people rather than machines.",
+      "tags": [
+        "Scaling",
+        "Engineering culture",
+        "Leadership",
+        "Organization design",
+        "Career growth"
+      ],
+      "source_url": "https://engineering.tiki.vn/scale-and-whats-next/",
+      "body_file": "data/case-studies/articles/scale-and-whats-next.html"
+    },
+    {
+      "slug": "tai-sao-tiki-chon-react-native",
+      "title": "Tại sao Tiki chọn React-Native?",
+      "company": "Tiki Engineering",
+      "author": "Lâm Vương",
+      "published_at": "2019-12-15",
+      "read_minutes": 6,
+      "language": "vi",
+      "language_label": "Bản gốc tiếng Việt",
+      "category": "mobile-developer-productivity",
+      "category_label": "Mobile & Developer Productivity",
+      "excerpt": "Why Tiki combines native mobile modules with cross-platform development, and why React Native fit its architecture, experimentation needs and available skills.",
+      "tags": [
+        "React Native",
+        "Mobile architecture",
+        "Cross-platform",
+        "Native apps",
+        "Multi-module"
+      ],
+      "source_url": "https://engineering.tiki.vn/tai-sao-tiki-chon-react-native/",
+      "body_file": "data/case-studies/articles/tai-sao-tiki-chon-react-native.html"
+    },
+    {
+      "slug": "into-the-demand-forecast-of-tiki-operations",
+      "title": "Into The Demand Forecast of Tiki Operations",
+      "company": "Tiki Engineering",
+      "author": "Khai Huynh",
+      "published_at": "2019-11-18",
+      "read_minutes": 7,
+      "language": "en",
+      "language_label": "English original",
+      "category": "data-ml-experimentation",
+      "category_label": "Data, ML & Experimentation",
+      "excerpt": "How Tiki Operations frames product demand forecasting, engineers calendar and sales features, evaluates error and turns forecasts into replenishment and workforce decisions.",
+      "tags": [
+        "Demand forecasting",
+        "Operations",
+        "Time series",
+        "Feature engineering",
+        "Inventory planning"
+      ],
+      "source_url": "https://engineering.tiki.vn/into-the-demand-forecast-of-tiki-operations/",
+      "body_file": "data/case-studies/articles/into-the-demand-forecast-of-tiki-operations.html"
+    },
+    {
+      "slug": "applying-machine-learning-to-solve-brand-logo-detection-problem",
+      "title": "Applying Machine Learning to Solve Brand/Logo Detection Problem",
+      "company": "Tiki Engineering",
+      "author": "Nghĩa Lê",
+      "published_at": "2019-10-09",
+      "read_minutes": 6,
+      "language": "en",
+      "language_label": "English original",
+      "category": "data-ml-experimentation",
+      "category_label": "Data, ML & Experimentation",
+      "excerpt": "How Tiki built a logo-detection pipeline with RetinaNet, synthetic training data and image preprocessing to identify branded products in marketplace photos.",
+      "tags": [
+        "Machine learning",
+        "Computer vision",
+        "Logo detection",
+        "RetinaNet",
+        "Synthetic data"
+      ],
+      "source_url": "https://engineering.tiki.vn/applying-machine-learning-to-solve-brand-logo-detection-problem/",
+      "body_file": "data/case-studies/articles/applying-machine-learning-to-solve-brand-logo-detection-problem.html"
+    },
+    {
+      "slug": "pegasus-catalog-product-api-architecture",
+      "title": "Pegasus — Catalog Product API Architecture.",
+      "company": "Tiki Engineering",
+      "author": "Nghĩa Lê",
+      "published_at": "2019-09-23",
+      "read_minutes": 7,
+      "language": "en",
+      "language_label": "English original",
+      "category": "systems-architecture",
+      "category_label": "Systems & Architecture at Scale",
+      "excerpt": "How Tiki redesigned its catalog product API around denormalized documents, read-optimized storage, cache layers and asynchronous data synchronization.",
+      "tags": [
+        "Catalog",
+        "API architecture",
+        "MongoDB",
+        "Caching",
+        "Data synchronization"
+      ],
+      "source_url": "https://engineering.tiki.vn/pegasus-catalog-product-api-architecture/",
+      "body_file": "data/case-studies/articles/pegasus-catalog-product-api-architecture.html"
+    },
+    {
+      "slug": "xac-thuc-va-phan-quyen-trong-microservices",
+      "title": "Xác thực và phân quyền trong Microservices",
+      "company": "Tiki Engineering",
+      "author": "Hòa Nguyễn",
+      "published_at": "2018-08-06",
+      "read_minutes": 12,
+      "language": "vi",
+      "language_label": "Bản gốc tiếng Việt",
+      "category": "systems-architecture",
+      "category_label": "Systems & Architecture at Scale",
+      "excerpt": "A practical tour of authentication and authorization in microservices, covering JWT, opaque tokens, OAuth 2, edge enforcement and service-level access control.",
+      "tags": [
+        "Microservices",
+        "Authentication",
+        "Authorization",
+        "JWT",
+        "OAuth 2"
+      ],
+      "source_url": "https://engineering.tiki.vn/xac-thuc-va-phan-quyen-trong-microservices/",
+      "body_file": "data/case-studies/articles/xac-thuc-va-phan-quyen-trong-microservices.html"
+    },
+    {
+      "slug": "how-to-handle-hot-deals-at-the-peak-time",
+      "title": "How to handle hot deals at the peak time",
+      "company": "Tiki Engineering",
+      "author": "Nghĩa Lê",
+      "published_at": "2020-04-25",
+      "read_minutes": 9,
+      "language": "en",
+      "language_label": "English original",
+      "category": "systems-architecture",
+      "category_label": "Systems & Architecture at Scale",
+      "excerpt": "How Tiki protects hot-deal inventory and checkout at peak traffic with queuing, throttling, inventory reservation and an asynchronous order workflow.",
+      "tags": [
+        "Flash sale",
+        "Peak traffic",
+        "Queueing",
+        "Inventory reservation",
+        "Checkout"
+      ],
+      "source_url": "https://engineering.tiki.vn/how-to-handle-hot-deals-at-the-peak-time/",
+      "body_file": "data/case-studies/articles/how-to-handle-hot-deals-at-the-peak-time.html"
     }
   ]
 }

@@ -1,0 +1,87 @@
+<p>Being well-known for fast delivery and customer service, huge selection of product is a missing piece that Tiki has been working on in the past few years. We opened Marketplace to have more sellers and hence more selection. Our Retail business — where Tiki purchases and manages our own inventory — is also growing rapidly, with that comes an interesting challenge: how much inventory should we purchase at any point in time ? And how much out of that should we put in each of our warehouses ? Also, how to do all that guesswork for millions of products ?</p>
+<p>Having too little inventory will lead to out-of-stock, where customers can see the listed product but can’t purchase. Having too many of them will solve that but lead to wasted cash. Having the right amount of inventory at the “wrong” warehouse (too far from customers) is not ideal either as it will increase the time it takes for us to deliver.</p>
+<p>So, having the “optimal” inventory (the right quantity at the right warehouse) for our millions of product — which we called “inventory replenishment” process — is the key to satisfy customers and still having a sustainable business model. We aim to achieve that with our Demand forecast platform.</p>
+<h2 id="problem-statement">Problem statement</h2>
+<p>Inventory replenishment has always been a crucial process of every trading business. At <strong>TIKI</strong>, this used to be handled manually by merchandising team based on their experiences (read: gut-feeling) with their products and market trend. It works for the early days where we have not so many products/warehouses and cost optimization is not a big concern. However, when our trading business starts growing with emphasis on both customer satisfaction <strong>and</strong> sustainability, each merchandiser then needs to handle larger categories with huge number of products and strict margin/inventory level target. With all those constraints, the manual approach doesn’t work well anymore and that’s where software solution adds value.</p>
+<p>Our Demand forecast platform aims to combine Machine Learning with classical time series forecasting methods to analyze and learn patterns in historical data and try to predict demand in the future.</p>
+<p>With a strong engineering foundation in both data processing and machine learning, the forecast can be applied for as much as millions of products with many different signals (historical demand, upcoming promotions, page-view etc). We want to build a platform so flexible that our data scientist can easily add new signals, run experiment againts our vast data warehouse, find out which signals work best and integrate it into our forecast model to continuously improve its accuracy.</p>
+<h2 id="our-approach">Our approach</h2>
+<h3 id="forecasting-methods">Forecasting methods</h3>
+<p>In the beginning, to limit the scope of the problem, we decided to consider the demand forecast as a natural forecasting time series problem. It means we only focused on the time series of demand and use it to forecast the demand in the future without considering other factors.</p>
+<p>We collected time series of demand from historical data and clustered by its form. The output shows that we have to deal with a diversity of forms of time series. So we decided to use multiple classical time series forecasting methods. There are 6 classical methods we are currently using inside our engine, some of them are well-known methods, such as: <strong>Theta</strong>, <strong>INNAR, Croston,…</strong></p>
+<p>After first phase, we did analysis and realized that there are many factors affect the demand of products, especially things related to promotions. We faced with the difficulty to do feature engineering with classical methods. So we researched and applied <strong>DeepAR</strong> — <strong>A probabilistic forecasting with Autoregressive Recurrent Networks</strong>, that can integrate other signals to optimize the accuracy of forecasting results.</p>
+<p>Because of having multiple models inside forecast engine, we applied a competition process to choose best model for each product. We use 20% time series of product to evaluate all models and choose the model has the best accuracy.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
+    <img src="assets/case-studies/demand-forecast/01-figure.png" width="844" height="1033" loading="lazy" decoding="async" alt="Compete process to choose best model for each SKU.">
+  </button>
+  <figcaption><em>Compete process to choose best model for each SKU.</em></figcaption>
+</figure>
+<h3 id="evaluation">Evaluation</h3>
+<p>We use several forecasting metrics such as <strong>Mean Absolute Error (MAE)</strong>, <strong>Mean Absolute Percentage Error (MAPE</strong>), but the key metric would be <strong>Symmetric Mean Absolute Percentage Error (SMAPE)</strong>.</p>
+<p><strong>SMAPE</strong> is currently used as a official measurement method in well-known <strong>M4 forecasting competition</strong>.There are multiple versions of <strong>SMAPE</strong>, we use the following form:</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
+    <img src="assets/case-studies/demand-forecast/02-figure.png" width="289" height="91" loading="lazy" decoding="async" alt="Figure 2 for Evaluation">
+  </button>
+  <figcaption>Figure 2 · Evaluation</figcaption>
+</figure>
+<p>In comparing to <strong>MAPE</strong>, <strong>SMAPE</strong> has both lower and upper bound by providing result between 0% and 100%.</p>
+<p>It also give different results for over and under forecasting, that is make sense when mapped to the impact created to business and customer.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
+    <img src="assets/case-studies/demand-forecast/03-figure.png" width="556" height="81" loading="lazy" decoding="async" alt="Example of different results for over and under forecasting of SMAPE.">
+  </button>
+  <figcaption><em>Example of different results for over and under forecasting of SMAPE.</em></figcaption>
+</figure>
+<p>Due to the need of business, we provide the forecast result every week. At each week-end, we collect the forecast and actual demand and use <strong>SMAPE</strong> to calculate the accuracy of forecast engine. The forecast engine provides forecasts that are up to 60% more accurate.</p>
+<h3 id="feature-engineering">Feature engineering</h3>
+<p>Along with researching more forecasting methods, we consider feature engineering one of the most important process to uplift the accuracy of forecast engine.</p>
+<p>We have a concept called <strong>Signals pool</strong>, which is a set of signals used for forecasting or experiments.</p>
+<p>We start with the ideas or we would like to call it biases.</p>
+<p><em>Let’s say I think that the traffic of Product detail page would impact to the demand.</em></p>
+<p>Then our data analysis team would roll up their sleeves and get their hands dirty in our data warehouse, to bring insights and validate ideas.</p>
+<p>The final list of new signals we have, we would do the ETL process and add new signals to signals pool. The experiment process then used to validate before we officially use new signals in production.</p>
+<h3 id="experimental-process">Experimental process</h3>
+<p>Let’s imagine we have a lot of ideas to improve the accuracy of forecasting results.</p>
+<p>Changes from ideas could be:</p>
+<ul>
+  <li>Add / remove methods from list of forecasting methods</li>
+  <li>Add / remove signals from Signals pool</li>
+  <li>Change the logic / target of competing method</li>
+  <li>…</li>
+</ul>
+<p>We built a process and foundation to support us the flexibility to experiment our changes quickly and easily.</p>
+<p>An experiment is named by a <strong>Tag. </strong>We call what we have in production with the tag name is <strong>“OFFICIAL”.</strong></p>
+<p>The forecast engine could run forecasting result for multiple tags, include <strong>“OFFICIAL” </strong>tag and experimental tags. By benchmarking the results between tags based on key metrics, we could know which changes would improve our target metrics and decide to rollout change to production or not.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
+    <img src="assets/case-studies/demand-forecast/04-figure.png" width="697" height="460" loading="lazy" decoding="async" alt="The whole picture about experimental process of Demand Forecast">
+  </button>
+  <figcaption><em>The whole picture about experimental process of Demand Forecast</em></figcaption>
+</figure>
+<h2 id="future-plan">Future plan</h2>
+<h3 id="products-segmentation">Products segmentation</h3>
+<p>As we said before, we clustered product by its demand. The idea is to cluster product by other similarities like trend or sales volume.</p>
+<p>By segmentation products to cluster, it will enable us the ability to analyze and troubleshoot easier. We could have dedicated that is specified for each cluster.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
+    <img src="assets/case-studies/demand-forecast/05-figure.png" width="300" height="272" loading="lazy" decoding="async" alt="Product segmentation by similarities">
+  </button>
+  <figcaption><em>Product segmentation by similarities</em></figcaption>
+</figure>
+<h3 id="forecast-by-regions">Forecast by regions</h3>
+<p><strong>TIKI</strong> nowadays opens more and more warehouses to support the rapid growth of business. The demand forecast result right now is the overall demand of the product for the the entire network and currently broke down into regions by some rules bases.</p>
+<p>The scaling of number of warehouses added complexity to this process and also decrease its accuracy. Our idea is to use order’s delivery address to extract demand by cluster and use it to forecast the demand by cluster systematically.</p>
+<p>The difficulty of forecast by cluster is feature engineering process. Because the factors impact the demand is rarely able to break down by cluster, like promotion or coupons (right now there’s no region-targetted promotion/scheme).</p>
+<h3 id="automate-inventory-replenishment-process">Automate inventory replenishment process</h3>
+<p>After successfully calculate the forecast by regions, based on the past performance of forecast engine, we can define the threshold to select the range of products that the forecast engine has good performance and feed that directly to our replenishment system to automatically purchase it and reduce manual efforts.</p>
+<h3 id="apply-forecast-result-into-human-resource-planning">Apply forecast result into human &amp; resource planning</h3>
+<p>We currently provide the weekly forecast. By optimizing the speed of feature engineering, we plan to provide the forecast result by days and this will enable our warehouse to better plan for their human resource to optimize labour cost while still able to maintain good service.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Demand forecast is an interesting AI/ML/mathematics challenge that has very practical application in inventory replenishment and placement. Doing this well is a key advantage for an e-commerce business to satisfy customer, deliver a good service with optimal cost. It’s a journey and Tiki has made some potential progress, we’re looking to share more about this in the future.</p>
+<p>Join us and accelerate it. List of available jobs:</p>
+<ul>
+  <li><a href="https://apply.workable.com/tiki-corporation/j/B90AFF4C53/" target="_blank" rel="noopener noreferrer">Data Scientist</a></li>
+  <li><a href="https://apply.workable.com/tiki-corporation/j/B0DE252FFF/" target="_blank" rel="noopener noreferrer">Data Engineer</a></li>
+</ul>

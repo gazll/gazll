@@ -54,7 +54,7 @@ function renderLibrary(manifest) {
     + '<header class="cs-library-hero"><p class="cs-eyebrow">Experience · Production stories</p>'
     + '<h1>Engineering Case Studies</h1>'
     + '<p>Long-form accounts of real systems, the constraints behind them, and the trade-offs teams made in production.</p>'
-    + '<div class="cs-library-stats"><span><b>' + articles.length + '</b> case study</span>'
+    + '<div class="cs-library-stats"><span><b>' + articles.length + '</b> case ' + (articles.length === 1 ? 'study' : 'studies') + '</span>'
     + '<span><b>1</b> company</span><span>Original language</span></div></header>'
     + groups + '</div>';
 }

@@ -1,0 +1,104 @@
+<p>In Ecommerce, the hot deal is a very efficient way to run marketing. Marketers can discount a product 90% in very short of time to get huge traffic to visit the website. But this activity also requires the system to scale so much. Systems have to handle large customers who are trying to place orders as quickly as possible. Because the discount is extremely high and products are very cheap with very small quantities. So systems have to guarantee the consistency of inventory and price very accuracy.</p>
+<p>For a long time, handling hot deals is a very painful point in our system. We tried and failed so many times. But finally, our catalog platform team can solve it well. Here is our sharing about our solutions.</p>
+<h2 id="1-oversold-deal-problem">1. Oversold deal problem.</h2>
+<p>Users usually use deals to run a promotional campaign. Users set up special prices with very limited quantity in a period of time. The expected behaviors:</p>
+<ul>
+  <li>Price changes exactly. At the start time of a deal, the price of a product has to be changed from the normal price to the special price and at the end time of a deal, the price of the product has to be changed back to the normal price.</li>
+  <li>Guarantee the special quantity. Because the products are usually discounted much, its quantity is very limited. Users don’t want to sell products over a special quantity at a special price. If it happens, they will lose a lot.</li>
+</ul>
+<p>For example, product A priced at 1.000.000 VND. Seller makes a 50% discount deal, which is worth 500.000 VND, from 10:00 AM to 11:00 AM and max quantity of this deal is 10.</p>
+<p>At 10:00 AM, deal change from active to running, and users can buy product A with a deal price. We expect that if ordered quantity is greater than 10 or time passed 11:00 AM, the price of a product will back to 1.000.000VND, and users can not buy products with a 50% discount anymore.</p>
+<p>With the old process to handle the deal before, the oversold problems happen usually. Product A can be sold to 100 products with a 50% discount. But the seller just set max quantity of deal to 10, so sellers have to pay (100–10) * 500.000 = 4.500.000 more for marketing or they have to cancel orders.</p>
+<h2 id="2-the-old-deal-solution">2. The old deal solution.</h2>
+<p>Price and quantity are two data that is required high consistency. If the system cannot guarantee the consistency of these data, the oversold deal problem will happen. To solve this problem, the first approach was to use the transactional database to lock and update these data. At our Talaria system, deals are stored in a MySQL database. This solution worked and guaranteed the consistency of special price and quantity. But in this way, Talaria got another availability issue. Because locking data is an expensive operation at MySQL. When data is locked, no one can access it. But deals are usually very hot, and marketers drive huge traffic to hot products. So many customers race to place orders of a hot deal, and crash the system. Our Engineers had a trade-off between consistency and availability. They chose the availability first and reduce the inconsistency of data as much as possible. Their solution is:</p>
+<ul>
+  <li>Separate deal data from product data and order data. The deal data (special price, special quantity, starting, and ending time) is stored and processed independently from product data and order data. When a deal is started, the deal system will use the deal’s special price to update the price of a product. In this way, when an order is placed, the checkout process no need to check the deal price.</li>
+  <li>Close deal asynchronously: the deal system checks the status of deals periodically. If the deal is expired or the quantity of ordered items is over the special quantity of the deal, the deal system will turn off the deal and change the price of the product to a normal price.</li>
+</ul>
+<p>This solution solved the availability issue but could not guarantee the consistency data of deals and caused the oversold deal problem. The processes are described below:</p>
+<h3 id="2-1-change-the-deal-price-process">2.1. Change the deal price process.</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
+    <img src="assets/case-studies/hot-deals/01-figure.jpeg" width="1320" height="900" loading="lazy" decoding="async" alt="Figure 1 for 2.1. Change the deal price process.">
+  </button>
+  <figcaption>Figure 1 · 2.1. Change the deal price process.</figcaption>
+</figure>
+<p>Deal worker updates price in MySql. Last time, it took 10 seconds from deal worker update price to MySql until price synced to MongoDB.</p>
+<p>So even when the deal is closed, the user still can buy a product with a deal price because the checkout service gets the price of a product from Pegasus, is not updated yet. <strong>And no matter how faster the system can replicate changes, It never guarantees to change price atomic.</strong></p>
+<h3 id="2-2-close-deals-process">2.2. Close deals process.</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
+    <img src="assets/case-studies/hot-deals/02-figure.jpeg" width="1160" height="680" loading="lazy" decoding="async" alt="Figure 2 for 2.2. Close deals process.">
+  </button>
+  <figcaption>Figure 2 · 2.2. Close deals process.</figcaption>
+</figure>
+<p>we can see that: once, the number of the deal is large, the deal worker takes much time to process all deal, it also takes time to get ordered quantity from sales_order_deal table to deal worker.</p>
+<p>So, it can not close the deal right after the ordered quantity exceeds the max quantity of deal. Users still can buy products with the deal price even when ordered quantity is larger than max quantity. <strong>And no matter how faster It can be, It never guarantees to close deals atomic.</strong></p>
+<h2 id="3-the-new-deal-solution">3. The new deal solution.</h2>
+<p>To solve the oversold problem, we have to guarantee the consistency of two data: the price of a deal and the special quantity:</p>
+<ul>
+  <li>Consistency of price: systems have to change the price of a product to the special price at starting deal and change back to normal price at the ending time atomic.</li>
+  <li>Consistency of quantity: systems have to guarantee the consistency of special quantity and don’t allow to place orders with the special price more than the special quantity of a deal.</li>
+</ul>
+<p>It is not easy to change the price of a deal correctly with the previous deal architecture. It is a problem in the distributed system. The data of a deal (special price) is stored separately from the product’s price data, and these data are stored in different databases (deals are store in a MySQL database, product data is stored in a Mongo database and in-memory caching Pegasus). There is no way to make a transaction between these systems to guarantee the consistency of these data. If we want to switch between normal price and special price atomic and correctly, we have to store these data in only one place to make a transaction. But both the price of products and the special price of deals are very hot data. If we use MySQL to store, we will get availability issues to handle the high volume of traffic. The root cause of this problem is the I/O bottleneck of the database. Solving this problem is the challenge of the new architecture. The new approach is to build an in-memory price system to store the normal price and special price of products. This system is a high consistency and availability system.</p>
+<p>About the consistency of inventory, we’ve solved this problem at Arcturus already. But the consistency of the deal’s quantity is slightly different. Each deal has a special quantity for a special price in a specific period of time. The system has to make sure that It doesn’t allow to sell over the special quantity of a deal. Now, there are three data: normal price, special price, special quantity that we have to guarantee consistency. The first approach is to store all these data in one place. But if we use this approach, we will separate the special quantity logic from inventory logic, and we will get another problem to guarantee the consistency of inventory, an order’s quantity satisfies the deal’s special quantity but the SKU is out of stock actually. We can’t solve the oversold deal problem if we cannot combine both logics: price/special price and special quantity.</p>
+<p>A product has one and only one selling price at a specific point in time. It means that if many orders of an SKU are placed at the same time, all of these orders have the same price. This condition is the key to solve the above challenge. We can generate a unique id for each price value. Every time when the system change price, it generates a new id for price. If each price has a unique id, we can solve the consistency between special prices and special quantity easily by attaching the special quantity for each price id. When an order is placed, Checkout will send a reserved stock command with price id to Arcturus to check the available quantity of each SKU and its price. Arcturus guarantees the consistency of inventory and quantity of each price id. And based on this condition, the deal system doesn’t allow overlap deals, at a specific period of time, there is only one active deal for an SKU. So each deal’s special price can be unique, the system can use deal id as price id for each price.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
+    <img src="assets/case-studies/hot-deals/03-figure.jpeg" width="996" height="341" loading="lazy" decoding="async" alt="Figure 3 for 3. The new deal solution.">
+  </button>
+  <figcaption>Figure 3 · 3. The new deal solution.</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
+    <img src="assets/case-studies/hot-deals/04-figure.png" width="1610" height="244" loading="lazy" decoding="async" alt="Figure 4 for 3. The new deal solution.">
+  </button>
+  <figcaption>Figure 4 · 3. The new deal solution.</figcaption>
+</figure>
+<h3 id="3-1-price-system-replicate-the-deal-price-process">3.1. Price system — replicate the deal price process.</h3>
+<p>The deal information is replicated to the price system.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
+    <img src="assets/case-studies/hot-deals/05-figure.jpeg" width="1140" height="560" loading="lazy" decoding="async" alt="Figure 5 for 3.1. Price system — replicate the deal price process.">
+  </button>
+  <figcaption>Figure 5 · 3.1. Price system — replicate the deal price process.</figcaption>
+</figure>
+<h3 id="3-2-arcturus-inventory-process">3.2. Arcturus inventory process.</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
+    <img src="assets/case-studies/hot-deals/06-figure.jpeg" width="1348" height="720" loading="lazy" decoding="async" alt="Figure 6 for 3.2. Arcturus inventory process.">
+  </button>
+  <figcaption>Figure 6 · 3.2. Arcturus inventory process.</figcaption>
+</figure>
+<h3 id="3-3-checkout-process">3.3. Checkout process</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 7 at full size">
+    <img src="assets/case-studies/hot-deals/07-figure.jpeg" width="1360" height="1020" loading="lazy" decoding="async" alt="Figure 7 for 3.3. Checkout process">
+  </button>
+  <figcaption>Figure 7 · 3.3. Checkout process</figcaption>
+</figure>
+<h3 id="3-4-system-architecture">3.4. System architecture.</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 8 at full size">
+    <img src="assets/case-studies/hot-deals/08-figure.jpeg" width="1704" height="832" loading="lazy" decoding="async" alt="Figure 8 for 3.4. System architecture.">
+  </button>
+  <figcaption>Figure 8 · 3.4. System architecture.</figcaption>
+</figure>
+<p>The new checkout and inventory transaction flow:</p>
+<p><strong>Step 1:</strong> When FE of Tiki call checkout, it will send the product_id and price of the product (from Pegasus, just the number like 100.000 VND)</p>
+<p><strong>Step 2:</strong> Checkout call Price-System go get (price, price-type, price-id); type in (‘deal’, ‘special’, ‘basic’); price like 90000VND, and price-id is deal_id in case ‘deal’ and is price-id in case ‘special’ or ‘basic’.</p>
+<p><strong>Step 3:</strong> Checkout compare price from price-system (call system-price) with price from Pegasus (call pegasus-price); If system-price &lt;= pegasus-price then the price is valid, can call to inventory transaction system; Otherwise checkout will inform the user a message like: “Price has changed, please refresh!”</p>
+<p><strong>Step 4:</strong> Checkout call Arcturus for inventory transaction, each item (product_id, warehouse_id, quantity_ordered) is sent with (price-id, price-type)</p>
+<p><strong>Step 5:</strong> Arcturus will check in warehouses for inventory, and if price-type == ‘deal’; Arcturus will check in deal_quantity of a deal (now price-id is deal id); If inventory satisfied and deal quantity is satisfied, then Arcturus return ACCEPT or not, Arcturus return REJECT.</p>
+<p>When Arcturus returns ACCEPT it will save quantity_ordered of a deal (if price-type is ‘deal’) and fire an event update quantity_ordered of a deal for Dealer updated this number to Database.</p>
+<p>When a deal is sold out, Arcturus will fire a SOLD_OUT event; then price-system will consume this event to turn off that deal (it mean deal-price switch to normal price immediately, don’t need to Dealer stop deal). Dealers also consume this event then stop the deal; normal price will sync to Pegasus after a while (1–2s to 5–6s).</p>
+<p><strong>Contributors:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 9 at full size">
+    <img src="assets/case-studies/hot-deals/09-figure.png" width="1128" height="508" loading="lazy" decoding="async" alt="Figure 9 for 3.4. System architecture.">
+  </button>
+  <figcaption>Figure 9 · 3.4. System architecture.</figcaption>
+</figure>
+<p>The next article:<em> </em><em><strong>How to handle inventory transactions at peak time — Project Arcturus.</strong></em></p>
+<p>Read more: <strong>Pegasus — Catalog Product API Architecture.</strong></p>
+<p><a href="https://engineering.tiki.vn/pegasus-catalog-product-api-architecture-f217c8623c9b" target="_blank" rel="noopener noreferrer">https://engineering.tiki.vn/pegasus-catalog-product-api-architecture-f217c8623c9b</a></p>

@@ -1,0 +1,157 @@
+<p>Pegasus is a project of catalog platform — Marketplace Engineering. It is one of the projects to separate catalog system out of TIKI.VN system absolutely. TIKI.VN is a big system with unclear boundary between many teams and domains. All modules share database and can access the other database directly. To scale, We have to break TIKI.VN into smaller systems, especially Catalog System — handle million products of TIKI.</p>
+<p>Our strategy:</p>
+<ul>
+  <li>First: prevent other modules to access catalog data sources directly by providing all necessary apis for both read and write</li>
+  <li>Second: migrate data to catalog owning database and block all direct access</li>
+</ul>
+<p>We have three modules:</p>
+<ul>
+  <li>Mercury: replicate all changes from write side (MySQL) to read side (Mongo DB). It is the backbone to replicate all changes of products.</li>
+  <li>Pegasus: provide read product api for all access. It is the highest throughput api of TIKI</li>
+  <li>Arcturus: provide api to handle all inventory transactions for order placement and integrate to warehouse system</li>
+</ul>
+<p>Pegasus is read product api for TIKI. TIKI.VN is an ecommerce web site, so every touch point of customer is related to product. So It is the highest throughput api of TIKI. It will prevent the direct access to Mongo DB of catalog. Pegasus has challenges:</p>
+<ul>
+  <li>Reliability: handle all traffic to get product data from TIKI</li>
+  <li>High throughput and low latency: handle at least 10k request/s, TP95&lt;5ms</li>
+</ul>
+<p>Our approach to design Pegasus is:</p>
+<ul>
+  <li>Use local memory to cache product data</li>
+  <li>Subscribe product change events from Mercury to invalid cache</li>
+  <li>Use convenient compressions to reduce payload size, utilize cpu and network.</li>
+  <li>Non Blocking architecture</li>
+</ul>
+<p><strong>Pegasus Architecture:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
+    <img src="assets/case-studies/pegasus/01-figure.png" width="1600" height="550" loading="lazy" decoding="async" alt="Figure 1 for Pegasus — Catalog Product API Architecture.">
+  </button>
+  <figcaption>Figure 1 · Pegasus — Catalog Product API Architecture.</figcaption>
+</figure>
+<p>Pegasus is based on Gridgo framework and follows its architecture guideline. It consists of 3 main components:</p>
+<ul>
+  <li>Entry-point: Entry to the application</li>
+  <li>Restful API: Provides APIs for client to query/invalidate products</li>
+  <li>Kafka Consumer: Consume messages from Kafka to invalidate products</li>
+  <li>GRPC: Provides a wrapped GRPC layer to the API</li>
+  <li>In-memory cache: An in-memory key value data structure to store product cache</li>
+  <li>Compressor: A configurable compressor to compress data when storing and serving</li>
+</ul>
+<h2 id="entry-point">Entry-point</h2>
+<p><strong>Restful API</strong></p>
+<p>Pegasus use Vert.x connector for its Restful API. All HTTP requests start from the Vert.x internal event loop, and then are routed to one of the corresponding processors and executed with a configurable strategy. Pegasus supports the following strategies:</p>
+<ul>
+  <li>default: Execute on the same thread as the event loop. This is not recommended, since although MongoDB client is asynchronous, there are still some parts of it which are synchronous, like DNS lookup. Also the compression of data will be CPU-bound, so using a single-thread will not utilize the full processing power of the CPU.</li>
+  <li>executor: Execute the processor using Java ExecutorService. The number of threads are also configurable. Experiments show that using too many threads won’t have any particular benefit and might even slow down the application.</li>
+  <li>disruptor: Execute the processor using Disruptor. Experiments shows that using Disruptor in this case won’t have any benefit compare to ExecutorService.</li>
+</ul>
+<p><strong>Kafka Consumer</strong></p>
+<p>Pegasus consume from Kafka topic <em>index.catalog.invalidate_product</em>, which is produced by Mercury, to invalidate the product in-mem cache. The invalidation is done by evicting the entry in the cache, the product will not be loaded until the next time it is accessed again.</p>
+<p><strong>GRPC</strong></p>
+<p>The restful API can already handle high throughput and low latency requests. Benchmark shows that with 40 opened connections, it can handle 24K RPS with TP99 of 20ms for single product API. But since most of Tala is written in PHP and PHP doesn’t have a built-in HTTP connection pool, each requests to PHP will resulted in 2 or 3 opened connections in Pegasus. Sometimes this lead to around 15K open connections and can easily overload the Load Balancer. (The L7 load balancer is not quite good, it might cut down the throughput by half and increase latency by 100%)</p>
+<p>One nodes:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
+    <img src="assets/case-studies/pegasus/02-figure.png" width="1600" height="643" loading="lazy" decoding="async" alt="Figure 2 for Entry-point">
+  </button>
+  <figcaption>Figure 2 · Entry-point</figcaption>
+</figure>
+<p>Two nodes:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
+    <img src="assets/case-studies/pegasus/03-figure.png" width="1600" height="683" loading="lazy" decoding="async" alt="Figure 3 for Entry-point">
+  </button>
+  <figcaption>Figure 3 · Entry-point</figcaption>
+</figure>
+<p>It’s, however, much better with L4 load balancer:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
+    <img src="assets/case-studies/pegasus/04-figure.png" width="1228" height="544" loading="lazy" decoding="async" alt="Figure 4 for Entry-point">
+  </button>
+  <figcaption>Figure 4 · Entry-point</figcaption>
+</figure>
+<p>To accommodate for this lack of connection pool, Pegasus also exposes its API via GRPC, since GRPC in PHP already supports persistent connection. This is, however, not yet integrated with Tala. The response format is almost quite identical to the Restful API.</p>
+<p>It is worth noting that using GRPC might not have any benefit with language which already supports persistent HTTP connections.</p>
+<h2 id="in-mem-cache">In-mem cache</h2>
+<p>Pegasus uses Guava for its in-memory product cache. This is a very simple Map from product id to product payload. The payload is usually transformed JSON (more on this under the Compressor section).</p>
+<p>The cache is actually a series of loaders using Decorator pattern. The most basic loader is DirectMongoLoader, which queries directly from MongoDB. This loader is wrapped inside GuavaLoader, which will store the payload in Guava Loading Cache and only calls the it when cache miss happens.</p>
+<p>For the single API, it’s very straightforward: return the payload in the cache in case of cache hit, or try to query single product from mongo when cache misses.</p>
+<p>For the multi API, it’s a bit more complicated: query any product missing from the cache, merge with the ones already in the cache (after decompressing them), and sort according to their orders in the request, then compress before returning response to client.</p>
+<p>There are also several optimizations in this component:</p>
+<ul>
+  <li>Promise Cache: Instead of caching the actual product payload, we cache the Promise of the payload. In case of multiple threads accessing the same product ID (calling <em>get(Long id)</em> method), all but one of them will be blocked. To reduce the cost of context switching and have better thread management, we only cache the Promise, so the threads are only blocked as long as the Promise is being created. Generally this will be quite fast.</li>
+  <li>Consistent Hashing: Enable consistent hashing mode in LB can increase cache hit to around 95% (from 85%). But we have now disabled it since Consistent Hashing requires extra works from LB and we cannot use a layer-4 LB.</li>
+  <li>Optionally, the GuavaLoader can also be wrapped inside OutputCacheLoader, which will store the whole response inside another Guava Loading Cache. The OutputCacheLoader will be most useful for multi-products query under heavy load. Benchmarks show that it can reduce TP90 to under 1s for a payload of 200KB with 8000 open connections. Note that the bandwidth is around 10 Gbps, and the transfer rate is around 7 Gbps (0.9 GB/s). Also keep in mind that the OutputCacheLoader is only suitable on some hot deal sales, where cache hit will be high. Generally cache hit will be quite low.</li>
+</ul>
+<p><strong>Without output cache:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
+    <img src="assets/case-studies/pegasus/05-figure.png" width="1600" height="681" loading="lazy" decoding="async" alt="Figure 5 for In-mem cache">
+  </button>
+  <figcaption>Figure 5 · In-mem cache</figcaption>
+</figure>
+<p><strong>With output cache:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
+    <img src="assets/case-studies/pegasus/06-figure.png" width="1600" height="670" loading="lazy" decoding="async" alt="Figure 6 for In-mem cache">
+  </button>
+  <figcaption>Figure 6 · In-mem cache</figcaption>
+</figure>
+<h2 id="compressor">Compressor</h2>
+<p>Pegasus supports configurable Compressors for product payload. We can configure separate compressor for single and multi query. To optimize the two APIs (single &amp; multi), we have a separate application server for each APIs.</p>
+<ul>
+  <li>To query single products: <a href="http://pegasus.tiki.services/" target="_blank" rel="noopener noreferrer">http://pegasus.</a>xxx</li>
+  <li>To query multi products: <a href="http://pegasus-query.tiki.services/" target="_blank" rel="noopener noreferrer">http://pegasus-query.x</a>xx</li>
+</ul>
+<p>Although the codebase are the same, the configuration are different for each API:</p>
+<p>With single API, it’s better to store the gzipped payload of the products and return it directly to client, since GZIP is smaller (thus reduce payload size), and there’s no need to compress/decompress the ones already in cache.</p>
+<p>With multi API, we can’t return the cache directly, so there’s no point keeping compressed version in the cache. Instead we only cache the plaintext version. When returning to client, compressing with Snappy is more efficient than Gzip, although payload will be increased about 2x-3x. Benchmark shows that the latency is reduced by 50% after switching to Snappy (from 15ms to 6ms).</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 7 at full size">
+    <img src="assets/case-studies/pegasus/07-figure.png" width="1432" height="732" loading="lazy" decoding="async" alt="Figure 7 for Compressor">
+  </button>
+  <figcaption>Figure 7 · Compressor</figcaption>
+</figure>
+<p>A special header will be returned to specify the compression algorithm used: <em>compression. </em>Client can use this information to decompress accordingly.</p>
+<p><strong>Performance:</strong></p>
+<p>Our traffic is separated into two sources: from web to render HTML and from api for Javascript or mobile app.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 8 at full size">
+    <img src="assets/case-studies/pegasus/08-figure.png" width="761" height="301" loading="lazy" decoding="async" alt="Figure 8 for Compressor">
+  </button>
+  <figcaption>Figure 8 · Compressor</figcaption>
+</figure>
+<p><strong>From web:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 9 at full size">
+    <img src="assets/case-studies/pegasus/09-figure.png" width="1540" height="790" loading="lazy" decoding="async" alt="Figure 9 for Compressor">
+  </button>
+  <figcaption>Figure 9 · Compressor</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 10 at full size">
+    <img src="assets/case-studies/pegasus/10-figure.png" width="1514" height="848" loading="lazy" decoding="async" alt="Figure 10 for Compressor">
+  </button>
+  <figcaption>Figure 10 · Compressor</figcaption>
+</figure>
+<p><strong>From API:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 11 at full size">
+    <img src="assets/case-studies/pegasus/11-figure.png" width="1520" height="810" loading="lazy" decoding="async" alt="Figure 11 for Compressor">
+  </button>
+  <figcaption>Figure 11 · Compressor</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 12 at full size">
+    <img src="assets/case-studies/pegasus/12-figure.png" width="1526" height="844" loading="lazy" decoding="async" alt="Figure 12 for Compressor">
+  </button>
+  <figcaption>Figure 12 · Compressor</figcaption>
+</figure>
+<p><strong>Contributors:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 13 at full size">
+    <img src="assets/case-studies/pegasus/13-figure.png" width="2000" height="733" loading="lazy" decoding="async" alt="Figure 13 for Compressor">
+  </button>
+  <figcaption>Figure 13 · Compressor</figcaption>
+</figure>

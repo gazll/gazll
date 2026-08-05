@@ -1,0 +1,426 @@
+<p>In Tiki Search we constantly add new features into the ranking formula to provide customers with better search quality. To make sure that a new feature actually gives better results we use A/B testing, which is a process when during some time we have both old and new formula running in parallel and ranking results for a different subset of users. Then we calculate key metrics on each of those subsets separately and make a decision whether the new formula is actually doing better or not.</p>
+<p>In this article we will give a detailed explanation on the process of making this decision — how to understand that the new ranking is “truly” better than the old one and how to estimate the probability of making a mistake in this decision.</p>
+<p>We will not cover the architecture of our whole A/B testing system here — how do we set up the experiments, how do we split our users between them, how do we track events in our system and so on. There’s a lot of information available on these topics. We will solely focus on just one thing — how to interpret the test results and make business decisions based on them.</p>
+<p>With all that said, let’s get to the topic.</p>
+<h2 id="naive-approach">Naive Approach</h2>
+<p>Most of the metrics we use for estimating search quality in Tiki are rate metrics that can be defined by dividing one value to another value. The most common example of such a metric is Click-Through-Rate (CTR), which is defined as the number of clicks divided by the number of impressions made in a certain context. Other rate metrics could be “purchase rate”, “non-clicked queries rate” etc. In the rest of the article we will focus on CTR, but everything below can be applied to any other rate metric as well.</p>
+<p>For the purpose of this article we will define our “view” event as an impression of a single product made within the search results. Our “click” event will be defined as a click on one of the previously impressed results. And the CTR (for a given customer) will be defined as the count of all their “click” events divided by count of all their “view” events.</p>
+<p>A naive approach to interpret A/B test results would be to simply compare the average CTR of old and new ranking formula directly and consider the bigger CTR as the “winner”. The problem here, though, is that the resulting CTRs will most likely be different even if we didn’t change the ranking formula at all. Different customers have different click behaviour and with such a “random” process we will never end up having the same average CTR for the same ranking formula.</p>
+<p>Historically we had seen differences in average CTR going up to 2–3% even if the ranking formula behind both test variants was the same. This presumably small difference can actually make a lot of extra money for the company, if it is “truly” there, so we want our testing process to be sensitive to the true changes even smaller than that and throw away all the cases where the improvement was not “truly” there. This means that a direct CTR comparison approach cannot be used.</p>
+<h2 id="statistical-tests">Statistical Tests</h2>
+<p>There’s a number of known ways to solve this comparison problem, they are called “statistical tests”.</p>
+<p>Let’s define a hypothesis that the CTR distribution of the old ranking model is the same as the CTR distribution of the new ranking model and call it a null hypothesis (H0). Let’s also define an alternative hypothesis (H1) that they are different. A statistical test can perform a calculation over the two distributions and as a result — provide a p-value (probability value), which estimates how likely it is that you would see the difference described by this test statistic if the H0 was true (meaning the actual distributions were the same). It might be hard to understand in theory, but we will show more on this later with examples.</p>
+<p>The most commonly used statistical tests in the industry are:</p>
+<ul>
+  <li><a href="https://en.wikipedia.org/wiki/Student%27s_t-test" target="_blank" rel="noopener noreferrer">T-Test</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test" target="_blank" rel="noopener noreferrer">Mann-Whitney U-Test</a></li>
+  <li>modifications of these two above</li>
+</ul>
+<p>T-Test is a “parametric test”, it requires the data to be normally distributed to be applied (a normal distribution is defined by 2 parameters — <code>mu</code> and <code>sigma</code>, hence the name &quot;parametric&quot;), but can also work relatively well with other distributions that look similar to normal.</p>
+<p>Mann-Whitney U-Test is a “non-parametric test” and can be applied to a much broader set of distributions.</p>
+<p>In the rest of the article we will try to answer the question of how to select the right statistical test for your specific problem and how to interpret its results correctly.</p>
+<h2 id="ctr-distribution">CTR Distribution</h2>
+<p>Here’s how a typical CTR distribution in Tiki Search looks like:</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/01-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 1 for CTR Distribution">
+  </button>
+  <figcaption>Figure 1 · CTR Distribution</figcaption>
+</figure>
+<p>This is a density graph that has specific CTR values on x axis and the number of users that had that specific CTR as their average by y axis. The peaks around 0.25, 0.20 etc are the users who just made a few impressions before clicking what they wanted to find and never came back during the test period — the low number of “views” is the reason why their CTRs seem to be so high.</p>
+<p>Note that we splitted the CTRs by users in our distribution, because most of statistical tests work under an assumption that the observations should be independent from each other (and we assume that different Tiki users act independently from each other). We could’ve used search sessions instead of users, but then if the same user did a search twice, the second observation might be dependent on the first one (for example, you search “vegetables”, because you haven’t found anything for “cucumber”) and thus it might be harder to use statistical tests.</p>
+<p>Let’s start with a simple idea — let’s find a way to model the CTR distribution above and generate N distributions like that. We will call it our A1 group. Then let’s do another N distributions using the same parameters and call it A2 group. And finally let’s do another N distributions, but change our parameters with a constant uplift coefficient, so that the average of the distributions in this 3rd group would be slightly higher than in A1 and A2. This will be our group B.</p>
+<p>We will use groups A1 and A2 to check that False-Positive Rate (FPR) of our statistical test is below the required threshold. And we will use A1 and B to check that the sensitivity of our test is high enough given the accepted error probability.</p>
+<p>An FPR is defined as the probability to decline H0 while it is actually correct (which is bad). And the sensitivity is defined as the probability to decline H0 while it is actually wrong (which is good).</p>
+<h2 id="modelling-the-ctr-distribution">Modelling the CTR Distribution</h2>
+<p>It is hard to model the CTR distribution directly, because of those peaks caused by users with low “view” counts. Instead of trying to do that, let’s model it indirectly. Let’s start from the “views”. Here’s how a typical views distribution looks like in Tiki Search:</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/02-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 2 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 2 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>It looks much “nicer” than the CTR one, so we can model it using log-normal distribution. Here’s the python code to do that:</p>
+<pre><code>import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from scipy import stats</code></pre>
+<pre><code>mu = 5
+sigma2 = 1.3
+N = 1000000
+views = np.absolute(np.exp(stats.norm(mu, sigma2).rvs(N)).astype(np.int64) + 1)</code></pre>
+<pre><code>p00 = np.percentile(views, 0)
+p99 = np.percentile(views, 99)
+ax = sns.histplot(views, bins=np.linspace(p00, p99, 50))
+ax.set_title(&#39;Views, P99 = {}&#39;.format(p99))
+ax.set(xlabel = &#39;Views&#39;)
+plt.tight_layout()
+plt.show()</code></pre>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/03-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 3 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 3 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>Great! It looks very similar to our real distribution! :)</p>
+<p>Now we need to somehow generate our clicks distribution as well. The simplest assumption would be that each user has the same “ground truth” probability to click on the product in search results given that those results are exactly the same. Then we can use that “ground truth” probability to generate our simulated click events. This assumption is far from reality, though. Different users have different click behaviour — some would like to check more results before clicking on one, others would just go for it if the first one looks relevant. Of course, this depends on the query context, but it ALSO depends on the user context.</p>
+<p>We can try to estimate our “ground truth” CTRs distribution by using our real historical CTRs, but only taking into account users who made enough “views” before, so that their real CTRs are more likely to be close to their “ground truth” CTRs in search. Here’s how such distribution looks in Tiki Search:</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/04-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 4 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 4 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>Good way to simulate it is to use beta distribution. It is defined on an interval between 0 and 1 and also its expectation can be expressed only using its two parameters — <code>alpha</code> and <code>beta</code>. We will use this fact later in the article. If you want a more intuitive understanding on why beta distribution is a good option here, read <a href="https://towardsdatascience.com/beta-distribution-intuition-examples-and-derivation-cf00f4db57af" target="_blank" rel="noopener noreferrer">this blog post</a>. Here&#39;s how the expectation is defined:</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/05-figure.png" width="170" height="62" loading="lazy" decoding="async" alt="Figure 5 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 5 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>Let’s write the code to do it:</p>
+<pre><code># expectation of our ground truth CTR, we will use it later to simulate B group
+success_rate = 0.02
+beta = 100
+alpha = success_rate * beta / (1 - success_rate)
+N = 1000000
+success_rate = stats.beta(alpha, beta).rvs(N)</code></pre>
+<pre><code>p00 = np.percentile(success_rate, 0)
+p99 = np.percentile(success_rate, 99)
+ax = sns.histplot(success_rate, bins=np.linspace(p00, p99, 50))
+ax.set_title(&#39;CTR, P99 = {}&#39;.format(p99))
+ax.set(xlabel = &#39;CTR&#39;)
+plt.tight_layout()
+plt.show()</code></pre>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/06-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 6 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 6 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>Note that we have selected the parameters for both simulations above so that they look close to our real distribution graphs, but we will change them later in the article to show which statistical tests work better under which conditions.</p>
+<p>Now that we have both views and ground truth ctrs, let’s finally generate our clicks distribution. We can simulate clicks as <code>views</code> number of experiments with <code>success_rate</code> probability of success using binomial distribution defined like this:</p>
+<pre><code>clicks = scipy.stats.binom(n=views, p=success_rate).rvs()</code></pre>
+<p>Let’s finally write the function to generate our A/A and A/B tests data. For groups A1 and A2 we will just use the same settings for both <code>views</code> and <code>success_rate</code> distributions. For group B we will change the parameters so that the expectation of <code>success_rate</code> has a certain given <code>uplift</code>, which represents that users in that distribution tend to click more than in groups A1 or A2. This is the change we want our statistical tests to catch.</p>
+<pre><code>import os
+import math
+import numpy as np
+import seaborn as sns
+from scipy import stats
+from matplotlib import pyplot as plt
+from matplotlib.axes import Axes</code></pre>
+<pre><code># generate A1, A2 and B groups with given settings
+def generate(N=20000, experiments=2000, mu=5, sigma2=1.3, \
+        success_rate=0.02, uplift=0.03, beta=100):
+    # generate {experiments} number of views distributions each containing {N} users
+    views_a_1 = np.absolute(np.exp(stats.norm(mu, sigma2).rvs(experiments * N)) \
+        .astype(np.int64).reshape(experiments, N) + 1)
+    views_a_2 = np.absolute(np.exp(stats.norm(mu, sigma2).rvs(experiments * N)) \
+        .astype(np.int64).reshape(experiments, N) + 1)
+    views_b = np.absolute(np.exp(stats.norm(mu, sigma2).rvs(experiments * N)) \
+        .astype(np.int64).reshape(experiments, N) + 1)</code></pre>
+<pre><code>    # ground truth CTR for groups A1 and A2
+    alpha_a = success_rate * beta / (1 - success_rate)
+    success_rate_a_1 = stats.beta(alpha_a, beta).rvs(experiments * N) \
+        .reshape(experiments, N)
+    success_rate_a_2 = stats.beta(alpha_a, beta).rvs(experiments * N) \
+        .reshape(experiments, N)</code></pre>
+<pre><code>    # ground truth CTR for group B (with uplift)
+    alpha_b = success_rate * (1 + uplift) * beta / (1 - success_rate * (1 + uplift))
+    success_rate_b = stats.beta(alpha_b, beta).rvs(experiments * N) \
+        .reshape(experiments, N)</code></pre>
+<pre><code>    # clicks distribution
+    clicks_a_1 = stats.binom(n=views_a_1, p=success_rate_a_1).rvs()
+    clicks_a_2 = stats.binom(n=views_a_2, p=success_rate_a_2).rvs()
+    clicks_b = stats.binom(n=views_b, p=success_rate_b).rvs()</code></pre>
+<pre><code>    return views_a_1, views_a_2, views_b, \
+        success_rate_a_1, success_rate_a_2, success_rate_b, \
+        clicks_a_1, clicks_a_2, clicks_b</code></pre>
+<p>Now for the actual tests we will just use their implementation available in the <code>scipy.stats</code> package.</p>
+<pre><code># T-Test implementation
+def t_test(a, b):
+    result = list(map(lambda x: stats.ttest_ind(x[0], x[1]).pvalue, zip(a, b)))
+    return np.array(result)</code></pre>
+<pre><code># Mann-Whitney U-Test implementation
+def mannwhitney(a, b):
+    result = list(map(lambda x: stats.mannwhitneyu(x[0], x[1], \
+        alternative=&#39;two-sided&#39;).pvalue, zip(a, b)))
+    return np.array(result)</code></pre>
+<p>And let’s also define a function, which we will use later to draw graphs.</p>
+<pre><code>colors = sns.color_palette(&quot;deep&quot;)</code></pre>
+<pre><code>def plot_cdf(data: np.ndarray, label: str, ax: Axes, color: str = colors[0], linewidth=3):
+    sorted_data = np.sort(data)
+    position = stats.rankdata(sorted_data, method=&#39;ordinal&#39;)
+    cdf = position / data.shape[0]
+    sorted_data = np.hstack((sorted_data, 1))
+    cdf = np.hstack((cdf, 1))
+    return ax.plot(sorted_data, cdf, color=color, linestyle=&#39;solid&#39;, \
+        label=label, linewidth=linewidth)</code></pre>
+<p>Let’s take A1/A2 test comparison and see how our p-values look like in both T-Test and Mann-Whitney U-Test first:</p>
+<pre><code>views_a_1, views_a_2, views_b, \
+    success_rate_a_1, success_rate_a_2, success_rate_b, \
+    clicks_a_1, clicks_a_2, clicks_b = generate()</code></pre>
+<pre><code>ctrs_a_1 = clicks_a_1.astype(np.float) / views_a_1
+ctrs_a_2 = clicks_a_2.astype(np.float) / views_a_2
+ctrs_b = clicks_b.astype(np.float) / views_b</code></pre>
+<pre><code>p_values_t_test = t_test(ctrs_a_1, ctrs_a_2)
+p_values_mannwhitney = mannwhitney(ctrs_a_1, ctrs_a_2)</code></pre>
+<pre><code>def plot_pvalues(p_values, title):
+    fig, axes = plt.subplots(ncols=1, nrows=1)
+    p_values_distr = sns.histplot(p_values, bins=np.linspace(0, 1, 20), \
+        kde=False, ax=axes, stat=&#39;probability&#39;)
+    axes.set_xlim((0, 1))
+    axes.set_title(title)
+    axes.set(xlabel = &#39;p-value&#39;)
+    plt.tight_layout()
+    plt.show()</code></pre>
+<pre><code>plot_pvalues(p_values_t_test, &#39;p-values in A/A test (T-Test)&#39;)
+plot_pvalues(p_values_mannwhitney, &#39;p-values in A/A test (Mann-Whitney)&#39;)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 7 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/07-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 7 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 7 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>And here’s how CDF (cummulative distribution function) graphs of p-value distribution look:</p>
+<pre><code>def plot_pvalues_cdf(p_values, title):
+    fig, ax = plt.subplots()
+    gr = ax.grid(True)
+    xlim = ax.set_xlim(-0.05,1.02)
+    ylim = ax.set_ylim(-0.02,1.02)
+    ax.axvline(0.05, color=&#39;k&#39;, alpha=0.5)
+    ax.set_xlabel(r&#39;$\alpha$&#39;)
+    ax.set_ylabel(&#39;Sensitivity&#39;)
+    ax.set_title(title)
+    cdf = plot_cdf(p_values, &#39;&#39;, ax)
+    plt.show()</code></pre>
+<pre><code>plot_pvalues_cdf(p_values_t_test, &#39;p-values CDF in A/A test (T-Test)&#39;)
+plot_pvalues_cdf(p_values_mannwhitney, &#39;p-values CDF in A/A test (Mann-Whitney)&#39;)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 8 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/08-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 8 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 8 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>We can see that in both tests the p-value is equally likely to be anywhere between 0 and 1, which means that if our acceptable FPR threshold is 5%, then this test will only mistakenly decline H0 in around 5% of all cases. The rest of the cases will show p-value &gt; 5% and thus we will accept H0, because the p-value is bigger than our threshold.</p>
+<p>Let’s see on p-values in A1/B test now:</p>
+<pre><code>p_values_t_test = t_test(ctrs_a_1, ctrs_b)
+p_values_mannwhitney = mannwhitney(ctrs_a_1, ctrs_b)</code></pre>
+<pre><code>plot_pvalues(p_values_t_test, &#39;p-values in A/B test (T-Test)&#39;)
+plot_pvalues(p_values_mannwhitney, &#39;p-values in A/B test (Mann-Whitney)&#39;)</code></pre>
+<pre><code>plot_pvalues_cdf(p_values_t_test, &#39;p-values CDF in A/B test (T-Test)&#39;)
+plot_pvalues_cdf(p_values_mannwhitney, &#39;p-values CDF in A/B test (Mann-Whitney)&#39;)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 9 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/09-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 9 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 9 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>And CDF graphs as well:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 10 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/10-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 10 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 10 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>We can see that both tests did have relatively good sensitivity under acceptable FPR threshold, but Mann-Whitney U-Test had shown better sensitivity than T-Test with the settings above.</p>
+<p>Let’s now try to tweak <code>views</code> and <code>success_rate</code> distributions to simulate different user behaviour and see how it affects the sensitivity and FPR of both tests. We will use <code>sigma2</code> parameter to tweak <code>views</code> and <code>beta</code> to tweak <code>success_rate</code>. For the purpose of presentation we will plot all important information in one summary screen and then merge all of them into an animated GIF here.</p>
+<pre><code>def plot_summary(data, ground_truth_ctr, views, sigma2, beta):
+    cdf_h1_title = &#39;p-value if H1 is correct (Sensitivity)&#39;
+    cdf_h0_title = &#39;p-value if H0 is correct (FPR)&#39;</code></pre>
+<pre><code>    # create layout
+    fig = plt.figure(constrained_layout=False, figsize=(3 * 3.5, 3.5 * 3), dpi = 100)
+    gs = fig.add_gridspec(4, 3)</code></pre>
+<pre><code>    # fill the layout
+    ax_h1 = fig.add_subplot(gs[:2, :2]) # sensitivity in A/B
+    ax_h0 = fig.add_subplot(gs[0, 2]) # FPR in A/A
+    ax_views = fig.add_subplot(gs[1, 2]) # views in A/A
+    ax_clicks = fig.add_subplot(gs[2, 2]) # ctr in A/A
+    ax_powers = fig.add_subplot(gs[2, :2]) # sensitivity at alpha = 0.05
+    ax_fpr = fig.add_subplot(gs[3, :2]) # FPR at alpha = 0.05
+    ax_hint = fig.add_subplot(gs[3, 2]) # current parameters hint</code></pre>
+<pre><code>    # adjustments
+    fig.subplots_adjust(left=0.2, wspace=0.3, hspace=0.4)</code></pre>
+<pre><code>    # diagonals at h1 and h0 for simpler comparison
+    ax_h1.plot(np.linspace(0, 1, 10000), np.linspace(0, 1, 10000), &#39;k&#39;, alpha=0.1)
+    ax_h0.plot(np.linspace(0, 1, 10000), np.linspace(0, 1, 10000), &#39;k&#39;, alpha=0.1)</code></pre>
+<pre><code>    ax_h1.set_title(cdf_h1_title)
+    ax_h0.set_title(cdf_h0_title)</code></pre>
+<pre><code>    ax_h1.axvline(0.05, color=&#39;k&#39;, alpha=0.5)</code></pre>
+<pre><code>    # plot cdf for all
+    for title, (ab_pvals, aa_pvals, color) in data.items():
+        plot_cdf(ab_pvals, title, ax_h1, color, linewidth=3)
+        plot_cdf(aa_pvals, title, ax_h0, color, linewidth=1.5)</code></pre>
+<pre><code>    ax_h1.grid(True)
+    ax_h0.grid(True)</code></pre>
+<pre><code>    ax_powers.set_title(&#39;Sensitivity&#39;)
+    ax_fpr.set_title(r&#39;False Positive rate at $\alpha = 0.05$&#39;)
+    tests_powers = []
+    tests_fprs = []
+    tests_labels = []
+    tests_colours = []</code></pre>
+<pre><code>    for title, (ab_pvals,aa_pvals, color) in data.items():
+        tests_labels.append(title)
+        tests_colours.append(color)
+        tests_powers.append(np.mean(ab_pvals &lt; 0.05))
+        tests_fprs.append(np.mean(aa_pvals &lt; 0.05))
+    ax_powers.barh(np.array(tests_labels), np.array(tests_powers), color=np.array(tests_colours))
+    ax_fpr.barh(np.array(tests_labels), np.array(tests_fprs), color=np.array(tests_colours))</code></pre>
+<pre><code>    views_p99 = np.percentile(views[:100].ravel(), 99)
+    sns.histplot(views.ravel(),
+                 bins=np.linspace(0, views_p99, 100),
+                 ax=ax_views,
+                 kde=False,
+                 stat=&#39;probability&#39;).set(ylabel=None)
+    ax_views.set_title(f&#39;Views, P99 = {views_p99:7.1f}&#39;)</code></pre>
+<pre><code>    success_rate_p99 = np.percentile(ground_truth_ctr[:100].ravel(), 99)
+    sns.histplot(ground_truth_ctr[:10].ravel(),
+                 bins=np.linspace(0, success_rate_p99, 100),
+                 ax=ax_clicks,
+                 kde=False,
+                 stat=&#39;probability&#39;).set(ylabel=None)
+    success_rate_std = ground_truth_ctr[:100].flatten().std()
+    ax_clicks.set_title(f&#39;Ground truth CTR, std = {success_rate_std:2.3f}&#39;)</code></pre>
+<pre><code>    ax_hint.axis(&#39;off&#39;)
+    ax_hint.text(0.5, 0.5, f&#39;sigma2 = {sigma2}\nbeta = {beta}&#39;, \
+        ha=&#39;center&#39;, va=&#39;center&#39;, size=&#39;xx-large&#39;)</code></pre>
+<pre><code>    plt.close()
+    return fig</code></pre>
+<pre><code>def plot_all(N=20000, experiments=2000, mu=5, sigma2=1.3, success_rate=0.02, uplift=0.03, beta=100):
+    views_a_1, views_a_2, views_b, \
+    success_rate_a_1, success_rate_a_2, success_rate_b, \
+    clicks_a_1, clicks_a_2, clicks_b = generate(N=N, experiments=experiments, mu=mu, \
+        sigma2=sigma2, success_rate=success_rate, uplift=uplift, beta=beta)
+    titles = [
+        &#39;t-test&#39;,
+        &#39;Mann-Whitney&#39;
+    ]</code></pre>
+<pre><code>    ctrs_a_1 = clicks_a_1.astype(np.float) / views_a_1
+    ctrs_a_2 = clicks_a_2.astype(np.float) / views_a_2
+    ctrs_b = clicks_b.astype(np.float) / views_b</code></pre>
+<pre><code>    # debug print
+    print(success_rate_a_1[0])</code></pre>
+<pre><code>    p_values_ab = [
+        t_test(ctrs_a_1, ctrs_b),
+        mannwhitney(ctrs_a_1, ctrs_b)
+    ]</code></pre>
+<pre><code>    p_values_aa = [
+        t_test(ctrs_a_1, ctrs_a_2),
+        mannwhitney(ctrs_a_1, ctrs_a_2)
+    ]</code></pre>
+<pre><code>    views_target = views_b
+    ground_truth_ctr_target = success_rate_b
+    color = colors[0]</code></pre>
+<pre><code>    test_data = {}
+    for i,j in enumerate(titles):
+        test_data[j] = (p_values_ab[i],p_values_aa[i],colors[i])
+    pict = plot_summary(test_data, ground_truth_ctr_target, views_target, sigma2, beta)
+    name = f&#39;exp={experiments}_N={N}_uplift={uplift}_sr={success_rate}_beta={beta}_sigma2={sigma2}.png&#39;
+    pict.savefig(f&#39;{name}&#39;)
+    return f&#39;{name}&#39;</code></pre>
+<p>Here’s how the result changes for different <code>sigma2</code> values:</p>
+<pre><code>sigma_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.0, 1.3, 1.5, 1.8, 2.0, 2.5, 3.0, 4.0, 4.5]</code></pre>
+<pre><code>for sigma2 in sigma_list:
+    plot_all(sigma2 = sigma2)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 11 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/11-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 11 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 11 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>And here’s the changes for different <code>beta</code> values:</p>
+<pre><code>beta_list = [1, 5, 10, 20, 40, 80, 100, 150, 300, 500, 1000, 2000, 10000]</code></pre>
+<pre><code>for beta in beta_list:
+    plot_all(beta = beta)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 12 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/12-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 12 for Modelling the CTR Distribution">
+  </button>
+  <figcaption>Figure 12 · Modelling the CTR Distribution</figcaption>
+</figure>
+<p>The Mann-Whitney U-Test shows better sensitivity in all the cases above, the difference is especially high when <code>views</code> distribution is heavily shifted to the left. Another interesting thing to notice is that if ground truth CTR distribution is shifted to the left, both tests&#39; performance is relatively low (but Mann-Whitney U-Test still outperforms T-Test).</p>
+<p>Let’s discuss how can we improve it further!</p>
+<h2 id="bucketing">Bucketing</h2>
+<p>A commonly used approach to improve statistical test performance is called “bucketing”. Instead taking each user separately and comparing CTR distributions between them we could group users into buckets and compare the CTR distributions between those buckets. The only requirement here is that each user should only belong to one bucket. To achieve this we can hash each user id with salt and divmod the hash by the number of buckets. In our simulated case we will just split the data directly without hashing as it is already a random simulation anyway.</p>
+<p>Let’s write a function to bucketize a given distribution and also wrappers to apply both statistical tests to a bucketed distribution:</p>
+<pre><code>def bucketize(ctrs_0, weights_0, ctrs_1, weights_1, bucket_size=10):
+    n_experiments, n_users = ctrs_0.shape
+    n_buckets = math.ceil(n_users / bucket_size)
+    values_0 = np.zeros((n_experiments, n_buckets))
+    values_1 = np.zeros((n_experiments, n_buckets))
+    for b in np.arange(n_buckets):
+        ind = np.arange(b * n_users / n_buckets, b * n_users / n_buckets + n_users / n_buckets).astype(np.int)
+        values_0[:, b] = np.sum(ctrs_0[:, ind] * weights_0[:, ind], axis=1) / np.sum(weights_0[:, ind], axis=1)
+        values_1[:, b] = np.sum(ctrs_1[:, ind] * weights_1[:, ind], axis=1) / np.sum(weights_1[:, ind], axis=1)
+    return values_0, values_1</code></pre>
+<pre><code>def t_test_buckets(ctrs_0, weights_0, ctrs_1, weights_1, bucket_size=10):
+    return t_test(*bucketize(ctrs_0, weights_0, ctrs_1, weights_1, bucket_size))</code></pre>
+<pre><code>def mannwhitney_buckets(ctrs_0, weights_0, ctrs_1, weights_1, bucket_size=10):
+    return mannwhitney(*bucketize(ctrs_0, weights_0, ctrs_1, weights_1, bucket_size))</code></pre>
+<p>We will use the same ranges of <code>sigma2</code> and <code>beta</code> and draw the same animated series of graphs to see how bucketing performs comparing to the regular tests. Here&#39;s the changes for <code>sigma2</code>. Modifications to <code>plot_all</code> to support bucketed versions of tests are very simple, so we will not provide <code>plot_all_buckets</code> code here, but you can find it in <a href="https://github.com/bachan/articles/tree/master/ab_testing_in_tiki_search_1" target="_blank" rel="noopener noreferrer">this repository</a>.</p>
+<pre><code>for sigma2 in sigma_list:
+    plot_all_buckets(sigma2 = sigma2)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 13 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/13-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 13 for Bucketing">
+  </button>
+  <figcaption>Figure 13 · Bucketing</figcaption>
+</figure>
+<p>And here’s the changes for <code>beta</code>:</p>
+<pre><code>for beta in beta_list:
+    plot_all_buckets(beta = beta)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 14 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/14-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 14 for Bucketing">
+  </button>
+  <figcaption>Figure 14 · Bucketing</figcaption>
+</figure>
+<p>While in most cases bucketing doesn’t outperform the Mann-Whitney U-Test and works even worse than the T-Test sometimes, it can be seen that under more “regular” ground truth CTR distributions when <code>beta</code> is high, it shows the best performance among all tests. Let&#39;s try to simulate the distributions where the improvement with bucketing would be more visible.</p>
+<pre><code>plot_all_buckets(N=20000, experiments=2000, mu=5, sigma2=4.5, success_rate=0.02, uplift=0.03, beta=1000, bucket_size=10)
+plot_all_buckets(N=50000, experiments=2000, mu=1, sigma2=4.5, success_rate=0.02, uplift=0.03, beta=1000, bucket_size=10)
+plot_all_buckets(N=20000, experiments=2000, mu=1, sigma2=4.5, success_rate=0.02, uplift=0.03, beta=1000, bucket_size=10)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 15 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/15-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 15 for Bucketing">
+  </button>
+  <figcaption>Figure 15 · Bucketing</figcaption>
+</figure>
+<p>We will leave the question of why bucketing works behind this article. We will also leave behind the question of how to pick the size of the bucket — it heavily depends on the actual distributions and the best way to pick it is to run similar tests on your own distributions and see what gives the best results.</p>
+<h2 id="the-real-data">The Real Data</h2>
+<p>All the tests above were made on simulated distributions, but we can actually generate any number of A/A tests from our real data, we just need to make sure that the way we split users is independent of any ongoing test, so that the ranking behind them is exactly the same, or even just take the data from a subset of users that was not under any test at the moment.</p>
+<p>Here’s p-value graph for A/A test on 2000 random distributions crafted from our real data:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 16 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/16-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 16 for The Real Data">
+  </button>
+  <figcaption>Figure 16 · The Real Data</figcaption>
+</figure>
+<p>And here’s the CDF graph for it:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 17 at full size">
+    <img src="assets/case-studies/ab-testing-in-search/17-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 17 for The Real Data">
+  </button>
+  <figcaption>Figure 17 · The Real Data</figcaption>
+</figure>
+<p>Now for real data A/B tests we cannot calculate sensitivity directly, because we don’t know the ground truth difference (if we knew it, we wouldn’t need an A/B test in the first place). But the simulations above helped us to understand the sensitivity of each test on many differently shaped distributions, so we can just use the test that has the best sensitivity on our closest simulation. And we can also double check ourselves by seeing if real data A/A test still gives an acceptable FPR.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>The main point of this article was not to give exact answer on what works best and not to give a “silver bullet” solution for all possible cases. What we’ve tried to do here is to show the technique that everybody can apply to their own distributions to figure out which test appraoch will have the best sensitivity under an acceptable false positive rate for their specific domain.</p>
+<p>Here’s the technique again:</p>
+<ul>
+  <li>draw your real views distribution and try to estimate how your ground truth CTRs could look like;</li>
+  <li>find the right simulations for your real distributions;</li>
+  <li>generate as many A/A and A/B tests with those simulations;</li>
+  <li>calculate sensitivity and FPR for each statistical test using those simulations.</li>
+</ul>
+<p>If simulating the tests is impossible for some reason, then at least you should always make sure to check how your statistical test works with your real data A/A test and make sure that false positive rate is within the limit. Cases when users were splitted incorrectly between the test variants are not uncommon in the real world A/B testing and doing such checks is one of the ways to catch this thing as well.</p>
+<h2 id="what-s-next">What’s next?</h2>
+<p>There’s a number of things that we want to leave behind this article.</p>
+<p>First of all, how long should we run the test to guarantee that we will notice the change of X% in the distribution with FPR being within the acceptable limit. The approach normally used here is called Minimum Detectable Effect (MDE), we might provide more details on it in the next article. There could also be some product related limitations here, for example, customer behaviour in Monday is different from Saturday and this can put some additional requirements on the length of the test.</p>
+<p>Second thing that wasn’t covered is how to work with non-rate metrics. For example, we want to optimize an average paycheck from search or increase the share of users with purchases of at least 100k VND of goods. We hope to put some light onto it in the next article.</p>
+<p>Third, there’s another popular technique to perform a statistical test called bootstrapping. It is a little more complex (both computationally and in implementation) than the techinques described above, but it might be the best option for some distributions. It is also available in <code>scipy.stats</code> package, so you can do your own research.</p>
+<p>Apart from these, we’ve tried to cover as much as we can on the process of making decisions about A/B test results that we use in Tiki Search. Hopefully, it was helpful and easy to understand.</p>
+<h2 id="references">References</h2>
+<p>The idea of testing and most of the code was taken from <a href="https://youtu.be/ObzlKVCiBqI" target="_blank" rel="noopener noreferrer">this webinar</a>. It’s in Russian language, but jupyter notebook with full code is available there.</p>
+<p>Full code for this article is also available in <a href="https://github.com/bachan/articles/tree/master/ab_testing_in_tiki_search_1" target="_blank" rel="noopener noreferrer">this repository</a>.</p>
+<h2 id="were-hiring">We’re Hiring!</h2>
+<p>Tiki Search team is actively hiring engineers; apart from A/B testing, the role features many of the other challenges that the team is facing. If you’re interested in joining, feel free to apply!</p>

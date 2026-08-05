@@ -349,6 +349,12 @@
   .cs-article-body li{padding-left:4px;margin:8px 0;line-height:1.74;color:var(--ink-soft)}
   .cs-article-body li::marker{color:var(--emerald)}
   .cs-article-body strong{color:var(--ink);font-weight:600}
+  .cs-article-body a{color:var(--emerald-deep);text-decoration-color:#8cc3ab;text-underline-offset:3px}
+  .cs-article-body a:hover{color:var(--emerald);text-decoration-color:currentColor}
+  .cs-article-body blockquote{margin:24px 0;padding:15px 20px;border-left:4px solid var(--emerald);background:var(--emerald-soft);border-radius:0 9px 9px 0}
+  .cs-article-body blockquote p{margin:0;color:var(--ink);font-size:17px;font-style:italic}
+  .cs-article-body pre{margin:20px 0 24px;max-height:560px}
+  .cs-link-card a{display:block;padding:13px 15px;border:1px solid var(--line);border-radius:9px;background:#f8fafc;font-family:"IBM Plex Mono",monospace;font-size:12px;text-decoration:none}
 
   .cs-figure{margin:25px 0 28px;border:1px solid var(--line);border-radius:12px;background:#F8FAFC;padding:11px;overflow:hidden}
   .cs-figure-wide{margin-left:clamp(-26px,-2.6vw,-10px);margin-right:clamp(-26px,-2.6vw,-10px)}

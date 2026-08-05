@@ -1,0 +1,169 @@
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
+    <img src="assets/case-studies/android-build-time/01-figure.jpeg" width="2000" height="595" loading="lazy" decoding="async" alt="Photo by Benjamin Suter on Unsplash">
+  </button>
+  <figcaption>Photo by <a href="https://unsplash.com/@benjaminjsuter" target="_blank" rel="noopener noreferrer">Benjamin Suter</a><strong> </strong>on <a href="https://unsplash.com/photos/CgoRzWX4CDg" target="_blank" rel="noopener noreferrer">Unsplash</a></figcaption>
+</figure>
+<h2 id="the-problem">The problem</h2>
+<p>Build time has always been a big issue for Android developers. In order to reduce build time, developers usually split the project into multiple modules to take advantage of the Gradle’s <a href="https://guides.gradle.org/performance/#parallel_execution" target="_blank" rel="noopener noreferrer">parallel execution</a> feature. At Tiki, we modularize our project with the “per feature” approach, which means each feature will sit in its own module.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
+    <img src="assets/case-studies/android-build-time/02-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Figure 2 for The problem">
+  </button>
+  <figcaption>Figure 2 · The problem</figcaption>
+</figure>
+<p>When developing new features or maintaining old ones, Tiki developers usually have to make changes in the <code>:data</code> module which causes the whole project to recompile because most of our feature modules are based upon it. The whole process would take about 5–8 minutes. The more modules/features you have, the more time the process will take to build. We call this <strong>O(n) build time</strong>.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
+    <img src="assets/case-studies/android-build-time/03-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Figure 3 for The problem">
+  </button>
+  <figcaption>Figure 3 · The problem</figcaption>
+</figure>
+<p>We want to move fast, hence developing new features must be fast, which leads to the core issue that our build time has to be fast. 5–8 minutes is nowhere near fast because every day there are around 10–20 builds to be made. Wasting a total of 50–160 minutes per day is just not productive at all.</p>
+<h2 id="the-solution">The solution</h2>
+<p>As it turns out, Gradle doesn’t need to recompile affected modules if they are not included in the project in the first place.</p>
+<p>Say you are working on the Home Screen in <code>:home</code> module, you only care about the changes only on the Home Screen (because recompiling other feature modules makes no sense to you, it is just a waste of time!). For that reason, we decided to exclude other feature modules for the time being so that Gradle doesn’t have to recompile them.</p>
+<p>The idea is simple, we will use the Gradle command line with a customized parameter to know which module we should include in that build.</p>
+<pre><code>./gradlew :app:installDebug -Ponly=&quot;home&quot;</code></pre>
+<pre><code>// app/build.gradle
+apply plugin: &#39;com.android.application&#39;
+
+def include(moduleName) {
+if (hasProperty(&#39;only&#39;)) {
+return only.split(&quot;,&quot;).contains(moduleName)
+}
+return true
+}
+
+dependencies {
+implementation &#39;androidx.appcompat:appcompat:1.0.2&#39;
+if (include(&quot;home&quot;)) {
+implementation project(&quot;:home&quot;)
+}
+if (include(&quot;detail&quot;)) {
+implementation project(&quot;:detail&quot;)
+}
+if (include(&quot;search&quot;)) {
+implementation project(&quot;:search&quot;)
+}
+}</code></pre>
+<p>For this particular build command, only 3 modules get recompiled if something changes in the <code>:data</code> module.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
+    <img src="assets/case-studies/android-build-time/04-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Figure 4 for The solution">
+  </button>
+  <figcaption>Figure 4 · The solution</figcaption>
+</figure>
+<h2 id="implementation-detail">Implementation detail</h2>
+<p>In this Github project shown below, I have made an example project to show you how this idea can be implemented. In the next section, I will discuss some of the challenges we face while trying to apply this idea into our codebase.</p>
+<p class="cs-link-card"><a href="https://github.com/nlgtuankiet/modularization" target="_blank" rel="noopener noreferrer">nlgtuankiet/modularization ↗</a></p>
+<p>First and foremost, we have to make the app compiled. Since all of the feature modules are excluded from the project, <code>:app</code> module can’t resolve the class you referred to in the feature module. The number of references may vary depends on the codebase. For our codebase, there are only 2 references:</p>
+<p><strong>The activity class: </strong>we use a static method in activity class to retrieve the starter intent for navigation. To remove this reference, the most simple and straightforward way is using reflection.</p>
+<pre><code>// :detail module
+
+class DetailActivity : DaggerAppCompatActivity() {
+// omitted
+
+companion object {
+@JvmStatic
+@Keep
+fun starterIntent(context:Context, productId:String): Intent {
+return Intent(context, DetailActivity::class.java).apply {
+putExtra(&quot;productId&quot;, productId)
+}
+}
+}
+}</code></pre>
+<pre><code>// :app module
+
+override fun detailIntent(context:Context, productId:String): Intent {
+// old way
+// return DetailActivity.starterIntent(context = context, productId = productId)
+
+// new way
+return Class.forName(&quot;com.nlgtuankiet.modularization.detail.DetailActivity&quot;)
+.getDeclaredMethod(&quot;starterIntent&quot;, Context::class.java, String::class.java)
+.invoke(null, context, productId) as Intent
+}</code></pre>
+<p>Although this approach is simple to implement but is come with some reflection costs, in the example project we take another approach which leverages <code>Dagger 2</code>’s <code>@BindOptionalOf</code> to get rid of the cons with reflection. I won’t go any further since this relates to Dagger 2, but you can check out the source code to see how it’s done.</p>
+<p><strong>The activity’s dagger module: </strong>resulting from<code>Dagger 2</code> best practice, each activity has the corresponding module and <code>AppComponent</code> in <code>:app</code> module references to all of these modules.</p>
+<pre><code>// :app
+@Singleton
+@Component(
+modules = [
+AndroidSupportInjectionModule::class,
+HomeActivityModule::class,
+DetailActivityModule::class,
+SearchActivityModule::class
+]
+)
+interface AppComponent
+
+// :home
+@Module
+interface HomeActivityModule {
+@ContributesAndroidInjector
+fun activity(): HomeActivity
+}</code></pre>
+<p>In the beginning, we try to make a stand-alone <code>Component</code> for each activity instead of <code>Subcomponent</code> from <code>AppComponent</code>, therefore <code>AppComponent</code>, no longer needs to reference the activity’s module. Refactor from <code>Subcomponent</code> to <code>Component</code> is time-consuming and we have a lot of modules to refactor. This approach would solve the problem but it will also require a lot of time (and we don’t want that!).</p>
+<p>In the end, we come up with a simple technique called <strong>fake source, </strong>creating a fake source set to mirror the missing real source</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
+    <img src="assets/case-studies/android-build-time/05-figure.png" width="422" height="383" loading="lazy" decoding="async" alt="Figure 5 for Implementation detail">
+  </button>
+  <figcaption>Figure 5 · Implementation detail</figcaption>
+</figure>
+<p>and include these source sets corresponding to the excluded module.</p>
+<pre><code>// app/build.gradle
+def include(moduleName) {
+if (hasProperty(&#39;only&#39;)) {
+return only.split(&quot;,&quot;).contains(moduleName)
+}
+return true
+}
+android {
+sourceSets {
+if (project.hasProperty(&quot;only&quot;)) {
+new File(projectDir, &quot;src/fake&quot;).listFiles().each { f-&gt;
+if (!include(f.name)) {
+// include fake source set
+main.java.srcDir &quot;src/fake/${f.name}&quot;
+}
+}
+}
+}
+}</code></pre>
+<p>Fake source compared to the real source:</p>
+<pre><code>// real source
+package com.nlgtuankiet.modularization.home
+
+import dagger.Module
+import dagger.android.ContributesAndroidInjector
+
+@Module
+interface HomeActivityModule {
+@ContributesAndroidInjector
+fun activity(): HomeActivity
+}
+
+// fake source (app/src/fake/home/HomeActivityModule.kt)
+package com.nlgtuankiet.modularization.home
+
+import dagger.Module
+
+@Module
+interface HomeActivityModule</code></pre>
+<p>This way, <code>AppComponent</code> now reference an empty module and compile successfully. Problem solved!</p>
+<p>There is still one more issue. Since most all of the screens are excluded from the debug APK, how can we open the screen that we are developing?<br>This can easily be done with a deep link using ADB command:</p>
+<pre><code>adb shell am start -a android.intent.action.VIEW -d sample://sample</code></pre>
+<h2 id="the-result">The result</h2>
+<p>After implementing this idea to the Tiki Android project, the build time has reduced by half. One of the bonus from this is the debug APK size become really small since all of the app’s feature is excluded, this will also save a lot of time when deploying the APK to test device.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
+    <img src="assets/case-studies/android-build-time/06-figure.jpeg" width="2000" height="475" loading="lazy" decoding="async" alt="Figure 6 for The result">
+  </button>
+  <figcaption>Figure 6 · The result</figcaption>
+</figure>
+<p>As you can see, with this setup, it doesn’t matter how big your project is or how many modules you have, your build time still remains the same, and that is why we call this <strong>O(1) build time</strong>.</p>
+<h2 id="the-next-step">The next step</h2>
+<p>1–2 minutes is quite good, but that we think we can always do better than that.<strong>15 seconds</strong> is the number we are aiming for, how can we do that? Stay tuned for the next part!</p>
