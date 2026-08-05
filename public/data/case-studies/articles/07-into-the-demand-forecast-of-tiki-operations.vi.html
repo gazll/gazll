@@ -1,0 +1,87 @@
+<p>Nổi tiếng với khả năng giao hàng nhanh và dịch vụ khách hàng, việc lựa chọn sản phẩm đa dạng là một phần còn thiếu mà Tiki đã nỗ lực trong vài năm qua. Chúng tôi đã mở Marketplace để có nhiều người bán hơn và do đó có nhiều lựa chọn hơn. Hoạt động kinh doanh Bán lẻ của chúng tôi - nơi Tiki mua và quản lý hàng tồn kho của riêng chúng tôi - cũng đang phát triển nhanh chóng, kéo theo đó là một thách thức thú vị: chúng tôi nên mua bao nhiêu hàng tồn kho tại bất kỳ thời điểm nào? Và chúng ta nên đặt bao nhiêu trong số đó vào mỗi kho của mình? Ngoài ra, làm thế nào để thực hiện tất cả những phỏng đoán đó cho hàng triệu sản phẩm?</p>
+<p>Việc tồn kho quá ít sẽ dẫn đến tình trạng hết hàng, khách hàng có thể xem sản phẩm được niêm yết nhưng không thể mua hàng. Có quá nhiều chúng sẽ giải quyết được vấn đề đó nhưng lại dẫn đến lãng phí tiền mặt. Việc có đúng lượng hàng tồn kho tại kho “nhầm” (quá xa khách hàng) cũng không phải là lý tưởng vì nó sẽ làm tăng thời gian giao hàng của chúng tôi.</p>
+<p>Vì vậy, có lượng hàng tồn kho “tối ưu” (đúng số lượng tại đúng kho) cho hàng triệu sản phẩm của chúng tôi - mà chúng tôi gọi là quy trình "bổ sung hàng tồn kho" - là chìa khóa để làm hài lòng khách hàng mà vẫn có được một mô hình kinh doanh bền vững. Chúng tôi mong muốn đạt được điều đó với nền tảng dự báo Nhu cầu của mình.</p>
+<h2 id="problem-statement">Tuyên bố vấn đề</h2>
+<p>Bổ sung hàng tồn kho luôn là một quá trình quan trọng của mọi hoạt động kinh doanh thương mại. Tại <strong>TIKI</strong>, việc này từng được nhóm bán hàng xử lý thủ công dựa trên kinh nghiệm của họ (đọc: trực giác) với sản phẩm và xu hướng thị trường của họ. Nó hoạt động trong những ngày đầu khi chúng tôi không có nhiều sản phẩm/kho và tối ưu hóa chi phí không phải là mối quan tâm lớn. Tuy nhiên, khi hoạt động kinh doanh thương mại của chúng tôi bắt đầu phát triển với sự nhấn mạnh vào cả sự hài lòng của khách hàng <strong>và</strong> tính bền vững, khi đó mỗi người bán hàng cần phải xử lý các danh mục lớn hơn với số lượng sản phẩm khổng lồ và mục tiêu mức tồn kho/lợi nhuận nghiêm ngặt. Với tất cả những hạn chế đó, cách tiếp cận thủ công không còn hoạt động tốt nữa và đó là lúc giải pháp phần mềm tăng thêm giá trị.</p>
+<p>Nền tảng dự báo Nhu cầu của chúng tôi nhằm mục đích kết hợp Học máy với các phương pháp dự báo chuỗi thời gian cổ điển để phân tích và tìm hiểu các mẫu trong dữ liệu lịch sử cũng như cố gắng dự đoán nhu cầu trong tương lai.</p>
+<p>Với nền tảng kỹ thuật vững chắc trong cả xử lý dữ liệu và học máy, dự báo có thể được áp dụng cho hàng triệu sản phẩm với nhiều tín hiệu khác nhau (nhu cầu trước đây, chương trình khuyến mãi sắp tới, lượt xem trang, v.v.). Chúng tôi muốn xây dựng một nền tảng linh hoạt đến mức nhà khoa học dữ liệu của chúng tôi có thể dễ dàng thêm tín hiệu mới, chạy thử nghiệm trên kho dữ liệu khổng lồ của chúng tôi, tìm ra tín hiệu nào hoạt động tốt nhất và tích hợp nó vào mô hình dự báo của chúng tôi để liên tục cải thiện độ chính xác của nó.</p>
+<h2 id="our-approach">Cách tiếp cận của chúng tôi</h2>
+<h3 id="forecasting-methods">Phương pháp dự báo</h3>
+<p>Ban đầu, để giới hạn phạm vi của vấn đề, chúng tôi quyết định coi dự báo nhu cầu là một vấn đề dự báo chuỗi thời gian tự nhiên. Điều đó có nghĩa là chúng ta chỉ tập trung vào chuỗi thời gian của nhu cầu và sử dụng nó để dự báo nhu cầu trong tương lai mà không xem xét đến các yếu tố khác.</p>
+<p>Chúng tôi đã thu thập chuỗi thời gian về nhu cầu từ dữ liệu lịch sử và phân cụm theo hình thức của nó. Kết quả đầu ra cho thấy chúng ta phải xử lý sự đa dạng của các dạng chuỗi thời gian. Vì vậy, chúng tôi quyết định sử dụng nhiều phương pháp dự báo chuỗi thời gian cổ điển. Có 6 phương pháp cổ điển mà chúng tôi hiện đang sử dụng bên trong công cụ của mình, một số trong số đó là những phương pháp nổi tiếng, chẳng hạn như: <strong>theta</strong>, <strong>INNAR, Croston,…</strong></p>
+<p>Sau giai đoạn đầu tiên, chúng tôi đã phân tích và nhận thấy có rất nhiều yếu tố ảnh hưởng đến nhu cầu về sản phẩm, đặc biệt là những thứ liên quan đến khuyến mại. Chúng tôi gặp phải khó khăn khi thực hiện kỹ thuật tính năng bằng các phương pháp cổ điển. Vì vậy chúng tôi đã nghiên cứu và áp dụng <strong>sâuAR</strong> — <strong>Dự báo xác suất với Mạng tái phát tự hồi phục</strong>, có thể tích hợp các tín hiệu khác để tối ưu hóa độ chính xác của kết quả dự báo.</p>
+<p>Do có nhiều mô hình bên trong công cụ dự báo nên chúng tôi đã áp dụng quy trình cạnh tranh để chọn ra mô hình tốt nhất cho từng sản phẩm. Chúng tôi sử dụng chuỗi thời gian 20% của sản phẩm để đánh giá tất cả các mô hình và chọn ra mô hình có độ chính xác tốt nhất.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 1 ở kích thước đầy đủ">
+    <img src="assets/case-studies/07-into-the-demand-forecast-of-tiki-operations/01-figure.png" width="844" height="1033" loading="lazy" decoding="async" alt="Quá trình cạnh tranh để chọn mô hình tốt nhất cho mỗi SKU.">
+  </button>
+  <figcaption><em>Quá trình cạnh tranh để chọn mô hình tốt nhất cho mỗi SKU.</em></figcaption>
+</figure>
+<h3 id="evaluation">Đánh giá</h3>
+<p>Chúng tôi sử dụng một số số liệu dự báo như <strong>Sai số tuyệt đối trung bình (MAE)</strong>, <strong>Lỗi phần trăm tuyệt đối trung bình (MAPE</strong>), nhưng số liệu chính sẽ là <strong>Lỗi phần trăm tuyệt đối trung bình đối xứng (SMAPE)</strong>.</p>
+<p><strong>SMPE</strong> hiện đang được sử dụng như một phương pháp đo lường chính thức ở các nước nổi tiếng <strong>Cuộc thi dự báo M4</strong>.Có nhiều phiên bản <strong>SMPE</strong>, ta sử dụng mẫu sau:</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 2 ở kích thước đầy đủ">
+    <img src="assets/case-studies/07-into-the-demand-forecast-of-tiki-operations/02-figure.png" width="289" height="91" loading="lazy" decoding="async" alt="Hình 2 để đánh giá">
+  </button>
+  <figcaption>Hình 2 · Đánh giá</figcaption>
+</figure>
+<p>So sánh với <strong>BẢN ĐỒ</strong>, <strong>SMPE</strong> có cả giới hạn dưới và giới hạn trên bằng cách cung cấp kết quả từ 0% đến 100%.</p>
+<p>Nó cũng đưa ra các kết quả khác nhau cho việc dự báo trên và dưới, điều này có ý nghĩa khi ánh xạ tới tác động được tạo ra đối với doanh nghiệp và khách hàng.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 3 ở kích thước đầy đủ">
+    <img src="assets/case-studies/07-into-the-demand-forecast-of-tiki-operations/03-figure.png" width="556" height="81" loading="lazy" decoding="async" alt="Ví dụ về các kết quả khác nhau về dự báo trên và dưới của SMAPE.">
+  </button>
+  <figcaption><em>Ví dụ về các kết quả khác nhau về dự báo trên và dưới của SMAPE.</em></figcaption>
+</figure>
+<p>Do nhu cầu kinh doanh, chúng tôi cung cấp kết quả dự báo hàng tuần. Vào mỗi cuối tuần, chúng tôi thu thập dự báo cũng như nhu cầu và sử dụng thực tế <strong>SMPE</strong> để tính toán độ chính xác của công cụ dự báo. Công cụ dự báo cung cấp các dự báo chính xác hơn tới 60%.</p>
+<h3 id="feature-engineering">Kỹ thuật tính năng</h3>
+<p>Cùng với việc nghiên cứu thêm các phương pháp dự báo, chúng tôi coi kỹ thuật tính năng là một trong những quy trình quan trọng nhất để nâng cao độ chính xác của công cụ dự báo.</p>
+<p>Chúng tôi có một khái niệm gọi là <strong>Nhóm tín hiệu</strong>, là tập hợp các tín hiệu được sử dụng để dự báo hoặc thử nghiệm.</p>
+<p>Chúng tôi bắt đầu với những ý tưởng hoặc chúng tôi muốn gọi nó là những thành kiến.</p>
+<p><em>Giả sử tôi nghĩ rằng lưu lượng truy cập của trang Chi tiết sản phẩm sẽ ảnh hưởng đến nhu cầu.</em></p>
+<p>Sau đó, nhóm phân tích dữ liệu của chúng tôi sẽ xắn tay áo và bắt tay vào kho dữ liệu của chúng tôi để mang lại những hiểu biết sâu sắc và xác thực các ý tưởng.</p>
+<p>Danh sách cuối cùng của các tín hiệu mới mà chúng tôi có, chúng tôi sẽ thực hiện quy trình ETL và thêm các tín hiệu mới vào nhóm tín hiệu. Quá trình thử nghiệm sau đó được sử dụng để xác thực trước khi chúng tôi chính thức sử dụng tín hiệu mới trong sản xuất.</p>
+<h3 id="experimental-process">Quá trình thí nghiệm</h3>
+<p>Hãy tưởng tượng chúng ta có rất nhiều ý tưởng để cải thiện độ chính xác của kết quả dự báo.</p>
+<p>Những thay đổi từ ý tưởng có thể là:</p>
+<ul>
+  <li>Thêm/xóa phương pháp khỏi danh sách phương pháp dự báo</li>
+  <li>Thêm/xóa tín hiệu khỏi nhóm Tín hiệu</li>
+  <li>Thay đổi logic/mục tiêu của phương thức cạnh tranh</li>
+  <li>…</li>
+</ul>
+<p>Chúng tôi đã xây dựng một quy trình và nền tảng để hỗ trợ chúng tôi linh hoạt thử nghiệm các thay đổi của mình một cách nhanh chóng và dễ dàng.</p>
+<p>Một thí nghiệm được đặt tên theo <strong>Đánh dấu. </strong>Chúng tôi gọi những gì chúng tôi có trong sản xuất với tên thẻ là <strong>“Chính thức”.</strong></p>
+<p>Công cụ dự báo có thể chạy kết quả dự báo cho nhiều thẻ, bao gồm <strong>“Chính thức” </strong>thẻ và thẻ thử nghiệm. Bằng cách đo điểm chuẩn kết quả giữa các thẻ dựa trên các chỉ số chính, chúng tôi có thể biết những thay đổi nào sẽ cải thiện các chỉ số mục tiêu của mình và quyết định có triển khai thay đổi cho sản xuất hay không.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 4 ở kích thước đầy đủ">
+    <img src="assets/case-studies/07-into-the-demand-forecast-of-tiki-operations/04-figure.png" width="697" height="460" loading="lazy" decoding="async" alt="Toàn cảnh quá trình thử nghiệm Dự báo nhu cầu">
+  </button>
+  <figcaption><em>Toàn cảnh quá trình thử nghiệm Dự báo nhu cầu</em></figcaption>
+</figure>
+<h2 id="future-plan">kế hoạch tương lai</h2>
+<h3 id="products-segmentation">Phân khúc sản phẩm</h3>
+<p>Như chúng tôi đã nói trước đây, chúng tôi nhóm sản phẩm theo nhu cầu của nó. Ý tưởng là phân cụm sản phẩm theo những điểm tương đồng khác như xu hướng hoặc khối lượng bán hàng.</p>
+<p>Bằng cách phân chia sản phẩm thành cụm, nó sẽ giúp chúng ta có khả năng phân tích và khắc phục sự cố dễ dàng hơn. Chúng tôi có thể dành riêng cho từng cụm.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 5 ở kích thước đầy đủ">
+    <img src="assets/case-studies/07-into-the-demand-forecast-of-tiki-operations/05-figure.png" width="300" height="272" loading="lazy" decoding="async" alt="Phân loại sản phẩm theo điểm tương đồng">
+  </button>
+  <figcaption><em>Phân loại sản phẩm theo điểm tương đồng</em></figcaption>
+</figure>
+<h3 id="forecast-by-regions">Dự báo theo khu vực</h3>
+<p><strong>TIKI</strong> ngày nay mở ngày càng nhiều kho hàng để hỗ trợ sự phát triển nhanh chóng của hoạt động kinh doanh. Kết quả dự báo nhu cầu hiện tại là nhu cầu chung của sản phẩm trên toàn mạng và hiện được chia thành các khu vực theo một số cơ sở quy tắc.</p>
+<p>Việc mở rộng số lượng kho đã làm tăng thêm độ phức tạp cho quy trình này và cũng làm giảm độ chính xác của nó. Ý tưởng của chúng tôi là sử dụng địa chỉ giao hàng của đơn đặt hàng để trích xuất nhu cầu theo cụm và sử dụng nó để dự báo nhu cầu theo cụm một cách có hệ thống.</p>
+<p>Khó khăn của việc dự báo theo cụm là quá trình kỹ thuật tính năng. Bởi vì các yếu tố tác động đến nhu cầu hiếm khi có thể chia nhỏ theo cụm, như khuyến mãi hoặc phiếu giảm giá (hiện tại không có chương trình/khuyến mãi nhắm mục tiêu theo khu vực).</p>
+<h3 id="automate-inventory-replenishment-process">Tự động hóa quá trình bổ sung hàng tồn kho</h3>
+<p>Sau khi tính toán thành công dự báo theo khu vực, dựa trên hiệu suất trước đây của công cụ dự báo, chúng tôi có thể xác định ngưỡng để chọn phạm vi sản phẩm mà công cụ dự báo có hiệu suất tốt và cung cấp trực tiếp sản phẩm đó cho hệ thống bổ sung của chúng tôi để tự động mua hàng và giảm bớt nỗ lực thủ công.</p>
+<h3 id="apply-forecast-result-into-human-resource-planning">Ứng dụng kết quả dự báo vào hoạch định nguồn nhân lực</h3>
+<p>Chúng tôi hiện đang cung cấp dự báo hàng tuần. Bằng cách tối ưu hóa tốc độ của kỹ thuật tính năng, chúng tôi dự định cung cấp kết quả dự báo theo ngày và điều này sẽ cho phép kho hàng của chúng tôi lập kế hoạch tốt hơn về nguồn nhân lực để tối ưu hóa chi phí lao động trong khi vẫn có thể duy trì dịch vụ tốt.</p>
+<h2 id="conclusion">Kết luận</h2>
+<p>Dự báo nhu cầu là một thử thách thú vị về AI/ML/toán học, có ứng dụng rất thực tế trong việc bổ sung và sắp xếp hàng tồn kho. Làm tốt điều này là lợi thế then chốt để một doanh nghiệp thương mại điện tử có thể làm hài lòng khách hàng, cung cấp dịch vụ tốt với chi phí tối ưu. Đó là một cuộc hành trình và Tiki đã đạt được một số tiến bộ tiềm năng, chúng tôi mong muốn chia sẻ nhiều hơn về điều này trong tương lai.</p>
+<p>Hãy tham gia cùng chúng tôi và tăng tốc nó. Danh sách công việc có sẵn:</p>
+<ul>
+  <li><a href="https://apply.workable.com/tiki-corporation/j/B90AFF4C53/" target="_blank" rel="noopener noreferrer">Nhà khoa học dữ liệu</a></li>
+  <li><a href="https://apply.workable.com/tiki-corporation/j/B0DE252FFF/" target="_blank" rel="noopener noreferrer">Kỹ sư dữ liệu</a></li>
+</ul>

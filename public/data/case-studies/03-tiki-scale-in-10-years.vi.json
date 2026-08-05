@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/03-tiki-scale-in-10-years.vi.html",
+  "guide": {
+    "title": "Đọc bài này như một bản đồ tiến hóa đồng thời của sản phẩm, kiến trúc và tổ chức kỹ thuật.",
+    "problem": "Một hệ thống phù hợp với nhà sách trực tuyến và một nhóm nhỏ không thể giữ nguyên khi Tiki mở rộng ngành hàng, marketplace, fulfillment, thanh toán và lưu lượng sale. Điểm nghẽn không chỉ nằm ở server mà còn ở ranh giới sở hữu và cách các team phối hợp.",
+    "core_idea": "Tiki đi qua nhiều lớp thay đổi: xây nền tảng Talaria, tách dần kiến trúc và domain, phát triển hệ thống phân tán, củng cố hạ tầng rồi xây đội ngũ có khả năng sở hữu từng phần của bài toán. Mỗi giai đoạn giải một giới hạn mới do giai đoạn trước tạo ra.",
+    "outcome": "Bài viết không mô tả một lần rewrite duy nhất. Nó cho thấy quá trình scale bằng nhiều bước chuyển có chủ đích, xen kẽ với incident, mùa sale và những lần di chuyển hạ tầng buộc tổ chức phải trưởng thành.",
+    "takeaways": [
+      "Scale là bài toán liên kết: traffic, dữ liệu, phạm vi nghiệp vụ, số team và tốc độ ra quyết định tăng cùng lúc.",
+      "Kiến trúc tập trung giúp giai đoạn đầu đi nhanh, nhưng khi domain lớn lên nó làm mờ ownership và khiến thay đổi của một nhóm tác động toàn hệ thống.",
+      "Platform chỉ tạo đòn bẩy khi cung cấp primitive và tiêu chuẩn dùng chung; nó không nên lấy mất quyền sở hữu sản phẩm của các domain team.",
+      "Incident và mùa sale là phép thử của cả kiến trúc lẫn cơ chế vận hành: quan sát, phản ứng, rollback và cách chia sẻ trách nhiệm.",
+      "Năng lực con người là một phần của kiến trúc. Hệ thống chỉ phân quyền được khi team đủ khả năng vận hành và chịu trách nhiệm cho quyết định của mình."
+    ],
+    "review_lenses": [
+      "Xác định tín hiệu nào cho thấy một module hoặc database đã đến lúc cần tách ownership.",
+      "Cân bằng giữa chuẩn hóa toàn công ty và quyền tự chủ công nghệ của từng domain.",
+      "Lập kế hoạch migration có trạng thái trung gian an toàn thay vì phụ thuộc vào một lần cut-over lớn.",
+      "Theo dõi cả chỉ số kỹ thuật và tổ chức: lead time, blast radius, số dependency chéo và tải vận hành của team."
+    ]
+  }
+}

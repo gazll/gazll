@@ -1,0 +1,157 @@
+<p>Pegasus là một dự án nền tảng danh mục - Marketplace Engineering. Đây là một trong những dự án tách biệt hoàn toàn hệ thống catalog ra khỏi hệ thống TIKI.VN. TIKI.VN là một hệ thống lớn với ranh giới không rõ ràng giữa nhiều team và nhiều lĩnh vực. Tất cả các mô-đun chia sẻ cơ sở dữ liệu và có thể truy cập trực tiếp vào cơ sở dữ liệu khác. Để mở rộng quy mô, chúng tôi phải chia TIKI.VN thành các hệ thống nhỏ hơn, đặc biệt là Catalog System — xử lý hàng triệu sản phẩm của TIKI.</p>
+<p>Chiến lược của chúng tôi:</p>
+<ul>
+  <li>Đầu tiên: ngăn các mô-đun khác truy cập trực tiếp vào nguồn dữ liệu danh mục bằng cách cung cấp tất cả các API cần thiết cho cả đọc và ghi</li>
+  <li>Thứ hai: di chuyển dữ liệu sang cơ sở dữ liệu sở hữu danh mục và chặn mọi truy cập trực tiếp</li>
+</ul>
+<p>Chúng tôi có ba mô-đun:</p>
+<ul>
+  <li>Mercury: sao chép tất cả các thay đổi từ bên ghi (MySQL) sang bên đọc (Mongo DB). Nó là xương sống để tái tạo mọi thay đổi của sản phẩm.</li>
+  <li>Pegasus: cung cấp api sản phẩm đã đọc cho mọi quyền truy cập. Đây là api có thông lượng cao nhất của TIKI</li>
+  <li>Arcturus: cung cấp api để xử lý tất cả các giao dịch tồn kho để đặt hàng và tích hợp vào hệ thống kho</li>
+</ul>
+<p>Pegasus được đọc api sản phẩm cho TIKI. TIKI.VN là website thương mại điện tử nên mọi điểm tiếp xúc của khách hàng đều liên quan đến sản phẩm. Vì vậy, đây là api có thông lượng cao nhất của TIKI. Nó sẽ ngăn chặn việc truy cập trực tiếp vào Mongo DB của danh mục. Pegasus có những thách thức:</p>
+<ul>
+  <li>Độ tin cậy: xử lý mọi lưu lượng truy cập để lấy dữ liệu sản phẩm từ TIKI</li>
+  <li>Thông lượng cao và độ trễ thấp: xử lý ít nhất 10k yêu cầu/giây, TP95&lt;5ms</li>
+</ul>
+<p>Cách tiếp cận của chúng tôi để thiết kế Pegasus là:</p>
+<ul>
+  <li>Sử dụng bộ nhớ cục bộ để lưu trữ dữ liệu sản phẩm</li>
+  <li>Theo dõi các sự kiện thay đổi sản phẩm từ Mercury sang bộ đệm không hợp lệ</li>
+  <li>Sử dụng tính năng nén thuận tiện để giảm kích thước tải trọng, tận dụng CPU và mạng.</li>
+  <li>Kiến trúc không chặn</li>
+</ul>
+<p><strong>Kiến trúc Pegasus:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 1 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/01-figure.png" width="1600" height="550" loading="lazy" decoding="async" alt="Hình 1 cho Pegasus - Kiến trúc API sản phẩm danh mục.">
+  </button>
+  <figcaption>Hình 1 · Pegasus - Kiến trúc API sản phẩm danh mục.</figcaption>
+</figure>
+<p>Pegasus dựa trên khung Gridgo và tuân theo hướng dẫn kiến trúc của nó. Nó bao gồm 3 thành phần chính:</p>
+<ul>
+  <li>Entry-point: Truy cập vào ứng dụng</li>
+  <li>Restful API: Cung cấp API để khách hàng truy vấn/vô hiệu hóa sản phẩm</li>
+  <li>Người tiêu dùng Kafka: Sử dụng tin nhắn từ Kafka để vô hiệu hóa sản phẩm</li>
+  <li>GRPC: Cung cấp lớp GRPC được bao bọc cho API</li>
+  <li>Bộ nhớ đệm trong bộ nhớ: Cấu trúc dữ liệu giá trị khóa trong bộ nhớ để lưu trữ bộ đệm sản phẩm</li>
+  <li>Máy nén: Máy nén có thể định cấu hình để nén dữ liệu khi lưu trữ và phục vụ</li>
+</ul>
+<h2 id="entry-point">Điểm vào</h2>
+<p><strong>API yên tĩnh</strong></p>
+<p>Pegasus sử dụng trình kết nối Vert.x cho API Restful của nó. Tất cả các yêu cầu HTTP bắt đầu từ vòng lặp sự kiện nội bộ của Vert.x, sau đó được định tuyến đến một trong các bộ xử lý tương ứng và được thực thi bằng chiến lược có thể định cấu hình. Pegasus hỗ trợ các chiến lược sau:</p>
+<ul>
+  <li>mặc định: Thực thi trên cùng một luồng với vòng lặp sự kiện. Điều này không được khuyến khích, vì mặc dù máy khách MongoDB không đồng bộ nhưng vẫn có một số phần của nó đồng bộ, chẳng hạn như tra cứu DNS. Ngoài ra, việc nén dữ liệu sẽ bị ràng buộc bởi CPU, do đó, việc sử dụng một luồng đơn sẽ không sử dụng được toàn bộ sức mạnh xử lý của CPU.</li>
+  <li>người thi hành: Thực thi bộ xử lý bằng Java ExecutorService. Số lượng chủ đề cũng có thể cấu hình được. Thử nghiệm cho thấy việc sử dụng quá nhiều luồng sẽ không mang lại lợi ích cụ thể nào và thậm chí có thể làm chậm ứng dụng.</li>
+  <li>bộ gây rối: Thực thi bộ xử lý bằng cách sử dụng Disruptor. Thử nghiệm cho thấy việc sử dụng Disruptor trong trường hợp này sẽ không có lợi ích gì so với ExecutorService.</li>
+</ul>
+<p><strong>Người tiêu dùng Kafka</strong></p>
+<p>Pegasus tiêu thụ từ chủ đề Kafka <em>index.catalog.invalidate_product</em>, do Mercury tạo ra, để vô hiệu hóa bộ đệm trong bộ nhớ của sản phẩm. Việc vô hiệu hóa được thực hiện bằng cách xóa mục nhập trong bộ đệm, sản phẩm sẽ không được tải cho đến lần truy cập lại vào lần tiếp theo.</p>
+<p><strong>GRPC</strong></p>
+<p>API an toàn đã có thể xử lý các yêu cầu thông lượng cao và độ trễ thấp. Điểm chuẩn cho thấy với 40 kết nối được mở, nó có thể xử lý 24K RPS với TP99 là 20ms cho API sản phẩm đơn lẻ. Nhưng vì hầu hết Tala được viết bằng PHP và PHP không có nhóm kết nối HTTP tích hợp nên mỗi yêu cầu tới PHP sẽ dẫn đến 2 hoặc 3 kết nối được mở trong Pegasus. Đôi khi điều này dẫn đến khoảng 15K kết nối mở và có thể dễ dàng làm quá tải Cân bằng tải. (Bộ cân bằng tải L7 hoạt động không tốt lắm, nó có thể giảm thông lượng xuống một nửa và tăng độ trễ lên 100%)</p>
+<p>Một nút:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 2 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/02-figure.png" width="1600" height="643" loading="lazy" decoding="async" alt="Hình 2 cho Điểm vào">
+  </button>
+  <figcaption>Hình 2 · Điểm vào</figcaption>
+</figure>
+<p>Hai nút:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 3 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/03-figure.png" width="1600" height="683" loading="lazy" decoding="async" alt="Hình 3 cho Điểm vào">
+  </button>
+  <figcaption>Hình 3 · Điểm vào</figcaption>
+</figure>
+<p>Tuy nhiên, nó tốt hơn nhiều với bộ cân bằng tải L4:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 4 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/04-figure.png" width="1228" height="544" loading="lazy" decoding="async" alt="Hình 4 cho Điểm vào">
+  </button>
+  <figcaption>Hình 4 · Điểm vào</figcaption>
+</figure>
+<p>Để giải quyết vấn đề thiếu nhóm kết nối này, Pegasus cũng hiển thị API của mình thông qua GRPC, vì GRPC trong PHP đã hỗ trợ kết nối liên tục. Tuy nhiên, tính năng này chưa được tích hợp với Tala. Định dạng phản hồi gần như khá giống với Restful API.</p>
+<p>Điều đáng lưu ý là việc sử dụng GRPC có thể không có bất kỳ lợi ích nào với ngôn ngữ đã hỗ trợ các kết nối HTTP liên tục.</p>
+<h2 id="in-mem-cache">Bộ đệm trong bộ nhớ</h2>
+<p>Pegasus sử dụng Guava cho bộ nhớ đệm sản phẩm trong bộ nhớ của mình. Đây là Bản đồ rất đơn giản từ id sản phẩm đến tải trọng sản phẩm. Tải trọng thường được chuyển đổi JSON (xem thêm về điều này trong phần Máy nén).</p>
+<p>Bộ đệm thực chất là một loạt các trình tải sử dụng mẫu Trang trí. Trình tải cơ bản nhất là DirectMongoLoader, truy vấn trực tiếp từ MongoDB. Trình tải này được gói bên trong GuavaLoader, nó sẽ lưu trữ tải trọng trong Guava Loading Cache và chỉ gọi nó khi xảy ra lỗi bộ đệm.</p>
+<p>Đối với một API, việc này rất đơn giản: trả về trọng tải trong bộ nhớ đệm trong trường hợp xảy ra lỗi bộ nhớ đệm hoặc cố gắng truy vấn một sản phẩm từ mongo khi bộ nhớ đệm bị thiếu.</p>
+<p>Đối với multi API, nó phức tạp hơn một chút: truy vấn bất kỳ sản phẩm nào bị thiếu trong bộ đệm, hợp nhất với những sản phẩm đã có trong bộ đệm (sau khi giải nén chúng) và sắp xếp theo thứ tự của chúng trong yêu cầu, sau đó nén trước khi trả về phản hồi cho khách hàng.</p>
+<p>Ngoài ra còn có một số tối ưu hóa trong thành phần này:</p>
+<ul>
+  <li>Bộ nhớ đệm hứa hẹn: Thay vì lưu vào bộ nhớ đệm trọng tải sản phẩm thực tế, chúng tôi lưu vào bộ nhớ đệm Lời hứa của trọng tải. Trong trường hợp có nhiều luồng truy cập vào cùng một ID sản phẩm (gọi <em>nhận được (Id dài)</em> phương thức), tất cả trừ một trong số chúng sẽ bị chặn. Để giảm chi phí chuyển đổi ngữ cảnh và quản lý luồng tốt hơn, chúng tôi chỉ lưu trữ Promise vào bộ đệm, vì vậy các luồng chỉ bị chặn miễn là Promise được tạo. Nói chung việc này sẽ khá nhanh.</li>
+  <li>Băm nhất quán: Kích hoạt chế độ băm nhất quán trong LB có thể tăng số lần truy cập bộ nhớ đệm lên khoảng 95% (từ 85%). Nhưng hiện tại chúng tôi đã vô hiệu hóa tính năng này vì Băm nhất quán yêu cầu công việc bổ sung từ LB và chúng tôi không thể sử dụng LB lớp 4.</li>
+  <li>Theo tùy chọn, GuavaLoader cũng có thể được gói bên trong OutputCacheLoader, nó sẽ lưu trữ toàn bộ phản hồi bên trong một Bộ đệm tải Guava khác. OutputCacheLoader sẽ hữu ích nhất cho truy vấn nhiều sản phẩm dưới tải nặng. Điểm chuẩn cho thấy nó có thể giảm TP90 xuống dưới 1 giây cho tải trọng 200KB với 8000 kết nối mở. Lưu ý rằng băng thông khoảng 10 Gbps và tốc độ truyền khoảng 7 Gbps (0,9 GB/s). Ngoài ra, hãy nhớ rằng OutputCacheLoader chỉ phù hợp với một số đợt giảm giá hấp dẫn, trong đó số lần truy cập bộ đệm sẽ cao. Nói chung số lần truy cập bộ đệm sẽ khá thấp.</li>
+</ul>
+<p><strong>Không có bộ đệm đầu ra:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 5 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/05-figure.png" width="1600" height="681" loading="lazy" decoding="async" alt="Hình 5 cho bộ nhớ đệm trong bộ nhớ">
+  </button>
+  <figcaption>Hình 5 · Bộ đệm trong bộ nhớ</figcaption>
+</figure>
+<p><strong>Với bộ đệm đầu ra:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 6 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/06-figure.png" width="1600" height="670" loading="lazy" decoding="async" alt="Hình 6 cho bộ nhớ đệm trong bộ nhớ">
+  </button>
+  <figcaption>Hình 6 · Bộ đệm trong bộ nhớ</figcaption>
+</figure>
+<h2 id="compressor">Máy nén</h2>
+<p>Pegasus hỗ trợ Máy nén có thể cấu hình cho tải trọng sản phẩm. Chúng tôi có thể định cấu hình máy nén riêng biệt cho một truy vấn và nhiều truy vấn. Để tối ưu hóa hai API (đơn &amp; đa), chúng tôi có một máy chủ ứng dụng riêng cho từng API.</p>
+<ul>
+  <li>Để truy vấn các sản phẩm đơn lẻ: <a href="http://pegasus.tiki.services/" target="_blank" rel="noopener noreferrer">http://pegasus.</a>xxx</li>
+  <li>Để truy vấn nhiều sản phẩm: <a href="http://pegasus-query.tiki.services/" target="_blank" rel="noopener noreferrer">http://pegasus-query.x</a>xx</li>
+</ul>
+<p>Mặc dù cơ sở mã giống nhau nhưng cấu hình của mỗi API lại khác nhau:</p>
+<p>Với một API, tốt hơn hết bạn nên lưu trữ tải trọng đã được nén của sản phẩm và trả lại trực tiếp cho khách hàng, vì GZIP nhỏ hơn (do đó giảm kích thước tải trọng) và không cần phải nén/giải nén những sản phẩm đã có trong bộ đệm.</p>
+<p>Với nhiều API, chúng tôi không thể trả lại bộ đệm trực tiếp, do đó, việc giữ phiên bản nén trong bộ đệm là vô ích. Thay vào đó chúng tôi chỉ lưu trữ phiên bản văn bản gốc. Khi quay lại client, việc nén bằng Snappy hiệu quả hơn Gzip, mặc dù tải trọng sẽ tăng lên khoảng 2x-3x. Benchmark cho thấy độ trễ giảm 50% sau khi chuyển sang Snappy (từ 15ms xuống 6ms).</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 7 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/07-figure.png" width="1432" height="732" loading="lazy" decoding="async" alt="Hình 7 cho máy nén">
+  </button>
+  <figcaption>Hình 7 · Máy nén</figcaption>
+</figure>
+<p>Một tiêu đề đặc biệt sẽ được trả về để chỉ định thuật toán nén được sử dụng: <em>nén. </em>Khách hàng có thể sử dụng thông tin này để giải nén cho phù hợp.</p>
+<p><strong>Hiệu suất:</strong></p>
+<p>Lưu lượng truy cập của chúng tôi được chia thành hai nguồn: từ web đến hiển thị HTML và từ api cho Javascript hoặc ứng dụng dành cho thiết bị di động.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 8 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/08-figure.png" width="761" height="301" loading="lazy" decoding="async" alt="Hình 8 cho máy nén">
+  </button>
+  <figcaption>Hình 8 · Máy nén</figcaption>
+</figure>
+<p><strong>Từ web:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 9 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/09-figure.png" width="1540" height="790" loading="lazy" decoding="async" alt="Hình 9 cho máy nén">
+  </button>
+  <figcaption>Hình 9 · Máy nén</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 10 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/10-figure.png" width="1514" height="848" loading="lazy" decoding="async" alt="Hình 10 cho Máy nén">
+  </button>
+  <figcaption>Hình 10 · Máy nén</figcaption>
+</figure>
+<p><strong>Từ API:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 11 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/11-figure.png" width="1520" height="810" loading="lazy" decoding="async" alt="Hình 11 cho Máy nén">
+  </button>
+  <figcaption>Hình 11 · Máy nén</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 12 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/12-figure.png" width="1526" height="844" loading="lazy" decoding="async" alt="Hình 12 cho Máy nén">
+  </button>
+  <figcaption>Hình 12 · Máy nén</figcaption>
+</figure>
+<p><strong>Người đóng góp:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 13 ở kích thước đầy đủ">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/13-figure.png" width="2000" height="733" loading="lazy" decoding="async" alt="Hình 13 cho Máy nén">
+  </button>
+  <figcaption>Hình 13 · Máy nén</figcaption>
+</figure>

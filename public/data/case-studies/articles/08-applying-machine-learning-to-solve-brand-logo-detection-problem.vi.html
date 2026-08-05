@@ -1,0 +1,146 @@
+<p>TIKI là nền tảng thương mại điện tử đáng tin cậy nơi hàng nghìn người bán bán hàng triệu sản phẩm. Chúng tôi cam kết cung cấp chất lượng dịch vụ tốt nhất và chỉ cung cấp sản phẩm chính hãng. Nhưng càng ngày chúng ta càng phát triển nhanh hơn… và không thể mở rộng quy mô nếu không có sự hỗ trợ của máy móc. Chúng tôi phải xây dựng một quy trình kết hợp cả con người và máy móc để xác minh sản phẩm của mình. Việc phát hiện nhãn hiệu/logo của sản phẩm là một bước giúp chúng ta ngăn chặn hàng giả. Đây cũng là lần đầu tiên chúng tôi áp dụng AI/Machine Learning để giải quyết vấn đề về quy mô.</p>
+<h2 id="1-problem-introduction"><strong>1. Giới thiệu vấn đề</strong></h2>
+<p>Phát hiện thương hiệu/logo là phương pháp xác minh tự động có thể giải phóng một phần lực lượng con người khỏi việc xác minh thủ công. Bất cứ khi nào một yêu cầu được đăng bởi bất kỳ người bán nào, các hình ảnh liên quan sẽ được chuyển tiếp đến hệ thống xác minh của chúng tôi (sau đây gọi là <strong>bot</strong>) và bot của chúng tôi sẽ có thể trả lại nhãn hiệu được dự đoán.</p>
+<p>Vai trò chính của bot là cung cấp thông tin sớm để từ chối các yêu cầu vi phạm. Theo lý do từ chối của chúng tôi, hành vi vi phạm biểu tượng được định nghĩa là: “<em>Hình ảnh chứa logo thương hiệu không phù hợp với thương hiệu của sản phẩm</em>”.</p>
+<h2 id="2-technical-approach"><strong>2. Cách tiếp cận kỹ thuật</strong></h2>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 1 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/01-figure.png" width="1024" height="768" loading="lazy" decoding="async" alt="Hình 1 cho 2. Phương pháp kỹ thuật">
+  </button>
+  <figcaption>Hình 1 · 2. Phương pháp kỹ thuật</figcaption>
+</figure>
+<p><strong><em>Hình 1. Lược đồ phát hiện.</em></strong></p>
+<p>Vấn đề này có thể được giải quyết bằng một số cách tiếp cận. Thoạt nhìn, chúng ta có thể chuyển vấn đề này sang vấn đề phân loại trong đó đầu vào là toàn bộ hình ảnh và đầu ra là thương hiệu tương ứng của nó. Thật không may, giải pháp này không hoạt động tốt trong thực tế vì <em>sản phẩm của các nhãn hiệu khác nhau khó có thể phân biệt được, ví dụ: kính</em>, giày.</p>
+<p>Điều gì thực sự phân biệt sản phẩm của các thương hiệu khác nhau? Đó là logo thương hiệu!!! Do đó, vấn đề có thể được chuyển sang phát hiện và dự đoán logo một cách độc đáo. Sơ đồ phát hiện của chúng tôi bao gồm hai giai đoạn:</p>
+<ul>
+  <li><strong>Giai đoạn bản địa hóa</strong>. Chúng tôi đào tạo darknet, một triển khai nổi tiếng của kiến trúc YOLO v3. Darknet có thể đồng thời bản địa hóa khu vực logo tiềm năng và dự đoán thương hiệu của nó. Mặc dù darknet thực hiện tốt nhiệm vụ bản địa hóa nhưng nó lại bộc lộ hiệu suất không đạt yêu cầu trong nhiệm vụ dự đoán. Do đó, chúng tôi sử dụng lại kết quả bản địa hóa của nó nhưng không dựa vào thương hiệu dự đoán của nó.</li>
+</ul>
+<p><strong>Giai đoạn dự đoán</strong>. Chúng tôi đào tạo Resnet (Mạng dư) về kết quả bản địa hóa của Darknet để theo đuổi kết quả phân loại chính xác hơn.</p>
+<h2 id="3-dataset-descriptions"><strong>3. Mô tả tập dữ liệu</strong></h2>
+<p>Bộ bảy thương hiệu được xem xét bao gồm: Apple, Adidas, Lego, Nike, Kingston, Calvin Klein, Bosch. Các bộ dữ liệu được sử dụng để đào tạo Darknet và Resnet được mô tả như sau:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 2 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/02-figure.png" width="1282" height="1036" loading="lazy" decoding="async" alt="Hình 2 cho 3. Mô tả tập dữ liệu">
+  </button>
+  <figcaption>Hình 2 · 3. Mô tả tập dữ liệu</figcaption>
+</figure>
+<p>Để theo dõi quá trình đào tạo, chúng tôi chia mỗi tập huấn luyện thành các tập con huấn luyện và xác nhận. Trong trường hợp của Darknet, tổng cộng 20 hình ảnh / thương hiệu → 140 hình ảnh được dùng làm bộ xác thực. Trong trường hợp Resnet, tổng cộng 10% tập dữ liệu → 1403 hình ảnh được dùng làm bộ xác thực.</p>
+<h2 id="4-evaluation-methods"><strong>4. Phương pháp đánh giá</strong></h2>
+<p>Vì Darknet và Resnet đang thực hiện các nhiệm vụ khác nhau nên việc đánh giá chúng yêu cầu các số liệu hơi khác nhau, chính xác là:</p>
+<ul>
+  <li>Đánh giá Darknet</li>
+</ul>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 3 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/03-figure.png" width="1320" height="626" loading="lazy" decoding="async" alt="Hình 3 cho 4. Phương pháp đánh giá">
+  </button>
+  <figcaption>Hình 3 · 4. Phương pháp đánh giá</figcaption>
+</figure>
+<ul>
+  <li>Đánh giá Darknet + Resnet</li>
+</ul>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 4 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/04-figure.png" width="1276" height="342" loading="lazy" decoding="async" alt="Hình 4 cho 4. Phương pháp đánh giá">
+  </button>
+  <figcaption>Hình 4 · 4. Phương pháp đánh giá</figcaption>
+</figure>
+<h2 id="5-performance-of-darknet"><strong>5. Hiệu suất của Darknet</strong></h2>
+<p>Chúng tôi xác thực Darknet trên bộ xác thực loại trừ bao gồm 20 hình ảnh / thương hiệu → tổng cộng 140 hình ảnh. Darknet đạt được một <strong>91,73% mAP</strong> ở ngưỡng IOU 0,5. Nói một cách trực quan, <strong>91.73%</strong> các khu vực logo được bản địa hóa và dự đoán chính xác (<em>chính xác</em> ở đây có nghĩa là nhiều hơn <strong>50%</strong> diện tích của hộp giới hạn thực sự được bản địa hóa và gán cho đúng nhãn hiệu). Một số ví dụ điển hình được thể hiện sau đây:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 5 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/05-figure.png" width="1296" height="1316" loading="lazy" decoding="async" alt="Hình 5 cho 5. Hiệu suất của Darknet">
+  </button>
+  <figcaption>Hình 5 · 5. Hiệu suất của Darknet</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 6 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/06-figure.png" width="1030" height="1292" loading="lazy" decoding="async" alt="Hình 6 cho 5. Hiệu suất của Darknet">
+  </button>
+  <figcaption>Hình 6 · 5. Hiệu suất của Darknet</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 7 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/07-figure.png" width="1032" height="1228" loading="lazy" decoding="async" alt="Hình 7 cho 5. Hiệu suất của Darknet">
+  </button>
+  <figcaption>Hình 7 · 5. Hiệu suất của Darknet</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 8 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/08-figure.png" width="1282" height="750" loading="lazy" decoding="async" alt="Hình 8 cho 5. Hiệu suất của Darknet">
+  </button>
+  <figcaption>Hình 8 · 5. Hiệu suất của Darknet</figcaption>
+</figure>
+<p>Mặc dù hiện tại chúng tôi chỉ nhắm mục tiêu vào bảy thương hiệu, nhưng chúng tôi hy vọng Darknet sẽ mạnh mẽ trong một kịch bản mở nơi các thương hiệu chưa biết xuất hiện. Vì lý do này, chúng tôi thử nghiệm thêm Darknet trên 10.000 hình ảnh không xác định (không có logo hoặc logo ngoài bộ bảy thương hiệu) trên môi trường sản xuất. Trên bộ này, Darknet tạo ra <strong>2.18%</strong> nhầm lẫn khi gán <strong>218</strong> hình ảnh chưa biết đến bảy thương hiệu. Một số ví dụ xấu được hiển thị sau đây.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 9 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/09-figure.png" width="1284" height="728" loading="lazy" decoding="async" alt="Hình 9 cho 5. Hiệu suất của Darknet">
+  </button>
+  <figcaption>Hình 9 · 5. Hiệu suất của Darknet</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 10 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/10-figure.png" width="1016" height="1354" loading="lazy" decoding="async" alt="Hình 10 cho 5. Hiệu suất của Darknet">
+  </button>
+  <figcaption>Hình 10 · 5. Hiệu suất của Darknet</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 11 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/11-figure.png" width="1282" height="718" loading="lazy" decoding="async" alt="Hình 11 cho 5. Hiệu suất của Darknet">
+  </button>
+  <figcaption>Hình 11 · 5. Hiệu suất của Darknet</figcaption>
+</figure>
+<p>Hiệu suất của Darknet trên 11.313 hình ảnh không xác định và 1.844 hình ảnh thuộc bảy thương hiệu được trình bày dưới đây.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 12 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/12-figure.png" width="1086" height="490" loading="lazy" decoding="async" alt="Hình 12 cho 5. Hiệu suất của Darknet">
+  </button>
+  <figcaption>Hình 12 · 5. Hiệu suất của Darknet</figcaption>
+</figure>
+<p>Độ chính xác trung bình, thu hồi và điểm F1 là <strong>88.70%</strong>, <strong>93.02%</strong>và <strong>90.62%</strong>, tương ứng.</p>
+<h2 id="6-performance-of-darknet-resnet-the-entire-system"><strong>6. Hiệu suất của Darknet + Resnet (toàn bộ hệ thống).</strong></h2>
+<p>Sao chép đánh giá tương tự trên 10.000 hình ảnh không xác định khi sản xuất, toàn bộ hệ thống Darknet + Resnet giảm sai sót của Darknet từ <strong>2.18%</strong> để <strong>0.26%</strong>. Điều đó có nghĩa là chỉ có 26 trong số 10.000 hình ảnh được gán sai cho 7 thương hiệu.</p>
+<p>Cuối cùng, chúng tôi tính toán hiệu suất của toàn bộ hệ thống trên hỗn hợp 11.313 hình ảnh chưa biết và 1.844 hình ảnh thuộc bảy nhãn hiệu, được hiển thị trong bảng sau.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 13 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/13-figure.png" width="1078" height="478" loading="lazy" decoding="async" alt="Hình 13 cho 6. Hiệu suất của Darknet + Resnet (toàn bộ hệ thống).">
+  </button>
+  <figcaption>Hình 13 · 6. Hiệu suất của Darknet + Resnet (toàn bộ hệ thống).</figcaption>
+</figure>
+<p>Độ chính xác trung bình, thu hồi và điểm F1 là <strong>95.68%</strong>, <strong>92.27%</strong>và <strong>94.01%</strong>, tương ứng. Bằng cách xem xét kỹ hai bảng, sự kết hợp giữa Darknet + Resnet giúp cải thiện khả năng thu hồi các nhãn hiệu chưa biết và độ chính xác của bảy nhãn hiệu.</p>
+<p>Ma trận nhầm lẫn sau đây cho thấy các mô hình bị nhầm lẫn giữa các lớp như thế nào.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 14 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/14-figure.png" width="1408" height="778" loading="lazy" decoding="async" alt="Hình 14 cho 6. Hiệu suất của Darknet + Resnet (toàn bộ hệ thống).">
+  </button>
+  <figcaption>Hình 14 · 6. Hiệu suất của Darknet + Resnet (toàn bộ hệ thống).</figcaption>
+</figure>
+<h2 id="7-effectiveness-on-production"><strong>7. Hiệu quả sản xuất.</strong></h2>
+<p>Chúng tôi điều tra thêm về tính hiệu quả của toàn bộ hệ thống ở cấp độ yêu cầu thay vì cấp độ hình ảnh. Cụ thể, chúng tôi muốn đếm xem có bao nhiêu dự đoán trùng khớp với quyết định của con người. Chúng tôi sử dụng hai quy tắc cơ bản để đếm số dự đoán đúng do bot đưa ra như sau:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 15 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/15-figure.png" width="1284" height="332" loading="lazy" decoding="async" alt="Hình 15 cho 7. Hiệu quả sản xuất.">
+  </button>
+  <figcaption>Hình 15 · 7. Hiệu quả sản xuất.</figcaption>
+</figure>
+<p>Chúng tôi đã thu thập thông tin các yêu cầu trong ba tháng qua và báo cáo số lần sửa bot theo hai trường hợp `được chấp thuận` và `bị từ chối` liên quan đến bảy thương hiệu trong Hình 3.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 16 ở kích thước đầy đủ">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/16-figure.png" width="1340" height="852" loading="lazy" decoding="async" alt="Hình 16 cho 7. Hiệu quả sản xuất.">
+  </button>
+  <figcaption>Hình 16 · 7. Hiệu quả sản xuất.</figcaption>
+</figure>
+<p>Để được phê duyệt, bot đã đưa ra quyết định rất tốt so với con người. Đối với việc từ chối, khả năng của bot khá hạn chế. Nguyên nhân chính là do logo của các thương hiệu nổi tiếng đã được làm lại với nhiều kiểu dáng hoặc chất liệu khác nhau và có một số hình ảnh trùng lặp giữa các hình ảnh mà bot không thể phát hiện được.</p>
+<h2 id="8-conclusions"><strong>8. Kết luận</strong></h2>
+<p>Ưu điểm:</p>
+<ul>
+  <li>Hệ thống nhận diện thương hiệu của chúng tôi dựa trên việc phát hiện và phân loại logo có độ chính xác cao trong nhiệm vụ phân loại. Cụ thể hơn, chúng tôi quan sát thấy lỗi phân loại sai rất nhỏ.</li>
+  <li>Chúng tôi có thể triển khai hệ thống này làm công cụ đề xuất cho QC nội dung. Hệ thống của chúng tôi sẽ đề xuất ngay những hình ảnh bất hợp pháp để QC nội dung từ chối nhanh chóng.</li>
+</ul>
+<p>Nhược điểm:</p>
+<ul>
+  <li>Tỷ lệ phát hiện logo, theo thử nghiệm của chúng tôi, vẫn còn khiêm tốn. Các sản phẩm này không thuộc về bảy thương hiệu của chúng tôi nhưng có chứa logo của họ. Một số hình ảnh được người bán chế tác chủ yếu để xóa logo. Trong những trường hợp như vậy, QC nội dung đã thực hiện hành động từ chối nhưng hệ thống của chúng tôi lại không làm như vậy vì biểu trưng bị hỏng.</li>
+</ul>
+<h2 id="contributors"><strong>Người đóng góp:</strong></h2>
+<p>Tín Phan — Tiến sĩ về Học máy/Kỹ sư AI cấp cao</p>
+<p>Bằng Võ — Kỹ sư AI</p>

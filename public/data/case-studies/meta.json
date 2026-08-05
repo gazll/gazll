@@ -1,0 +1,334 @@
+{
+  "version": 1,
+  "library": {
+    "en": {
+      "eyebrow": "Experience · Production stories",
+      "title": "Engineering Case Studies",
+      "intro": "Long-form accounts of real systems, the constraints behind them, and the trade-offs teams made in production."
+    },
+    "vi": {
+      "eyebrow": "Kinh nghiệm · Chuyện từ production",
+      "title": "Case Study Kỹ thuật",
+      "intro": "Những bài viết chuyên sâu về hệ thống thực tế, các ràng buộc phía sau và những đánh đổi mà đội ngũ kỹ thuật đã lựa chọn trên production."
+    }
+  },
+  "categories": {
+    "systems-architecture": {
+      "en": {
+        "label": "Systems & Architecture at Scale",
+        "description": "Production architectures shaped by correctness, traffic, integration and operational constraints."
+      },
+      "vi": {
+        "label": "Hệ thống & Kiến trúc ở quy mô",
+        "description": "Các kiến trúc production được định hình bởi ràng buộc về tính đúng đắn, lưu lượng, tích hợp và vận hành."
+      }
+    },
+    "data-ml-experimentation": {
+      "en": {
+        "label": "Data, ML & Experimentation",
+        "description": "How teams turn data, statistical methods and machine learning into production decisions."
+      },
+      "vi": {
+        "label": "Dữ liệu, ML & Thử nghiệm",
+        "description": "Cách các đội ngũ đưa dữ liệu, phương pháp thống kê và machine learning vào quyết định trên production."
+      }
+    },
+    "mobile-developer-productivity": {
+      "en": {
+        "label": "Mobile & Developer Productivity",
+        "description": "Platform choices and engineering practices that change how product teams ship."
+      },
+      "vi": {
+        "label": "Mobile & Năng suất lập trình viên",
+        "description": "Các lựa chọn nền tảng và thực hành kỹ thuật thay đổi cách đội ngũ sản phẩm phát hành phần mềm."
+      }
+    },
+    "engineering-evolution": {
+      "en": {
+        "label": "Engineering Evolution",
+        "description": "Stories about growing a technology organization and deciding what comes next."
+      },
+      "vi": {
+        "label": "Tiến hóa tổ chức kỹ thuật",
+        "description": "Những câu chuyện về quá trình phát triển tổ chức công nghệ và quyết định bước đi tiếp theo."
+      }
+    }
+  },
+  "articles": {
+    "1": {
+      "key": "01-arcturus-inventory-processing-system",
+      "en": {
+        "title": "Arcturus — Inventory Processing System",
+        "excerpt": "How Tiki rebuilt inventory processing around an ordered command queue, in-memory state and asynchronous persistence to survive peak-sale traffic without overselling.",
+        "tags": [
+          "Inventory",
+          "Eventual consistency",
+          "Kafka",
+          "L-Max Disruptor",
+          "High concurrency"
+        ]
+      },
+      "vi": {
+        "title": "Arcturus — Hệ thống xử lý tồn kho",
+        "excerpt": "Cách Tiki xây dựng lại hệ thống xử lý tồn kho dựa trên hàng đợi lệnh có thứ tự, trạng thái in-memory và cơ chế ghi bền bất đồng bộ để chịu tải sale cao điểm mà không bán vượt tồn.",
+        "tags": [
+          "Tồn kho",
+          "Eventual consistency",
+          "Kafka",
+          "L-Max Disruptor",
+          "High concurrency"
+        ]
+      }
+    },
+    "2": {
+      "key": "02-a-b-testing-in-tiki-search",
+      "en": {
+        "title": "A/B testing in Tiki Search",
+        "excerpt": "How Tiki Search simulates realistic CTR distributions to compare statistical tests, control false positives and choose an experiment decision method for its own data.",
+        "tags": [
+          "A/B testing",
+          "Search ranking",
+          "Statistical tests",
+          "CTR",
+          "Bucketing"
+        ]
+      },
+      "vi": {
+        "title": "Thử nghiệm A/B trong Tiki Search",
+        "excerpt": "Cách Tiki Search mô phỏng phân phối CTR sát thực tế để so sánh các kiểm định thống kê, kiểm soát false positive và chọn phương pháp ra quyết định phù hợp với dữ liệu của mình.",
+        "tags": [
+          "A/B testing",
+          "Xếp hạng tìm kiếm",
+          "Kiểm định thống kê",
+          "CTR",
+          "Bucketing"
+        ]
+      }
+    },
+    "3": {
+      "key": "03-tiki-scale-in-10-years",
+      "en": {
+        "title": "TIKI @ Scale in 10 Years.",
+        "excerpt": "A ten-year journey developing Tiki's product, architecture, team, and technology organization — from online bookstore to multi-service commerce platform.",
+        "tags": [
+          "Engineering growth",
+          "Organization",
+          "Architecture evolution",
+          "E-commerce",
+          "Company history"
+        ]
+      },
+      "vi": {
+        "title": "TIKI @ Scale in 10 Years.",
+        "excerpt": "Hành trình mười năm phát triển sản phẩm, kiến trúc, đội ngũ và tổ chức công nghệ của Tiki — từ nhà sách trực tuyến đến nền tảng thương mại đa dịch vụ.",
+        "tags": [
+          "Tăng trưởng kỹ thuật",
+          "Tổ chức",
+          "Tiến hóa kiến trúc",
+          "Thương mại điện tử",
+          "Lịch sử công ty"
+        ]
+      }
+    },
+    "4": {
+      "key": "04-o1-android-build-time-at-tiki",
+      "en": {
+        "title": "O(1) Android build time at Tiki",
+        "excerpt": "How Tiki's Android team excludes unrelated feature modules, supplies fake source sets and uses deep links to keep local build time independent of project size.",
+        "tags": [
+          "Android",
+          "Gradle",
+          "Build performance",
+          "Modularization",
+          "Developer experience"
+        ]
+      },
+      "vi": {
+        "title": "Thời gian build Android O(1) tại Tiki",
+        "excerpt": "Cách đội Android tại Tiki loại các feature module không liên quan khỏi build, cung cấp fake source set và dùng deep link để thời gian build local không tăng theo quy mô dự án.",
+        "tags": [
+          "Android",
+          "Gradle",
+          "Hiệu năng build",
+          "Mô-đun hóa",
+          "Trải nghiệm lập trình viên"
+        ]
+      }
+    },
+    "5": {
+      "key": "05-scale-and-whats-next",
+      "en": {
+        "title": "SCALE, AND WHAT'S NEXT",
+        "excerpt": "A candid look at scale in operations: from picking, inventory, delivery to finance — and why the next frontier is often determined by people, process and quality.",
+        "tags": [
+          "Scaling",
+          "Engineering culture",
+          "Leadership",
+          "Organization design",
+          "Career growth"
+        ]
+      },
+      "vi": {
+        "title": "SCALE, AND WHAT’S NEXT",
+        "excerpt": "Góc nhìn thẳng thắn về scale trong vận hành: từ lấy hàng, tồn kho, giao nhận đến tài chính — và vì sao giới hạn tiếp theo thường nằm ở con người, quy trình và chất lượng quyết định.",
+        "tags": [
+          "Mở rộng quy mô",
+          "Văn hóa kỹ thuật",
+          "Lãnh đạo",
+          "Thiết kế tổ chức",
+          "Phát triển sự nghiệp"
+        ]
+      }
+    },
+    "6": {
+      "key": "06-tai-sao-tiki-chon-react-native",
+      "en": {
+        "title": "Why did Tiki choose React-Native?",
+        "excerpt": "Why did Tiki combine Native modules with cross-platform development, and why did React Native fit the architecture, testing needs, and team capacity at that time.",
+        "tags": [
+          "React Native",
+          "Mobile architecture",
+          "Cross-platform",
+          "Native apps",
+          "Multi-modules"
+        ]
+      },
+      "vi": {
+        "title": "Tại sao Tiki chọn React-Native?",
+        "excerpt": "Vì sao Tiki kết hợp các module Native với phát triển đa nền tảng, và vì sao React Native phù hợp với kiến trúc, nhu cầu thử nghiệm và năng lực đội ngũ tại thời điểm đó.",
+        "tags": [
+          "React Native",
+          "Kiến trúc mobile",
+          "Đa nền tảng",
+          "Ứng dụng native",
+          "Đa mô-đun"
+        ]
+      }
+    },
+    "7": {
+      "key": "07-into-the-demand-forecast-of-tiki-operations",
+      "en": {
+        "title": "Into The Demand Forecast of Tiki Operations",
+        "excerpt": "How Tiki Operations frames product demand forecasting, engineers calendar and sales features, evaluates error and turns forecasts into replenishment and workforce decisions.",
+        "tags": [
+          "Demand forecasting",
+          "Operations",
+          "Time series",
+          "Feature engineering",
+          "Inventory planning"
+        ]
+      },
+      "vi": {
+        "title": "Bên trong bài toán dự báo nhu cầu của Tiki Operations",
+        "excerpt": "Cách Tiki Operations định hình bài toán dự báo nhu cầu sản phẩm, xây dựng feature từ lịch và dữ liệu bán hàng, đánh giá sai số, rồi biến forecast thành quyết định bổ sung hàng và nhân sự.",
+        "tags": [
+          "Dự báo nhu cầu",
+          "Hoạt động",
+          "Chuỗi thời gian",
+          "Kỹ thuật đặc trưng",
+          "Lập kế hoạch tồn kho"
+        ]
+      }
+    },
+    "8": {
+      "key": "08-applying-machine-learning-to-solve-brand-logo-detection-problem",
+      "en": {
+        "title": "Applying Machine Learning to Solve Brand/Logo Detection Problem",
+        "excerpt": "How Tiki built a two-stage logo-detection pipeline with YOLO v3 localization and ResNet classification to identify branded products in marketplace photos.",
+        "tags": [
+          "Machine learning",
+          "Computer vision",
+          "Logo detection",
+          "YOLO v3",
+          "Synthetic data"
+        ]
+      },
+      "vi": {
+        "title": "Ứng dụng Machine Learning cho bài toán phát hiện thương hiệu/logo",
+        "excerpt": "Cách Tiki xây dựng pipeline phát hiện logo hai giai đoạn, dùng YOLO v3 để định vị và ResNet để phân loại sản phẩm có thương hiệu trong ảnh marketplace.",
+        "tags": [
+          "Học máy",
+          "Thị giác máy tính",
+          "Phát hiện logo",
+          "YOLO v3",
+          "Dữ liệu tổng hợp"
+        ]
+      }
+    },
+    "9": {
+      "key": "09-pegasus-catalog-product-api-architecture",
+      "en": {
+        "title": "Pegasus — Catalog Product API Architecture.",
+        "excerpt": "How Tiki redesigned its catalog product API around denormalized documents, read-optimized storage, cache layers and asynchronous data synchronization.",
+        "tags": [
+          "Catalog",
+          "API architecture",
+          "MongoDB",
+          "Caching",
+          "Data synchronization"
+        ]
+      },
+      "vi": {
+        "title": "Pegasus — Kiến trúc Catalog Product API",
+        "excerpt": "Cách Tiki thiết kế lại Catalog Product API quanh document phi chuẩn hóa, storage tối ưu cho read, nhiều lớp cache và đồng bộ dữ liệu bất đồng bộ.",
+        "tags": [
+          "Catalog",
+          "Kiến trúc API",
+          "MongoDB",
+          "Caching",
+          "Đồng bộ dữ liệu"
+        ]
+      }
+    },
+    "10": {
+      "key": "10-xac-thuc-va-phan-quyen-trong-microservices",
+      "en": {
+        "title": "Authentication and authorization in Microservices",
+        "excerpt": "Practical analysis of authentication and authorization in microservices: JWT, opaque tokens, OAuth 2, enforcement at the edge and access control at each service.",
+        "tags": [
+          "Microservices",
+          "Xác thực",
+          "Phân quyền",
+          "JWT",
+          "OAuth 2"
+        ]
+      },
+      "vi": {
+        "title": "Xác thực và phân quyền trong Microservices",
+        "excerpt": "Phân tích thực tế về xác thực và phân quyền trong microservices: JWT, opaque token, OAuth 2, enforcement tại lớp rìa và kiểm soát truy cập ở từng service.",
+        "tags": [
+          "Microservices",
+          "Authentication",
+          "Authorization",
+          "JWT",
+          "OAuth 2"
+        ]
+      }
+    },
+    "11": {
+      "key": "11-how-to-handle-hot-deals-at-the-peak-time",
+      "en": {
+        "title": "How to handle hot deals at the peak time",
+        "excerpt": "How Tiki protects hot-deal inventory and checkout at peak traffic with queuing, throttling, inventory reservation and an asynchronous order workflow.",
+        "tags": [
+          "Flash sale",
+          "Peak traffic",
+          "Queueing",
+          "Inventory reservation",
+          "Checkout"
+        ]
+      },
+      "vi": {
+        "title": "Cách xử lý deal hot lúc cao điểm",
+        "excerpt": "Cách Tiki bảo vệ tồn kho hot deal và checkout ở thời điểm traffic cao nhất bằng queue, throttling, giữ chỗ tồn kho và luồng xử lý đơn hàng bất đồng bộ.",
+        "tags": [
+          "Flash sale",
+          "Lưu lượng cao điểm",
+          "Hàng đợi",
+          "Giữ chỗ tồn kho",
+          "Checkout"
+        ]
+      }
+    }
+  }
+}

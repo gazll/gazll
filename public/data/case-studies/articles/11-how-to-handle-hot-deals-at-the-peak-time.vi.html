@@ -1,0 +1,104 @@
+<p>Trong Thương mại điện tử, ưu đãi hấp dẫn là một cách rất hiệu quả để thực hiện tiếp thị. Các nhà tiếp thị có thể giảm giá 90% cho một sản phẩm trong thời gian rất ngắn để có được lượng truy cập lớn vào trang web. Nhưng hoạt động này cũng đòi hỏi hệ thống phải mở rộng quy mô rất nhiều. Hệ thống phải xử lý những khách hàng lớn đang cố gắng đặt hàng càng nhanh càng tốt. Bởi mức chiết khấu cực kỳ cao và sản phẩm có giá rất rẻ với số lượng rất ít. Vì vậy hệ thống phải đảm bảo tính nhất quán của hàng tồn kho và giá cả thật chính xác.</p>
+<p>Trong một thời gian dài, việc xử lý các giao dịch hấp dẫn là một điểm rất nhức nhối trong hệ thống của chúng tôi. Chúng tôi đã thử và thất bại rất nhiều lần. Nhưng cuối cùng, nhóm nền tảng danh mục của chúng tôi có thể giải quyết tốt vấn đề đó. Đây là chia sẻ của chúng tôi về các giải pháp của chúng tôi.</p>
+<h2 id="1-oversold-deal-problem">1. Vấn đề giao dịch quá bán.</h2>
+<p>Người dùng thường sử dụng các giao dịch để chạy chiến dịch quảng cáo. Người dùng thiết lập mức giá đặc biệt với số lượng rất hạn chế trong một khoảng thời gian. Các hành vi dự kiến:</p>
+<ul>
+  <li>Giá thay đổi chính xác. Khi bắt đầu giao dịch, giá của sản phẩm phải được thay đổi từ giá thông thường thành giá đặc biệt và khi kết thúc giao dịch, giá của sản phẩm phải được thay đổi về giá bình thường.</li>
+  <li>Đảm bảo số lượng đặc biệt. Vì sản phẩm thường được giảm giá nhiều nên số lượng rất có hạn. Người dùng không muốn bán sản phẩm với số lượng đặc biệt ở mức giá đặc biệt. Nếu điều đó xảy ra, họ sẽ mất mát rất nhiều.</li>
+</ul>
+<p>Ví dụ: sản phẩm A có giá 1.000.000 đồng. Người bán thực hiện giao dịch giảm giá 50%, trị giá 500.000 đồng, từ 10:00 sáng đến 11:00 sáng và số lượng tối đa của giao dịch này là 10.</p>
+<p>Vào lúc 10:00 sáng, giao dịch thay đổi từ đang hoạt động sang đang chạy và người dùng có thể mua sản phẩm A với giá ưu đãi. Chúng tôi dự đoán rằng nếu số lượng đặt hàng lớn hơn 10 hoặc thời gian trôi qua 11:00 sáng, giá của một sản phẩm sẽ quay về mức 1.000.000đ và người dùng không thể mua sản phẩm giảm giá 50% nữa.</p>
+<p>Với quy trình xử lý giao dịch cũ trước đây, vấn đề bán quá mức thường xuyên xảy ra. Sản phẩm A có thể được bán cho 100 sản phẩm với mức giảm giá 50%. Nhưng người bán chỉ đặt số lượng giao dịch tối đa là 10 nên người bán phải trả thêm (100–10) * 500.000 = 4.500.000 nữa cho việc tiếp thị nếu không họ phải hủy đơn hàng.</p>
+<h2 id="2-the-old-deal-solution">2. Giải pháp thỏa thuận cũ.</h2>
+<p>Giá cả và số lượng là hai dữ liệu đòi hỏi tính nhất quán cao. Nếu hệ thống không thể đảm bảo tính nhất quán của những dữ liệu này thì vấn đề giao dịch quá bán sẽ xảy ra. Để giải quyết vấn đề này, cách tiếp cận đầu tiên là sử dụng cơ sở dữ liệu giao dịch để khóa và cập nhật những dữ liệu này. Tại hệ thống Talaria của chúng tôi, các giao dịch được lưu trữ trong cơ sở dữ liệu MySQL. Giải pháp này có hiệu quả và đảm bảo tính nhất quán về giá cả và số lượng đặc biệt. Nhưng theo cách này, Talaria gặp phải một vấn đề khác về tính sẵn có. Bởi vì khóa dữ liệu là một thao tác tốn kém ở MySQL. Khi dữ liệu bị khóa, không ai có thể truy cập được. Nhưng các giao dịch thường rất hấp dẫn và các nhà tiếp thị thu hút lượng truy cập lớn đến các sản phẩm hot. Vì vậy, nhiều khách hàng đua nhau đặt hàng với giá hời và làm hỏng hệ thống. Các kỹ sư của chúng tôi đã phải đánh đổi giữa tính nhất quán và tính khả dụng. Họ chọn tính khả dụng trước tiên và giảm thiểu sự không nhất quán của dữ liệu càng nhiều càng tốt. Giải pháp của họ là:</p>
+<ul>
+  <li>Tách dữ liệu giao dịch khỏi dữ liệu sản phẩm và dữ liệu đơn hàng. Dữ liệu giao dịch (giá đặc biệt, số lượng đặc biệt, thời gian bắt đầu và kết thúc) được lưu trữ và xử lý độc lập với dữ liệu sản phẩm và dữ liệu đơn hàng. Khi một giao dịch được bắt đầu, hệ thống giao dịch sẽ sử dụng giá đặc biệt của giao dịch đó để cập nhật giá của sản phẩm. Bằng cách này, khi đặt hàng, quá trình thanh toán không cần phải kiểm tra giá thỏa thuận.</li>
+  <li>Chốt giao dịch không đồng bộ: hệ thống giao dịch kiểm tra trạng thái giao dịch theo định kỳ. Nếu ưu đãi đã hết hạn hoặc số lượng mặt hàng đặt hàng vượt quá số lượng đặc biệt của ưu đãi, hệ thống ưu đãi sẽ tắt ưu đãi và thay đổi giá sản phẩm về giá bình thường.</li>
+</ul>
+<p>Giải pháp này giải quyết được vấn đề về tính sẵn có nhưng không thể đảm bảo dữ liệu nhất quán của các giao dịch và gây ra vấn đề giao dịch quá bán. Các quá trình được mô tả dưới đây:</p>
+<h3 id="2-1-change-the-deal-price-process">2.1. Thay đổi quá trình giá thỏa thuận.</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 1 ở kích thước đầy đủ">
+    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/01-figure.jpeg" width="1320" height="900" loading="lazy" decoding="async" alt="Hình 1 cho 2.1. Thay đổi quá trình giá thỏa thuận.">
+  </button>
+  <figcaption>Hình 1 · 2.1. Thay đổi quá trình giá thỏa thuận.</figcaption>
+</figure>
+<p>Nhân viên giao dịch cập nhật giá trong MySql. Lần trước, phải mất 10 giây từ khi cập nhật giá của nhân viên giao dịch lên MySql cho đến khi giá được đồng bộ hóa với MongoDB.</p>
+<p>Vì vậy, ngay cả khi giao dịch đã kết thúc, người dùng vẫn có thể mua sản phẩm với giá ưu đãi vì dịch vụ thanh toán lấy giá sản phẩm từ Pegasus, chưa được cập nhật. <strong>Và cho dù hệ thống có thể sao chép các thay đổi nhanh hơn đến đâu, Nó không bao giờ đảm bảo sẽ thay đổi giá nguyên tử.</strong></p>
+<h3 id="2-2-close-deals-process">2.2. Quá trình chốt giao dịch.</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 2 ở kích thước đầy đủ">
+    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/02-figure.jpeg" width="1160" height="680" loading="lazy" decoding="async" alt="Hình 2 cho 2.2. Quá trình chốt giao dịch.">
+  </button>
+  <figcaption>Hình 2 · 2.2. Quá trình chốt giao dịch.</figcaption>
+</figure>
+<p>Chúng ta có thể thấy rằng: một khi số lượng giao dịch lớn, nhân viên giao dịch mất nhiều thời gian để xử lý toàn bộ giao dịch, cũng mất thời gian để lấy số lượng đặt hàng từ bảng sales_order_deal về cho nhân viên giao dịch.</p>
+<p>Vì vậy, nó không thể kết thúc giao dịch ngay sau khi số lượng đặt hàng vượt quá số lượng giao dịch tối đa. Người dùng vẫn có thể mua sản phẩm với giá ưu đãi ngay cả khi số lượng đặt hàng lớn hơn số lượng tối đa. <strong>Và cho dù nó có thể nhanh hơn thế nào, nó không bao giờ đảm bảo sẽ chốt được các giao dịch nguyên tử.</strong></p>
+<h2 id="3-the-new-deal-solution">3. Giải pháp thỏa thuận mới.</h2>
+<p>Để giải quyết vấn đề bán quá mức, chúng ta phải đảm bảo tính nhất quán của hai dữ liệu: giá của giao dịch và số lượng đặc biệt:</p>
+<ul>
+  <li>Tính nhất quán về giá: hệ thống phải thay đổi giá của sản phẩm thành giá đặc biệt khi bắt đầu giao dịch và thay đổi về giá bình thường vào thời điểm kết thúc.</li>
+  <li>Tính nhất quán về số lượng: hệ thống phải đảm bảo tính nhất quán về số lượng đặc biệt và không cho phép đặt lệnh với giá đặc biệt nhiều hơn số lượng đặc biệt của một giao dịch.</li>
+</ul>
+<p>Không dễ để thay đổi giá của một giao dịch một cách chính xác với cấu trúc giao dịch trước đó. Đó là một vấn đề trong hệ thống phân tán. Dữ liệu của một giao dịch (giá đặc biệt) được lưu trữ riêng biệt với dữ liệu về giá của sản phẩm và những dữ liệu này được lưu trữ trong các cơ sở dữ liệu khác nhau (giao dịch được lưu trữ trong cơ sở dữ liệu MySQL, dữ liệu sản phẩm được lưu trữ trong cơ sở dữ liệu Mongo và bộ nhớ đệm trong bộ nhớ Pegasus). Không có cách nào để thực hiện giao dịch giữa các hệ thống này để đảm bảo tính nhất quán của những dữ liệu này. Nếu chúng tôi muốn chuyển đổi giữa giá thông thường và giá nguyên tử đặc biệt một cách chính xác, chúng tôi phải lưu trữ những dữ liệu này ở một nơi duy nhất để thực hiện giao dịch. Nhưng cả giá sản phẩm lẫn giá ưu đãi đặc biệt đều là những dữ liệu rất hot. Nếu chúng tôi sử dụng MySQL để lưu trữ, chúng tôi sẽ gặp vấn đề về tính khả dụng để xử lý lưu lượng truy cập lớn. Nguyên nhân sâu xa của vấn đề này là do tắc nghẽn I/O của cơ sở dữ liệu. Giải quyết vấn đề này là thách thức của kiến ​​trúc mới. Cách tiếp cận mới là xây dựng hệ thống giá trong bộ nhớ để lưu trữ giá thông thường và giá đặc biệt của sản phẩm. Hệ thống này là một hệ thống có tính nhất quán và sẵn sàng cao.</p>
+<p>Về tính nhất quán của hàng tồn kho, chúng tôi đã giải quyết được vấn đề này tại Arcturus rồi. Nhưng tính nhất quán về số lượng của giao dịch hơi khác một chút. Mỗi giao dịch có số lượng đặc biệt với mức giá đặc biệt trong một khoảng thời gian cụ thể. Hệ thống phải đảm bảo rằng nó không cho phép bán vượt quá số lượng đặc biệt của một giao dịch. Hiện tại, có ba dữ liệu: giá thông thường, giá đặc biệt, số lượng đặc biệt mà chúng tôi phải đảm bảo tính nhất quán. Cách tiếp cận đầu tiên là lưu trữ tất cả những dữ liệu này ở một nơi. Nhưng nếu sử dụng phương pháp này, chúng ta sẽ tách logic số lượng đặc biệt khỏi logic hàng tồn kho và chúng ta sẽ gặp một vấn đề khác là đảm bảo tính nhất quán của hàng tồn kho, số lượng của đơn hàng đáp ứng số lượng đặc biệt của giao dịch nhưng thực tế SKU đã hết hàng. Chúng ta không thể giải quyết vấn đề giao dịch quá bán nếu không thể kết hợp cả hai logic: giá/giá đặc biệt và số lượng đặc biệt.</p>
+<p>Một sản phẩm chỉ có một và chỉ một giá bán tại một thời điểm nhất định. Điều đó có nghĩa là nếu nhiều đơn hàng của một SKU được đặt cùng lúc thì tất cả các đơn hàng này đều có cùng mức giá. Điều kiện này chính là chìa khóa để giải quyết thách thức trên. Chúng tôi có thể tạo một id duy nhất cho mỗi giá trị. Mỗi khi hệ thống thay đổi giá, nó sẽ tạo ra một id mới cho giá. Nếu mỗi giá có một id duy nhất, chúng ta có thể giải quyết sự thống nhất giữa giá đặc biệt và số lượng đặc biệt một cách dễ dàng bằng cách đính kèm số lượng đặc biệt cho mỗi id giá. Khi một đơn hàng được đặt, Checkout sẽ gửi lệnh dự trữ hàng có id giá tới Arcturus để kiểm tra số lượng có sẵn của từng SKU và giá của nó. Arcturus đảm bảo tính nhất quán của hàng tồn kho và số lượng của từng id giá. Và dựa trên điều kiện này, hệ thống giao dịch không cho phép giao dịch chồng chéo, tại một khoảng thời gian cụ thể, chỉ có một giao dịch đang hoạt động cho một SKU. Vì vậy, giá đặc biệt của mỗi giao dịch có thể là duy nhất, hệ thống có thể sử dụng id giao dịch làm id giá cho mỗi giá.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 3 ở kích thước đầy đủ">
+    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/03-figure.jpeg" width="996" height="341" loading="lazy" decoding="async" alt="Hình 3 cho 3. Giải pháp thỏa thuận mới.">
+  </button>
+  <figcaption>Hình 3 · 3. Giải pháp giao dịch mới.</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 4 ở kích thước đầy đủ">
+    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/04-figure.png" width="1610" height="244" loading="lazy" decoding="async" alt="Hình 4 cho 3. Giải pháp thỏa thuận mới.">
+  </button>
+  <figcaption>Hình 4 · 3. Giải pháp giao dịch mới.</figcaption>
+</figure>
+<h3 id="3-1-price-system-replicate-the-deal-price-process">3.1. Hệ thống giá - nhân rộng quy trình giá thỏa thuận.</h3>
+<p>Thông tin giao dịch được sao chép vào hệ thống giá.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 5 ở kích thước đầy đủ">
+    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/05-figure.jpeg" width="1140" height="560" loading="lazy" decoding="async" alt="Hình 5 cho 3.1. Hệ thống giá - nhân rộng quy trình giá thỏa thuận.">
+  </button>
+  <figcaption>Hình 5 · 3.1. Hệ thống giá - nhân rộng quy trình giá thỏa thuận.</figcaption>
+</figure>
+<h3 id="3-2-arcturus-inventory-process">3.2. Quá trình kiểm kê Arcturus.</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 6 ở kích thước đầy đủ">
+    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/06-figure.jpeg" width="1348" height="720" loading="lazy" decoding="async" alt="Hình 6 cho 3.2. Quá trình kiểm kê Arcturus.">
+  </button>
+  <figcaption>Hình 6 · 3.2. Quá trình kiểm kê Arcturus.</figcaption>
+</figure>
+<h3 id="3-3-checkout-process">3.3. Quá trình thanh toán</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 7 ở kích thước đầy đủ">
+    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/07-figure.jpeg" width="1360" height="1020" loading="lazy" decoding="async" alt="Hình 7 cho 3.3. Quá trình thanh toán">
+  </button>
+  <figcaption>Hình 7 · 3.3. Quá trình thanh toán</figcaption>
+</figure>
+<h3 id="3-4-system-architecture">3.4. Kiến trúc hệ thống.</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 8 ở kích thước đầy đủ">
+    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/08-figure.jpeg" width="1704" height="832" loading="lazy" decoding="async" alt="Hình 8 cho 3.4. Kiến trúc hệ thống.">
+  </button>
+  <figcaption>Hình 8 · 3.4. Kiến trúc hệ thống.</figcaption>
+</figure>
+<p>Luồng giao dịch thanh toán và hàng tồn kho mới:</p>
+<p><strong>Bước 1:</strong> Khi FE của Tiki gọi thanh toán sẽ gửi mã_id sản phẩm và giá của sản phẩm (từ Pegasus chỉ cần số như 100.000đ)</p>
+<p><strong>Bước 2:</strong> Cuộc gọi thanh toán Hệ thống giá đi lấy (giá, loại giá, id giá); gõ vào ('thỏa thuận', 'đặc biệt', 'cơ bản'); giá như 90000 VNĐ, và price-id là deal_id trong trường hợp 'thỏa thuận' và là price-id trong trường hợp 'đặc biệt' hoặc 'cơ bản'.</p>
+<p><strong>Bước 3:</strong> Checkout so sánh giá từ hệ thống giá (gọi system-price) với giá từ Pegasus (gọi pegasus-price); Nếu system-price &lt;= pegasus-price thì giá hợp lệ, có thể gọi đến hệ thống giao dịch hàng tồn kho; Nếu không, quá trình thanh toán sẽ thông báo cho người dùng một thông báo như: “Giá đã thay đổi, vui lòng làm mới!”</p>
+<p><strong>Bước 4:</strong> Thanh toán, gọi Arcturus cho giao dịch hàng tồn kho, mỗi mặt hàng (product_id, stock_id, số_ordered) được gửi với (price-id, price-type)</p>
+<p><strong>Bước 5:</strong> Arcturus sẽ kiểm tra kho hàng để tìm hàng tồn kho và nếu loại giá == 'thỏa thuận'; Arcturus sẽ kiểm tra deal_quantity của một giao dịch (bây giờ price-id là id giao dịch); Nếu hàng tồn kho được đáp ứng và số lượng giao dịch được đáp ứng, thì Arcturus trả về CHẤP NHẬN hoặc không, Arcturus trả về TỪ CHỐI.</p>
+<p>Khi Arcturus trả về CHẤP NHẬN, nó sẽ lưu số lượng_ordered của một giao dịch (nếu loại giá là 'giao dịch') và kích hoạt cập nhật sự kiện số_ordered của một giao dịch cho Đại lý đã cập nhật số này vào Cơ sở dữ liệu.</p>
+<p>Khi hết hàng, Arcturus sẽ tổ chức sự kiện SOLD_OUT; thì hệ thống giá sẽ sử dụng sự kiện này để tắt giao dịch đó (nghĩa là giá giao dịch chuyển về giá bình thường ngay lập tức, không cần Dealer dừng giao dịch). Các đại lý cũng tiêu thụ sự kiện này sau đó dừng giao dịch; giá bình thường sẽ đồng bộ với Pegasus sau một thời gian (1–2 giây đến 5–6 giây).</p>
+<p><strong>Người đóng góp:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 9 ở kích thước đầy đủ">
+    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/09-figure.png" width="1128" height="508" loading="lazy" decoding="async" alt="Hình 9 cho 3.4. Kiến trúc hệ thống.">
+  </button>
+  <figcaption>Hình 9 · 3.4. Kiến trúc hệ thống.</figcaption>
+</figure>
+<p>Bài viết tiếp theo:<em> </em><em><strong>Cách xử lý các giao dịch hàng tồn kho vào thời điểm cao điểm - Project Arcturus.</strong></em></p>
+<p>Đọc thêm: <strong>Pegasus - Kiến trúc API sản phẩm danh mục.</strong></p>
+<p><a href="https://engineering.tiki.vn/pegasus-catalog-product-api-architecture-f217c8623c9b" target="_blank" rel="noopener noreferrer">https://engineering.tiki.vn/pegasus-catalog-product-api-architecture-f217c8623c9b</a></p>

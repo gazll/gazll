@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/05-scale-and-whats-next.vi.html",
+  "guide": {
+    "title": "Đây là câu chuyện scale vận hành từ “chạy được” sang “tối ưu được”, không chỉ là tăng thêm server.",
+    "problem": "Khi số đơn, kho, sản phẩm và đối tác tăng lên, cách lấy hàng bằng giấy, quản lý tồn kho gần đúng, trao đổi file và xử lý kế toán thủ công không còn đủ nhanh hoặc đủ chính xác. Mỗi bước giao hàng lại mở ra một chuỗi bài toán hậu mãi và tài chính phía sau.",
+    "core_idea": "Operation Product số hóa dần toàn bộ vòng đời: vị trí tồn kho chính xác, pick-by-batch và đường đi tối ưu, PDA trong kho, cấu hình tuyến giao hàng, tích hợp đối tác, proof-of-delivery, hậu mãi và các luồng phải thu/phải trả.",
+    "outcome": "Khi nền tảng cơ bản đã hoạt động, trọng tâm tiếp theo chuyển sang tối ưu tồn kho, ưu tiên đơn, phân tuyến thời gian thực, tự động hóa kế toán và nâng năng lực con người. Bài viết đặt quy trình và chất lượng tổ chức ngang hàng với thuật toán.",
+    "takeaways": [
+      "Một tối ưu cục bộ chỉ có giá trị khi dữ liệu đầu vào đủ chính xác; đường đi lấy hàng tốt không giúp được nếu hệ thống không biết sản phẩm thực sự nằm ở kệ nào.",
+      "Thiết kế cho người vận hành cần giảm tải nhận thức và làm exception rõ ràng, vì sai lệch vật lý thường bắt đầu từ thao tác thủ công.",
+      "Tích hợp logistics là một state machine dài: bàn giao, vận chuyển, thu hộ, cập nhật trạng thái và bằng chứng giao hàng đều cần đối soát.",
+      "Hệ thống tài chính chịu một dạng scale khác: không nhất thiết latency thấp nhất, nhưng số liệu phải truy vết và chính xác đến từng giao dịch.",
+      "Giai đoạn tiếp theo của scale thường là tối ưu quyết định và con người, không phải chỉ thay công nghệ mới."
+    ],
+    "review_lenses": [
+      "Vẽ state machine xuyên suốt từ inbound đến hậu mãi và chỉ ra owner của từng transition.",
+      "Thiết kế cơ chế reconcile khi dữ liệu hệ thống khác tồn kho vật lý hoặc dữ liệu đối tác.",
+      "Đặt metric end-to-end như thời gian giao, chi phí mỗi đơn và tỷ lệ sai thay vì chỉ metric của từng service.",
+      "Đánh giá UX của công cụ nội bộ bằng lỗi thao tác, thời gian đào tạo và năng suất thực tế của người vận hành."
+    ]
+  }
+}

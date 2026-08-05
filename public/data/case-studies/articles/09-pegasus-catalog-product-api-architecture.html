@@ -25,7 +25,7 @@
 <p><strong>Pegasus Architecture:</strong></p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
-    <img src="assets/case-studies/pegasus/01-figure.png" width="1600" height="550" loading="lazy" decoding="async" alt="Figure 1 for Pegasus — Catalog Product API Architecture.">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/01-figure.png" width="1600" height="550" loading="lazy" decoding="async" alt="Figure 1 for Pegasus — Catalog Product API Architecture.">
   </button>
   <figcaption>Figure 1 · Pegasus — Catalog Product API Architecture.</figcaption>
 </figure>
@@ -53,21 +53,21 @@
 <p>One nodes:</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
-    <img src="assets/case-studies/pegasus/02-figure.png" width="1600" height="643" loading="lazy" decoding="async" alt="Figure 2 for Entry-point">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/02-figure.png" width="1600" height="643" loading="lazy" decoding="async" alt="Figure 2 for Entry-point">
   </button>
   <figcaption>Figure 2 · Entry-point</figcaption>
 </figure>
 <p>Two nodes:</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
-    <img src="assets/case-studies/pegasus/03-figure.png" width="1600" height="683" loading="lazy" decoding="async" alt="Figure 3 for Entry-point">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/03-figure.png" width="1600" height="683" loading="lazy" decoding="async" alt="Figure 3 for Entry-point">
   </button>
   <figcaption>Figure 3 · Entry-point</figcaption>
 </figure>
 <p>It’s, however, much better with L4 load balancer:</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
-    <img src="assets/case-studies/pegasus/04-figure.png" width="1228" height="544" loading="lazy" decoding="async" alt="Figure 4 for Entry-point">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/04-figure.png" width="1228" height="544" loading="lazy" decoding="async" alt="Figure 4 for Entry-point">
   </button>
   <figcaption>Figure 4 · Entry-point</figcaption>
 </figure>
@@ -87,14 +87,14 @@
 <p><strong>Without output cache:</strong></p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
-    <img src="assets/case-studies/pegasus/05-figure.png" width="1600" height="681" loading="lazy" decoding="async" alt="Figure 5 for In-mem cache">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/05-figure.png" width="1600" height="681" loading="lazy" decoding="async" alt="Figure 5 for In-mem cache">
   </button>
   <figcaption>Figure 5 · In-mem cache</figcaption>
 </figure>
 <p><strong>With output cache:</strong></p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
-    <img src="assets/case-studies/pegasus/06-figure.png" width="1600" height="670" loading="lazy" decoding="async" alt="Figure 6 for In-mem cache">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/06-figure.png" width="1600" height="670" loading="lazy" decoding="async" alt="Figure 6 for In-mem cache">
   </button>
   <figcaption>Figure 6 · In-mem cache</figcaption>
 </figure>
@@ -109,7 +109,7 @@
 <p>With multi API, we can’t return the cache directly, so there’s no point keeping compressed version in the cache. Instead we only cache the plaintext version. When returning to client, compressing with Snappy is more efficient than Gzip, although payload will be increased about 2x-3x. Benchmark shows that the latency is reduced by 50% after switching to Snappy (from 15ms to 6ms).</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 7 at full size">
-    <img src="assets/case-studies/pegasus/07-figure.png" width="1432" height="732" loading="lazy" decoding="async" alt="Figure 7 for Compressor">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/07-figure.png" width="1432" height="732" loading="lazy" decoding="async" alt="Figure 7 for Compressor">
   </button>
   <figcaption>Figure 7 · Compressor</figcaption>
 </figure>
@@ -118,40 +118,40 @@
 <p>Our traffic is separated into two sources: from web to render HTML and from api for Javascript or mobile app.</p>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open figure 8 at full size">
-    <img src="assets/case-studies/pegasus/08-figure.png" width="761" height="301" loading="lazy" decoding="async" alt="Figure 8 for Compressor">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/08-figure.png" width="761" height="301" loading="lazy" decoding="async" alt="Figure 8 for Compressor">
   </button>
   <figcaption>Figure 8 · Compressor</figcaption>
 </figure>
 <p><strong>From web:</strong></p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 9 at full size">
-    <img src="assets/case-studies/pegasus/09-figure.png" width="1540" height="790" loading="lazy" decoding="async" alt="Figure 9 for Compressor">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/09-figure.png" width="1540" height="790" loading="lazy" decoding="async" alt="Figure 9 for Compressor">
   </button>
   <figcaption>Figure 9 · Compressor</figcaption>
 </figure>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 10 at full size">
-    <img src="assets/case-studies/pegasus/10-figure.png" width="1514" height="848" loading="lazy" decoding="async" alt="Figure 10 for Compressor">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/10-figure.png" width="1514" height="848" loading="lazy" decoding="async" alt="Figure 10 for Compressor">
   </button>
   <figcaption>Figure 10 · Compressor</figcaption>
 </figure>
 <p><strong>From API:</strong></p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 11 at full size">
-    <img src="assets/case-studies/pegasus/11-figure.png" width="1520" height="810" loading="lazy" decoding="async" alt="Figure 11 for Compressor">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/11-figure.png" width="1520" height="810" loading="lazy" decoding="async" alt="Figure 11 for Compressor">
   </button>
   <figcaption>Figure 11 · Compressor</figcaption>
 </figure>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 12 at full size">
-    <img src="assets/case-studies/pegasus/12-figure.png" width="1526" height="844" loading="lazy" decoding="async" alt="Figure 12 for Compressor">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/12-figure.png" width="1526" height="844" loading="lazy" decoding="async" alt="Figure 12 for Compressor">
   </button>
   <figcaption>Figure 12 · Compressor</figcaption>
 </figure>
 <p><strong>Contributors:</strong></p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 13 at full size">
-    <img src="assets/case-studies/pegasus/13-figure.png" width="2000" height="733" loading="lazy" decoding="async" alt="Figure 13 for Compressor">
+    <img src="assets/case-studies/09-pegasus-catalog-product-api-architecture/13-figure.png" width="2000" height="733" loading="lazy" decoding="async" alt="Figure 13 for Compressor">
   </button>
   <figcaption>Figure 13 · Compressor</figcaption>
 </figure>

@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/10-xac-thuc-va-phan-quyen-trong-microservices.vi.html",
+  "guide": {
+    "title": "Bài viết nên được đọc như một chuỗi quyết định về trust boundary, không chỉ là danh sách token và protocol.",
+    "problem": "Trong monolith, session và kiểm tra quyền thường nằm chung một tiến trình. Khi tách microservices, danh tính phải đi qua network, mỗi service có thể bị gọi theo nhiều đường và quyền truy cập cần nhất quán mà không biến một auth service thành điểm nghẽn mới.",
+    "core_idea": "Bài viết so sánh JWT ký RSA với opaque token, đặt OAuth 2 vào bài toán ủy quyền, rồi xem xét hai vị trí enforcement: lớp rìa và từng service. Phần access control đi từ ACL đến RBAC và PBAC để tăng khả năng biểu đạt policy.",
+    "outcome": "Không có một lựa chọn thắng mọi trường hợp. JWT giảm lookup nhưng khó thu hồi tức thời; opaque token tăng quyền kiểm soát phiên nhưng thêm network dependency; gateway đơn giản hóa client nhưng service vẫn cần bảo vệ boundary của chính mình.",
+    "takeaways": [
+      "Authentication trả lời ai đang gọi; authorization quyết định lời gọi đó được làm gì trên tài nguyên cụ thể. Gộp hai bước làm policy khó kiểm chứng.",
+      "Token tự chứa tối ưu đường đọc bằng cách chấp nhận dữ liệu quyền có thể cũ cho tới khi token hết hạn.",
+      "Ký bất đối xứng cho phép nhiều service verify mà không giữ secret có khả năng phát hành token mới.",
+      "Gateway là điểm enforcement hữu ích nhưng không đủ cho service-to-service traffic hoặc những đường gọi bỏ qua lớp rìa.",
+      "RBAC dễ quản trị hơn ACL khi quy mô tăng; PBAC linh hoạt hơn nhưng cần ngôn ngữ policy, precedence và công cụ giải thích quyết định."
+    ],
+    "review_lenses": [
+      "Vẽ trust boundary và chỉ ra nơi phát hành, verify, refresh và revoke credential.",
+      "Chọn thời gian sống token dựa trên rủi ro quyền cũ, độ sẵn sàng của auth service và trải nghiệm người dùng.",
+      "Quy định service nào là nguồn sự thật cho role, permission và thuộc tính dùng trong policy.",
+      "Log quyết định phân quyền đủ để trả lời ai bị từ chối, bởi rule nào và với phiên bản policy nào."
+    ]
+  }
+}

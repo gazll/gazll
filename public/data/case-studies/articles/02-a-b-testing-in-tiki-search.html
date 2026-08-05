@@ -23,7 +23,7 @@
 <p>Here’s how a typical CTR distribution in Tiki Search looks like:</p>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/01-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 1 for CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/01-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 1 for CTR Distribution">
   </button>
   <figcaption>Figure 1 · CTR Distribution</figcaption>
 </figure>
@@ -36,7 +36,7 @@
 <p>It is hard to model the CTR distribution directly, because of those peaks caused by users with low “view” counts. Instead of trying to do that, let’s model it indirectly. Let’s start from the “views”. Here’s how a typical views distribution looks like in Tiki Search:</p>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/02-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 2 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/02-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 2 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 2 · Modelling the CTR Distribution</figcaption>
 </figure>
@@ -58,7 +58,7 @@ plt.tight_layout()
 plt.show()</code></pre>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/03-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 3 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/03-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 3 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 3 · Modelling the CTR Distribution</figcaption>
 </figure>
@@ -67,14 +67,14 @@ plt.show()</code></pre>
 <p>We can try to estimate our “ground truth” CTRs distribution by using our real historical CTRs, but only taking into account users who made enough “views” before, so that their real CTRs are more likely to be close to their “ground truth” CTRs in search. Here’s how such distribution looks in Tiki Search:</p>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/04-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 4 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/04-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 4 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 4 · Modelling the CTR Distribution</figcaption>
 </figure>
 <p>Good way to simulate it is to use beta distribution. It is defined on an interval between 0 and 1 and also its expectation can be expressed only using its two parameters — <code>alpha</code> and <code>beta</code>. We will use this fact later in the article. If you want a more intuitive understanding on why beta distribution is a good option here, read <a href="https://towardsdatascience.com/beta-distribution-intuition-examples-and-derivation-cf00f4db57af" target="_blank" rel="noopener noreferrer">this blog post</a>. Here&#39;s how the expectation is defined:</p>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/05-figure.png" width="170" height="62" loading="lazy" decoding="async" alt="Figure 5 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/05-figure.png" width="170" height="62" loading="lazy" decoding="async" alt="Figure 5 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 5 · Modelling the CTR Distribution</figcaption>
 </figure>
@@ -94,7 +94,7 @@ plt.tight_layout()
 plt.show()</code></pre>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/06-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 6 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/06-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Figure 6 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 6 · Modelling the CTR Distribution</figcaption>
 </figure>
@@ -178,7 +178,7 @@ p_values_mannwhitney = mannwhitney(ctrs_a_1, ctrs_a_2)</code></pre>
 plot_pvalues(p_values_mannwhitney, &#39;p-values in A/A test (Mann-Whitney)&#39;)</code></pre>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 7 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/07-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 7 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/07-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 7 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 7 · Modelling the CTR Distribution</figcaption>
 </figure>
@@ -198,7 +198,7 @@ plot_pvalues(p_values_mannwhitney, &#39;p-values in A/A test (Mann-Whitney)&#39;
 plot_pvalues_cdf(p_values_mannwhitney, &#39;p-values CDF in A/A test (Mann-Whitney)&#39;)</code></pre>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 8 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/08-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 8 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/08-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 8 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 8 · Modelling the CTR Distribution</figcaption>
 </figure>
@@ -212,14 +212,14 @@ plot_pvalues(p_values_mannwhitney, &#39;p-values in A/B test (Mann-Whitney)&#39;
 plot_pvalues_cdf(p_values_mannwhitney, &#39;p-values CDF in A/B test (Mann-Whitney)&#39;)</code></pre>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 9 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/09-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 9 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/09-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 9 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 9 · Modelling the CTR Distribution</figcaption>
 </figure>
 <p>And CDF graphs as well:</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 10 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/10-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 10 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/10-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 10 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 10 · Modelling the CTR Distribution</figcaption>
 </figure>
@@ -324,7 +324,7 @@ plot_pvalues_cdf(p_values_mannwhitney, &#39;p-values CDF in A/B test (Mann-Whitn
     plot_all(sigma2 = sigma2)</code></pre>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 11 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/11-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 11 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/11-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 11 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 11 · Modelling the CTR Distribution</figcaption>
 </figure>
@@ -334,7 +334,7 @@ plot_pvalues_cdf(p_values_mannwhitney, &#39;p-values CDF in A/B test (Mann-Whitn
     plot_all(beta = beta)</code></pre>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 12 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/12-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 12 for Modelling the CTR Distribution">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/12-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 12 for Modelling the CTR Distribution">
   </button>
   <figcaption>Figure 12 · Modelling the CTR Distribution</figcaption>
 </figure>
@@ -362,7 +362,7 @@ plot_pvalues_cdf(p_values_mannwhitney, &#39;p-values CDF in A/B test (Mann-Whitn
     plot_all_buckets(sigma2 = sigma2)</code></pre>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 13 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/13-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 13 for Bucketing">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/13-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 13 for Bucketing">
   </button>
   <figcaption>Figure 13 · Bucketing</figcaption>
 </figure>
@@ -371,7 +371,7 @@ plot_pvalues_cdf(p_values_mannwhitney, &#39;p-values CDF in A/B test (Mann-Whitn
     plot_all_buckets(beta = beta)</code></pre>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 14 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/14-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 14 for Bucketing">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/14-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 14 for Bucketing">
   </button>
   <figcaption>Figure 14 · Bucketing</figcaption>
 </figure>
@@ -381,7 +381,7 @@ plot_all_buckets(N=50000, experiments=2000, mu=1, sigma2=4.5, success_rate=0.02,
 plot_all_buckets(N=20000, experiments=2000, mu=1, sigma2=4.5, success_rate=0.02, uplift=0.03, beta=1000, bucket_size=10)</code></pre>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 15 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/15-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 15 for Bucketing">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/15-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Figure 15 for Bucketing">
   </button>
   <figcaption>Figure 15 · Bucketing</figcaption>
 </figure>
@@ -391,14 +391,14 @@ plot_all_buckets(N=20000, experiments=2000, mu=1, sigma2=4.5, success_rate=0.02,
 <p>Here’s p-value graph for A/A test on 2000 random distributions crafted from our real data:</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 16 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/16-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 16 for The Real Data">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/16-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 16 for The Real Data">
   </button>
   <figcaption>Figure 16 · The Real Data</figcaption>
 </figure>
 <p>And here’s the CDF graph for it:</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 17 at full size">
-    <img src="assets/case-studies/ab-testing-in-search/17-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 17 for The Real Data">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/17-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Figure 17 for The Real Data">
   </button>
   <figcaption>Figure 17 · The Real Data</figcaption>
 </figure>

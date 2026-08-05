@@ -1,0 +1,57 @@
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
+    <img src="assets/case-studies/06-tai-sao-tiki-chon-react-native/01-figure.jpeg" width="1920" height="1080" loading="lazy" decoding="async" alt="Figure 1 for Why did Tiki choose React-Native?">
+  </button>
+  <figcaption>Figure 1 · Why did Tiki choose React-Native?</figcaption>
+</figure>
+<p><strong>The article belongs to the series of articles: “</strong><em>How does Tiki use React-Native?</em></p>
+<ul>
+  <li><a href="https://engineering.tiki.vn/tiki-su-dung-react-native-nhu-the-nao/" target="_blank" rel="noopener noreferrer">Introduction</a></li>
+  <li><a href="https://engineering.tiki.vn/tai-sao-tiki-chon-react-native/" target="_blank" rel="noopener noreferrer">Part 1. Why did Tiki choose React-Native?</a> <em>(You are reading this article)</em></li>
+  <li>Part 2. How does Tiki build architecture for React-Native?</li>
+  <li>Part 3. How Tiki builds architecture to combine Native App and React-Native</li>
+  <li>Part 4. What will Tiki do for the next stage?</li>
+</ul>
+<blockquote><p>In the previous section, I mentioned the problem encountered and the main goal of this series of articles. If you haven't read it yet, please take some time to read it!</p></blockquote>
+<p>To prepare well for learning why Tiki chose React-Native. I would like to briefly introduce some concepts to avoid situations where you do not understand when mentioned in the article.</p>
+<h2 id="native-app"><strong>Native App</strong></h2>
+<p>It is a native application, written in programming languages specific to each platform. The two most popular mobile platforms today are Android and iOS. Corresponding programming languages ​​such as programming on Android use Java, Kotlin; Objective-C and Swift are used on the iOS platform.</p>
+<ul>
+  <li><strong>Advantages:</strong> The strength of Native App programming is that it can achieve maximum performance of the platform. Always supported to update the latest versions and SDKs.</li>
+  <li><strong>Disadvantages:</strong> Because you have to use different programming languages for each different platform, it will cost human resources to develop the application, maintenance costs, as well as time to complete new features.</li>
+</ul>
+<h2 id="cross-platform"><strong>Cross-platform</strong></h2>
+<p>A term for cross-platform applications. While Native App costs a lot to build on all platforms, with Cross-platform, programmers only need to use a single programming language and then compile or interpret into Native App corresponding to each platform. The most popular Frameworks for writing Cross-platform applications today are: React-Native, Flutter, ...</p>
+<ul>
+  <li><strong>Advantages:</strong> Reading the above concept, you already understand some of the strengths of Cross-platform. The strength is achieving the best speed of new feature development, saving personnel, development and maintenance costs (It's like buying one and getting two).</li>
+  <li><strong>Disadvantages:</strong> Depends quite a bit on third-party libraries. Performance cannot be maximized compared to using Native App. Always have to live with constant updates of the Cross-platform Framework in use. For me, making a Cross-platform application is not difficult, but to understand the nature and in some cases where you cannot find a support library, you have to rewrite the library yourself in Native App language.</li>
+</ul>
+<h2 id="hybrid-app"><strong>Hybrid App</strong></h2>
+<p>It is a hybrid application. Essentially, embedding a Website in WebView form into a Native Container to communicate with the device's APIs. Frameworks for writing popular Hybrid Apps today: PhoneGap, Sencha Touch, ...</p>
+<ul>
+  <li><strong>Advantages:</strong> It's easy to see that the strength of using Hybrid App is being able to reuse the existing Website. The only thing left is to build APIs to support communication and upload them to the store of each platform. Save a lot on application development and maintenance costs.</li>
+  <li><strong>Disadvantages:</strong> Hybrid App development will have risks regarding performance and the ability to customize the interface for each platform.</li>
+</ul>
+<p>When reading the above concepts. Surely you have already somewhat figured out what appropriate solution you will use. In fact, Tiki is using all three solutions above to build applications. But within the scope of this article series, I only mention two main solutions: Native App and Cross-platform. So the question arises:</p>
+<blockquote><p>“Why did Tiki choose to combine Native App with Cross-platform instead of just choosing a single solution?”</p></blockquote>
+<p>Instead of answering the above question, I will go straight to Tiki's current mobile application model and explain how Tiki built this model. Below is an image describing the model and specifically I will take an example of the project my group is implementing, Tiki Livestreaming Video.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
+    <img src="assets/case-studies/06-tai-sao-tiki-chon-react-native/02-figure.png" width="2000" height="918" loading="lazy" decoding="async" alt="Multi-module model combined with Cross-platform">
+  </button>
+  <figcaption>Multi-module model combined with Cross-platform</figcaption>
+</figure>
+<h2 id="mo-hinh-da-modules-ket-hop-voi-cross-platform">Multi-module model combined with Cross-platform</h2>
+<p>The multi-module model is essentially a way to structure a project so that each module will take on a certain task or feature. In most cases, when building a module, that module can operate completely independently and then be linked to the main source; If for the Android platform, it will be written as an Android library, and for the iOS platform, it will be written as a Pod library. (In the following section I will talk in more detail about how to build this model)</p>
+<p>Looking at the diagram in the image above, when an End-user accesses the Tiki application, the modules responsible for navigating and managing sub-modules will display the corresponding modules depending on each case.</p>
+<p>After completing the construction of the multi-module model, the decision to use a Cross-platform Framework will be made on each module. For example: With the Tiki Livestreaming Video project, our team has built a number of modules using React-Native such as: Home page, personal page, game, ...</p>
+<h2 id="loi-ich">Benefits</h2>
+<p>Let's say if we just choose to use a completely Native App solution. There will come a time when it is necessary to develop a few features to test the effectiveness of that feature, or simply to develop a game for a short-term event. We will spend a lot of time and personnel costs on this.</p>
+<p>Next, let's assume we only choose to use the Cross-platform solution. The risk will increase later, in terms of application performance, as well as in the future if there is a change in the Framework being used or, more clearly, a better Framework is born. It will be very difficult for us to decide to test it.</p>
+<p>From the above two cases, it is easy to see that choosing to combine Native App with Cross-platform is safe and easy to switch between Cross-platform Frameworks. In addition, it will be easier to recruit staff for multiple solutions.</p>
+<h2 id="nhung-han-che">Limitations</h2>
+<p>The only drawback I see is that the application size may increase slightly due to the use of cross-platform support frameworks. But with the current rate of development of mobile devices, I accept that trade-off.</p>
+<h2 id="tai-sao-tiki-chon-react-native">Why did Tiki choose React-Native?</h2>
+<p>To answer this question is quite simple. Currently, there are two most notable Cross-platform Frameworks: React-Native and Flutter. The reason for choosing React-Native is that Flutter at this time is still too new for most programmers in general and for programmers at Tiki in particular. In addition, using React-Native also takes advantage of the current ReactJS human resources at Tiki.</p>
+<p>Finally, if you have chosen the right solution for yourself. Focus on developing human resource quality. Simply, if someone asks me: How is the performance between Native App and Cross-platform? I will answer: <em>"Any platform that has many good and careful programmers will have higher performance."</em></p>
+<p>In the next part, I will guide in detail how Tiki builds the architecture for a Cross-platform project, specifically React-Native with a multi-module model combining Auto Loader ideology.</p>

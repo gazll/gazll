@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/11-how-to-handle-hot-deals-at-the-peak-time.vi.html",
+  "guide": {
+    "title": "Sự bất biến khó khăn này bao gồm giá cả, số lượng khuyến mãi và hàng tồn kho thực tế cùng một lúc.",
+    "problem": "Một giao dịch chớp nhoáng không an toàn chỉ vì giá hiển thị của nó thay đổi đúng thời điểm. Hàng nghìn lượt thanh toán đồng thời có thể bán quá số lượng đặc biệt, chạy đua với hàng tồn kho thông thường và tiếp tục thấy dữ liệu giá cũ trong khi hệ thống giao dịch và danh mục hội tụ.",
+    "core_idea": "Cung cấp cho mỗi phiên bản giá một mã định danh duy nhất, sử dụng id giao dịch làm id giá đặc biệt và gửi thông tin nhận dạng đó cùng với việc đặt trước hàng tồn kho. Arcturus xác nhận cả hàng tồn trong kho và số lượng giao dịch, trong khi các sự kiện bán hết sẽ tắt giao dịch và tuyên truyền giá bình thường.",
+    "outcome": "Quy trình mới loại bỏ trách nhiệm phân chia mà trước đây yêu cầu hệ thống giao dịch phải đóng các chương trình khuyến mãi một cách phản ứng. Sao chép giá, đặt trước hàng tồn kho và thanh toán hiện chia sẻ các số nhận dạng và sự kiện rõ ràng cho vòng đời giao dịch.",
+    "takeaways": [
+      "Tính chính xác cần nhận dạng được mức giá mà khách hàng thực sự nhìn thấy; Chỉ so sánh giá trị bằng số không thể phân biệt được phiên bản hay cập nhật trùng lặp.",
+      "Việc kiểm tra số lượng đặc biệt thuộc về quyết định kiểm kê thực tế nên một lần chấp nhận không thể vi phạm bất biến kia.",
+      "Việc tuyên truyền giá cuối cùng chỉ được chấp nhận khi thanh toán gửi nhận dạng phiên bản và dịch vụ đặt chỗ từ chối các giao dịch cũ hoặc đã hết.",
+      "Một sự kiện bán hết vừa là sự chuyển đổi kinh doanh vừa là tín hiệu vô hiệu hóa bộ đệm; người tiêu dùng phải xử lý các sự trùng lặp và sắp xếp lại.",
+      "Xử lý cao điểm là luồng phối hợp giữa giá, giao dịch, danh mục, hàng tồn kho và thanh toán—không phải là tối ưu hóa thông lượng trong một dịch vụ."
+    ],
+    "review_lenses": [
+      "Phân tích cuộc đua: liệt kê thời điểm bắt đầu giao dịch, cập nhật giá, đặt chỗ cuối cùng và xen kẽ các sự kiện đã bán hết.",
+      "Tính tạm thời: bảo vệ việc đặt chỗ thanh toán lặp lại và các sự kiện cập nhật số lượng trùng lặp.",
+      "Chính sách ổn định: xác định phiên bản giá nào vẫn được chấp nhận trong quá trình truyền bá và trong bao lâu.",
+      "Giảm tải: duy trì tính chính xác của hàng tồn kho khi người tiêu dùng ở mức giá hoặc giao dịch thấp hơn so với lưu lượng truy cập cao điểm."
+    ]
+  }
+}

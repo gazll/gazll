@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/07-into-the-demand-forecast-of-tiki-operations.vi.html",
+  "guide": {
+    "title": "Chất lượng dự báo chỉ quan trọng khi nó thay đổi các quyết định bổ sung, bố trí và lực lượng lao động một cách an toàn.",
+    "problem": "Hàng triệu sản phẩm, nhiều kho hàng và chương trình khuyến mãi khiến cho các quyết định mua hàng thủ công không thể mở rộng quy mô. Quá ít hàng tồn kho sẽ gây ra tình trạng hết hàng, quá nhiều sẽ khóa tiền mặt và việc đặt đúng số lượng vào sai khu vực vẫn làm tăng thời gian giao hàng.",
+    "core_idea": "Kết hợp một số phương pháp chuỗi thời gian cổ điển với DeepAR, cho phép các mô hình cạnh tranh trên mỗi sản phẩm, duy trì nhóm tín hiệu có thể tái sử dụng và chạy thử nghiệm được gắn thẻ dựa trên đường cơ sở sản xuất. SMAPE cung cấp số liệu đánh giá chính hàng tuần.",
+    "outcome": "Bài báo báo cáo dự báo chính xác hơn tới 60% và mô tả các bước hoạt động tiếp theo: dự báo khu vực, bổ sung tự động cho các phân khúc sản phẩm đáng tin cậy và dự báo hàng ngày để lập kế hoạch lực lượng lao động kho.",
+    "takeaways": [
+      "Một mô hình khó có thể phù hợp với nhu cầu hỗn hợp, theo mùa, thưa thớt và không liên tục được tìm thấy trên một danh mục lớn.",
+      "Cuộc thi mô hình chuyển việc lựa chọn sang cấp SKU; dữ liệu đánh giá phải nằm ngoài quá trình đào tạo, nếu không người chiến thắng rõ ràng sẽ bị thiên vị.",
+      "Nhóm tín hiệu biến kỹ thuật tính năng thành khả năng của nền tảng, cho phép quảng cáo, lưu lượng truy cập và các giả thuyết khác được thử nghiệm nhiều lần.",
+      "Dự báo dưới mức và dự báo quá mức có chi phí kinh doanh khác nhau. Một thước đo lỗi đối xứng duy nhất rất hữu ích nhưng không thể thể hiện mọi hệ quả của hàng tồn kho.",
+      "Quá trình tự động hóa nên bắt đầu với các phân đoạn trong đó độ tin cậy dự báo lịch sử vượt qua một ngưỡng xác định, để lại những trường hợp không chắc chắn do con người xem xét."
+    ],
+    "review_lenses": [
+      "Kiểm tra ngược: duy trì trật tự thời gian và tái tạo thông tin thực sự có sẵn tại thời điểm dự báo.",
+      "Tổn thất kinh doanh: chuyển lỗi dự báo thành hết hàng, chi phí lưu kho, rủi ro giảm giá và khoảng cách giao hàng.",
+      "Drift: theo dõi các sản phẩm mới, những thay đổi trong chương trình khuyến mãi và hành vi khu vực có thể làm mất hiệu lực các mô hình lịch sử.",
+      "Tích hợp quyết định: ghi lại hành động mua hàng hoặc nhân sự nào đã sử dụng phiên bản dự báo nào để có thể kiểm tra kết quả."
+    ]
+  }
+}

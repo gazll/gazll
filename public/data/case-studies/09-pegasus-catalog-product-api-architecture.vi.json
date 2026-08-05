@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/09-pegasus-catalog-product-api-architecture.vi.html",
+  "guide": {
+    "title": "Pegasus là một thiết kế đường dẫn đọc được xây dựng dựa trên quyền sở hữu, tính nhất quán của bộ đệm và chi phí tải trọng.",
+    "problem": "Dữ liệu danh mục tồn tại bên trong một hệ thống lớn, nơi cơ sở dữ liệu chia sẻ các mô-đun và ranh giới quyền sở hữu không rõ ràng. Dữ liệu sản phẩm xuất hiện trên hầu hết mọi điểm tiếp xúc của khách hàng, do đó, API thay thế cần thông lượng cao, độ trễ thấp và đường dẫn di chuyển khỏi quyền truy cập cơ sở dữ liệu trực tiếp.",
+    "core_idea": "Mercury sao chép các thay đổi của sản phẩm từ bên ghi MySQL sang MongoDB, Pegasus sở hữu API đọc và bộ nhớ đệm ổi cục bộ, đồng thời các sự kiện vô hiệu hóa Kafka giúp giữ cho các sản phẩm được lưu trong bộ nhớ đệm luôn mới. Nén và địa chỉ gRPC Chi phí quản lý CPU, mạng và kết nối.",
+    "outcome": "Bài viết báo cáo 24k yêu cầu mỗi giây với TP99 khoảng 20 mili giây cho API một sản phẩm trong một thiết lập điểm chuẩn. Nó cũng cho thấy lý do tại sao cân bằng tải L4 và kết nối gRPC liên tục có thể hoạt động tốt hơn máy khách PHP mở nhiều kết nối HTTP.",
+    "takeaways": [
+      "Việc tách biệt đọc và ghi cũng là một quá trình di chuyển quyền sở hữu: khách hàng phải ngừng coi cơ sở dữ liệu danh mục như một giao diện tích hợp chung.",
+      "Việc vô hiệu hóa bộ đệm được thực hiện theo sự kiện, nhưng lỗi vẫn cần một đường dẫn đáng tin cậy thông qua MongoDB; cả hành vi nóng và lạnh đều quan trọng.",
+      "API hàng loạt yêu cầu logic tải khác với API khóa đơn hoặc lỗi bộ nhớ đệm lặp đi lặp lại có thể dẫn đến khả năng truy cập cơ sở dữ liệu không hiệu quả.",
+      "Nén giao dịch CPU cho mạng và lưu trữ. Sự lựa chọn hữu ích phụ thuộc vào hình dạng tải trọng, lớp bộ đệm và khả năng của người gọi.",
+      "Hiệu suất giao thức có thể bị chi phối bởi hành vi kết nối máy khách và bộ cân bằng tải, không chỉ mã xử lý máy chủ."
+    ],
+    "review_lenses": [
+      "Hợp đồng mới: xác định độ trễ vô hiệu và khả năng phục hồi có thể chấp nhận được khi các sự kiện Kafka bị trì hoãn hoặc bị mất.",
+      "An toàn di chuyển: quan sát và chặn những người tiêu dùng cơ sở dữ liệu trực tiếp còn lại trước khi thay đổi quyền sở hữu.",
+      "Bảo vệ bộ đệm: ngăn chặn tình trạng đóng băng và bộ nhớ bị ràng buộc trong khi vẫn duy trì tốc độ truy cập cho các sản phẩm nóng.",
+      "Chủ nghĩa hiện thực của điểm chuẩn: bao gồm kích thước tải trọng, kết hợp hàng loạt, nhóm kết nối, bộ cân bằng tải và thời gian lưu trữ bộ nhớ đệm nguội."
+    ]
+  }
+}

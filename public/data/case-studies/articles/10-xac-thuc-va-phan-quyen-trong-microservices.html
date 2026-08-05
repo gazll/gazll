@@ -1,0 +1,172 @@
+<p>Authentication (authentication, answering the question of who you are) and decentralization (authorization, answering the question of what you can do) are always indispensable components of every system, but the level of application depends on each stage. If you do everything too tightly from the beginning, it can increase complexity and slow down the company's growth. But if you do it too late, then you may risk being attacked and the risks that come from it. For an e-commerce company like Tiki, that risk is very present with systems related to payment, virtual currency (Tiki Coins), promotional codes (coupons), gift certificates (giftcards) and many other sensitive systems...</p>
+<h2 id="bat-dau-tu-monolithic">Starting from Monolithic</h2>
+<p>Tiki is originally a monolithic system, usually in such a system there will be a common module that manages authentication and authorization. After logging in, each user will be given a unique Session ID for identification. The client side can save the Session ID as a cookie and include it in every request. The system will then use the sent Session ID to determine the identity of the accessing user, so that the user does not need to re-enter login information next time.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/01-figure.png" width="1322" height="906" loading="lazy" decoding="async" alt="Figure 1 for Starting from Monolithic">
+  </button>
+  <figcaption>Figure 1 · Starting from Monolithic</figcaption>
+</figure>
+<p>When the Session ID is sent, the server will determine the identity of the user associated with that Session ID, and will check the user's permission to see whether or not to access that task. The session and cookie solution can still be used, but today we have more requirements, such as Hybrid or SPA (Single Page Application) applications that may need to access many different backend systems, so sessions and cookies taken from one server may not be usable on another server.</p>
+<h2 id="bai-toan-kho-microservices">Microservices difficult problem</h2>
+<p>In microservices architecture, the system is divided into many subsystems, responsible for different operations and functions. Each of those subsystems also needs to be authenticated and decentralized. If handled in the manner of the Monolithic architecture above, we will encounter the following problems:</p>
+<ul>
+  <li>Each service needs to perform its own authentication and authorization in its own service. Although we can use the same libraries in each service to do that, the cost of maintaining that common library with many different language platforms is too large.</li>
+  <li>Each service should focus on building its own operations. Building additional decentralization logic reduces development speed and increases the complexity of services.</li>
+  <li>Services will typically provide interfaces in the form of RESTful APIs, using the HTTP protocol. HTTP requests will go through many components of the system. The traditional way of using sessions on the server (stateful) will make it difficult to expand the system horizontally.</li>
+  <li>The service will be accessed from many different applications and users, be it a user, a hardware device, a 3rd-party, crontab or another service. Determining identity and authorization in many different contexts is extremely complicated.</li>
+</ul>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/02-figure.png" width="2000" height="1225" loading="lazy" decoding="async" alt="Figure 2 for Microservices difficult problem">
+  </button>
+  <figcaption>Figure 2 · Microservices difficult problem</figcaption>
+</figure>
+<p>Below are some solutions, techniques and approaches that Tiki has applied to this problem.</p>
+<h2 id="dinh-danh">Identifier</h2>
+<h3 id="su-dung-jwt">Use JWT</h3>
+<p>JWT (Json Web Token) is a type of token that uses an open standard to exchange information along with HTTP requests. This information is authenticated and reliably marked based on the signature. JWT has many advantages over session.</p>
+<ul>
+  <li>Stateless, information is not stored on the server.</li>
+  <li>Easy to develop and expand.</li>
+  <li>Better performance because the server reads information right in the request (if session, it needs to be read in storage or database)</li>
+</ul>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/03-figure.png" width="1888" height="1024" loading="lazy" decoding="async" alt="Figure 3 for Using JWT">
+  </button>
+  <figcaption>Figure 3 · Using JWT</figcaption>
+</figure>
+<h3 id="ma-hoa-rsa-cho-jwt">RSA encryption for JWT</h3>
+<p>The signature will be re-encrypted using HMAC or RSA.</p>
+<ul>
+  <li>HMAC: the JWT originator (token issuer) and the JWT receiver (token verifier) use the same secret code for encryption and verification.</li>
+  <li>RSA: uses a key pair, the JWT initializer uses the Private Key for encryption, the JWT receiver uses the Public Key to check.</li>
+</ul>
+<p>So with HMAC, both sides must share the secret code with each other, and the JWT recipient can completely create another valid JWT code based on that secret code. As for RSA, the receiver uses the Public Key to check but cannot create a new JWT based on that key. Therefore, encryption using RSA helps secure signatures better when needing to share JWTs with many different objects.</p>
+<h3 id="su-dung-opaque-token-khi-muon-de-kiem-soat-phien-lam-viec-tot-hon">Use Opaque Token when desired for better session control</h3>
+<p>Opaque Token (also known as stateful token) is a form of token that does not contain information, usually a random string and requires an intermediary service to check and retrieve information. For example:</p>
+<pre><code>{</code></pre>
+<pre><code>&quot;access_token&quot;: &quot;c2hr8Jgp5jBn-TY7E14HRuO37hEK1o_IOfDzbnZEO-o.zwh2f8SPiLKbcMbrD_DSgOTd3FIfQ8ch2bYSFi8NwbY&quot;,</code></pre>
+<pre><code>&quot;expires_in&quot;: 3599,</code></pre>
+<pre><code>&quot;token_type&quot;: &quot;bearer&quot;</code></pre>
+<pre><code>}</code></pre>
+<p>Transparent Token (also known as stateless token) is usually in the form of JWT, this token itself contains information and does not need an intermediary service to check. Let's compare these two types of tokens.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/04-figure.png" width="1574" height="312" loading="lazy" decoding="async" alt="Figure 4 for Use Opaque Token when desired for better session control">
+  </button>
+  <figcaption>Figure 4 · Use Opaque Token when desired for better session control</figcaption>
+</figure>
+<p>So we can see that Transparent Token brings better speed, is simple and easy to use for both sides, and does not depend on a central server for checking. Opaque Token has better control over object sessions, for example when you want to log out of all currently logged in devices.</p>
+<h3 id="oauth-2">OAuth 2</h3>
+<p>Tokens will be initialized through OAuth 2, which is the most popular authentication method today, through which a service, or a third-party application can represent (delegation) for users to access a user's resource located on a certain service.</p>
+<p>OAuth 2 is an open standard, with full documentation and libraries in all different languages, making integration and development based on it easy and fast.</p>
+<h2 id="kien-truc-cho-xac-thuc-va-phan-quyen">Architecture for authentication and authorization</h2>
+<p>After having the identifier and protocol used to communicate, the next question is to answer the question of whether the object with that identifier has the right to perform an action, access a certain resource or not. At Tiki, besides newly built services, there still exist old systems (legacy) running in parallel, so currently Tiki has 2 decentralized organization methods as below.</p>
+<h3 id="xac-thuc-phan-quyen-tai-lop-ria">Authentication and decentralization at the edge layer</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/05-figure.png" width="1022" height="1162" loading="lazy" decoding="async" alt="Figure 5 for Authentication and authorization at the edge layer">
+  </button>
+  <figcaption>Figure 5 · Authentication and authorization at the edge layer</figcaption>
+</figure>
+<p>According to the model, all requests will be authenticated when going through API Gateway or BFF (Backend For Frontend). BFF is the service layer at the edge (Edge Service) designed specifically for each application (eg IOS, Android, Management UI). We will place authentication and authorization at this edge layer</p>
+<ul>
+  <li>API Gateway will require all requests to include a token for identification</li>
+  <li>If this token is JWT (for OpenID Connect), the Gateway can check the validity of the token through signature, claim or issuer.</li>
+  <li>Since this token is Opaque Token, the Gateway can analyze (introspect) the token, exchange it for JWT and pass it on to the services.</li>
+  <li>API Gateway or BFF checks policies to see if they are valid through the central Authorization Server.</li>
+  <li>Microservices do not implement any authentication or authorization layer and can be freely accessed within the internal network.</li>
+</ul>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/06-figure.png" width="1780" height="858" loading="lazy" decoding="async" alt="Figure 6 for Authentication and authorization at the edge layer">
+  </button>
+  <figcaption>Figure 6 · Authentication and authorization at the edge layer</figcaption>
+</figure>
+<p>This model has similarities with the Monolithic architecture when placing decentralized authentication at certain services, construction and maintenance will cost less, but will reveal a huge security gap in the inner layer because the services can freely access each other. We can set some rules from a network perspective for these internal services, but these rules will be relatively simple and cannot meet the mutual data access operations between independent teams/services (by extension, internal companies).</p>
+<h3 id="xac-thuc-phan-quyen-tai-cac-service">Authentication and authorization at services</h3>
+<p>In this model, each service (except for some exceptions) is designed and built with extensible APIs (API Interfaces). <strong>can serve the outside world</strong>. A service today is built for internal operations within the company, but tomorrow may be ready to open to external partners and programmers. This will help services/teams be completely proactive about existing resources, which objects are allocated to those resources, whether they are accessed partially or fully...</p>
+<p>To do this, a huge role will lie in the IAM (Identity Access Management) service. IAM holds the identities of all objects (users, services, commands...) along with detailed permission rules for each type of resource.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 7 at full size">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/07-figure.png" width="1746" height="830" loading="lazy" decoding="async" alt="Figure 7 for Authentication and authorization at services">
+  </button>
+  <figcaption>Figure 7 · Authentication and authorization at services</figcaption>
+</figure>
+<p>The fact that each service must perform its own authentication and authorization will increase costs when building services. Outside of the main operations, an additional middleware layer is needed to communicate with IAM. However, services will have complete autonomy, be proactive in providing resources to objects, and accelerate development because in many cases clients can access services directly without needing to develop an additional BFF layer in the middle.</p>
+<h2 id="access-control">Access Control</h2>
+<p>Building an effective rule system is never easy, as increased professional requirements lead to more complex decentralization requirements. Let's take a specific example to clarify, each normal application will assign rights to a specific member (for example, John has the right to create products). Expanding into a microservices system, objects here can be users, services, crontabs...</p>
+<p>There are several approaches to decentralization as above, try going through different approaches to get different perspectives.</p>
+<h3 id="access-control-list-acl">Access Control List (ACL)</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 8 at full size">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/08-figure.png" width="1706" height="448" loading="lazy" decoding="async" alt="Figure 8 for Access Control List (ACL)">
+  </button>
+  <figcaption>Figure 8 · Access Control List (ACL)</figcaption>
+</figure>
+<p>In the example above you can see a matrix of objects and permissions, it is roughly equivalent to file management on Linux (chmod) and is suitable for applications with few objects. When the system grows, this model will be unmanageable because the matrix created is too large and complex. Therefore, this model is no longer popular today.</p>
+<h3 id="role-based-access-control-rbac">Role-Based Access Control (RBAC)</h3>
+<p>RBAC links objects to roles, and from roles to permissions. For example role <strong>Administrator</strong>can inherit all rights that role <strong>Manager </strong>yes, this helps reduce the complexity of the permissions matrix, instead of assigning the entire permissions to <strong>Administrator </strong>then just give <strong>Administrator </strong>inherit the rights of <strong>Manager</strong>.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Open figure 9 at full size">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/09-figure.png" width="899" height="432" loading="lazy" decoding="async" alt="Figure 9 for Role-Based Access Control (RBAC)">
+  </button>
+  <figcaption>Figure 9 · Role-Based Access Control (RBAC)</figcaption>
+</figure>
+<p>RBAC is very popular and you can see it everywhere. Compared to ACL, RBAC helps reduce complexity when the number of objects + permissions increases. However, RBAC does not satisfy some cases, for example when granting permissions for a product to be edited only by the creator, users in a specific department, or permissions to differentiate between users from many different systems (tenants).</p>
+<h3 id="policy-based-access-control-pbac">Policy-Based Access Control (PBAC)</h3>
+<p>PBAC is built on Attribute Based Access Control (ABAC), which defines permissions to express whether a request is allowed or denied. ABAC uses attributes to describe the object that needs to be tested, each attribute is a key-value pair, for example <strong>Department </strong>= <strong>Marketing</strong>. Thanks to that, ABAC can help decentralize authority more smoothly, suitable for many different contexts and business rules.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Open figure 10 at full size">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/10-figure.png" width="1616" height="1290" loading="lazy" decoding="async" alt="Figure 10 for Policy-Based Access Control (PBAC)">
+  </button>
+  <figcaption>Figure 10 · Policy-Based Access Control (PBAC)</figcaption>
+</figure>
+<p>PABC is defined through policies written in a common language XACML (eXtensible Access Control Markup Language). A policy defines 4 objects subject, effect, action and resource. For example <strong>john </strong>(subject) okay <strong>allowed</strong>(effect) so that <strong>delete</strong>(action) product with ID <strong>john-leman</strong>(resource). At first glance, it is similar to how an ACL is defined</p>
+<pre><code>{</code></pre>
+<pre><code>&quot;subjects&quot;: [&quot;user:john&quot;],</code></pre>
+<pre><code>&quot;effect&quot;: &quot;allow&quot;,</code></pre>
+<pre><code>&quot;actions&quot;: [&quot;catalog:delete&quot;]</code></pre>
+<pre><code>&quot;resources&quot;: [&quot;product:john-leman&quot;],</code></pre>
+<pre><code>}</code></pre>
+<p>We can add subjects, actions as well as resources to the policy if we want.</p>
+<pre><code>{</code></pre>
+<pre><code>&quot;subjects&quot;: [&quot;user:john&quot;, &quot;user:katy&quot;, &quot;user:perry&quot;],</code></pre>
+<pre><code>&quot;effect&quot;: &quot;allow&quot;,</code></pre>
+<pre><code>&quot;actions&quot;: [&quot;catalog:delete&quot;, &quot;catalog:update&quot;, &quot;catalog:publish&quot;]</code></pre>
+<pre><code>&quot;resources&quot;: [&quot;product:john-leman&quot;, &quot;product:john-doe&quot;]</code></pre>
+<pre><code>}</code></pre>
+<p>You may wonder how PBAC is different from ACL, and here is the difference</p>
+<p><strong>Law of priority</strong></p>
+<ul>
+  <li>By default, if there is no appropriate policy, the request will be rejected</li>
+  <li>If there is no policy <strong>deny</strong>, has at least one policy <strong>allow </strong>then the request is allowed</li>
+  <li>If there is a policy, <strong>deny</strong>, then the request is always denied</li>
+</ul>
+<p><strong>Regular Expressions</strong></p>
+<p>Policies allow declaring the use of regular expressions, as in this example allowing all users to view product information.</p>
+<pre><code>{</code></pre>
+<pre><code>&quot;subjects&quot;: [&quot;user:&lt;.*&gt;&quot;],</code></pre>
+<pre><code>&quot;effect&quot;: &quot;allow&quot;,</code></pre>
+<pre><code>&quot;actions&quot;: [&quot;catalog:read],</code></pre>
+<pre><code>&quot;resources&quot;: [&quot;product:&lt;.*&gt;&quot;]</code></pre>
+<pre><code>}</code></pre>
+<p><strong>Conditions</strong></p>
+<p>Policies can add conditions to narrow the scope of rights, for example only applying to a certain IP range, or only allowing the product creator to edit that product.</p>
+<pre><code>{</code></pre>
+<pre><code>&quot;subjects&quot;: [&quot;user:ken&quot;],</code></pre>
+<pre><code>&quot;actions&quot; : [&quot;catalog:delete&quot;, &quot;catalog:create&quot;, &quot;catalog:update&quot;],</code></pre>
+<pre><code>&quot;effect&quot;: &quot;allow&quot;,</code></pre>
+<pre><code>&quot;resources&quot;: [&quot;products:&lt;.*&gt;&quot;],</code></pre>
+<pre><code>&quot;conditions&quot;: {</code></pre>
+<pre><code>&quot;IpAddress&quot;: {</code></pre>
+<pre><code>&quot;addresses&quot;: [</code></pre>
+<pre><code>&quot;192.168.0.0/16&quot;</code></pre>
+<pre><code>]</code></pre>
+<pre><code>}</code></pre>
+<pre><code>}</code></pre>
+<pre><code>}</code></pre>
+<h2 id="tong-ket">Summary</h2>
+<p>Continuous expansion of business and systems requires services to authenticate themselves, thereby regardless of whether the service is internal or external, helping teams easily expand and integrate with each other. This requires a common authentication model to operate stably, optimally and meet high performance. There are many challenges ahead, if you want to join us, learn more here <a href="https://tuyendung.tiki.vn/" target="_blank" rel="noopener noreferrer">https://tuyendung.tiki.vn</a> okay.</p>

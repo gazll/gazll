@@ -1,0 +1,426 @@
+<p>Trong Tiki Search chúng tôi liên tục bổ sung thêm những tính năng mới vào công thức xếp hạng để mang đến cho khách hàng chất lượng tìm kiếm tốt hơn. Để đảm bảo rằng tính năng mới thực sự mang lại kết quả tốt hơn, chúng tôi sử dụng thử nghiệm A/B, đây là một quá trình trong một thời gian nào đó chúng tôi chạy song song cả công thức cũ và công thức mới và xếp hạng kết quả cho một nhóm nhỏ người dùng khác. Sau đó, chúng tôi tính toán riêng các số liệu chính trên từng tập hợp con đó và đưa ra quyết định xem công thức mới có thực sự hoạt động tốt hơn hay không.</p>
+<p>Trong bài viết này, chúng tôi sẽ giải thích chi tiết về quá trình đưa ra quyết định này - làm thế nào để hiểu rằng thứ hạng mới “thực sự” tốt hơn thứ hạng cũ và cách ước tính xác suất mắc sai lầm trong quyết định này.</p>
+<p>Chúng tôi sẽ không đề cập đến kiến trúc của toàn bộ hệ thống thử nghiệm A/B của mình ở đây - cách chúng tôi thiết lập thử nghiệm, cách phân chia người dùng giữa họ, cách chúng tôi theo dõi các sự kiện trong hệ thống của mình, v.v. Có rất nhiều thông tin có sẵn về các chủ đề này. Chúng tôi sẽ chỉ tập trung vào một điều - cách diễn giải kết quả kiểm tra và đưa ra quyết định kinh doanh dựa trên chúng.</p>
+<p>Với tất cả những gì đã nói, hãy chuyển sang chủ đề.</p>
+<h2 id="naive-approach">Cách tiếp cận ngây thơ</h2>
+<p>Hầu hết số liệu chúng tôi sử dụng để ước tính chất lượng tìm kiếm trong Tiki là số liệu xếp hạng có thể được xác định bằng cách chia giá trị này cho giá trị khác. Ví dụ phổ biến nhất về số liệu như vậy là Tỷ lệ nhấp chuột (CTR), được định nghĩa là số lần nhấp chuột chia cho số lần hiển thị được thực hiện trong một ngữ cảnh nhất định. Các số liệu tỷ lệ khác có thể là “tỷ lệ mua hàng”, “tỷ lệ truy vấn không được nhấp chuột”, v.v. Trong phần còn lại của bài viết, chúng tôi sẽ tập trung vào CTR, nhưng mọi thứ bên dưới cũng có thể được áp dụng cho bất kỳ số liệu tỷ lệ nào khác.</p>
+<p>Với mục đích của bài viết này, chúng tôi sẽ định nghĩa sự kiện “xem” là lần hiển thị về một sản phẩm được tạo trong kết quả tìm kiếm. Sự kiện “nhấp chuột” của chúng tôi sẽ được định nghĩa là một lần nhấp chuột vào một trong những kết quả ấn tượng trước đó. Và CTR (đối với một khách hàng nhất định) sẽ được xác định bằng tổng số sự kiện “nhấp chuột” chia cho tổng số sự kiện “xem” của họ.</p>
+<p>Một cách tiếp cận đơn giản để diễn giải kết quả thử nghiệm A/B là chỉ cần so sánh trực tiếp CTR trung bình của công thức xếp hạng cũ và mới và coi CTR lớn hơn là “người chiến thắng”. Tuy nhiên, vấn đề ở đây là CTR thu được rất có thể sẽ khác ngay cả khi chúng tôi không thay đổi công thức xếp hạng nào cả. Những khách hàng khác nhau có hành vi nhấp chuột khác nhau và với quy trình “ngẫu nhiên” như vậy, chúng tôi sẽ không bao giờ có cùng CTR trung bình cho cùng một công thức xếp hạng.</p>
+<p>Trong lịch sử, chúng tôi đã thấy sự khác biệt về CTR trung bình lên tới 2–3% ngay cả khi công thức xếp hạng đằng sau cả hai biến thể thử nghiệm đều giống nhau. Sự khác biệt được cho là nhỏ này thực sự có thể kiếm thêm rất nhiều tiền cho công ty, nếu nó “thực sự” ở đó, vì vậy chúng tôi muốn quá trình thử nghiệm của mình nhạy cảm với những thay đổi thực sự thậm chí còn nhỏ hơn thế và loại bỏ tất cả các trường hợp cải tiến không “thực sự” ở đó. Điều này có nghĩa là không thể sử dụng phương pháp so sánh CTR trực tiếp.</p>
+<h2 id="statistical-tests">Kiểm tra thống kê</h2>
+<p>Có một số cách đã biết để giải quyết vấn đề so sánh này, chúng được gọi là “kiểm tra thống kê”.</p>
+<p>Hãy xác định một giả thuyết rằng phân phối CTR của mô hình xếp hạng cũ giống với phân phối CTR của mô hình xếp hạng mới và gọi đó là giả thuyết khống (H0). Chúng ta cũng hãy xác định một giả thuyết thay thế (H1) rằng chúng khác nhau. Kiểm tra thống kê có thể thực hiện phép tính trên hai phân phối và kết quả là - cung cấp giá trị p (giá trị xác suất), ước tính khả năng bạn sẽ thấy sự khác biệt được mô tả bởi thống kê kiểm tra này nếu H0 đúng (có nghĩa là phân phối thực tế giống nhau). Về mặt lý thuyết có thể khó hiểu, nhưng chúng tôi sẽ trình bày thêm về điều này sau bằng các ví dụ.</p>
+<p>Các thử nghiệm thống kê được sử dụng phổ biến nhất trong ngành là:</p>
+<ul>
+  <li><a href="https://en.wikipedia.org/wiki/Student%27s_t-test" target="_blank" rel="noopener noreferrer">Kiểm tra T</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test" target="_blank" rel="noopener noreferrer">Mann-Whitney U-Thử nghiệm</a></li>
+  <li>sửa đổi của hai điều trên</li>
+</ul>
+<p>T-Test là một “kiểm tra tham số”, nó yêu cầu dữ liệu phải được phân phối chuẩn để được áp dụng (phân phối chuẩn được xác định bởi 2 tham số - <code>mu</code> và <code>sigma</code>, do đó có tên là "tham số"), nhưng cũng có thể hoạt động tương đối tốt với các bản phân phối khác trông giống như bình thường.</p>
+<p>Mann-Whitney U-Test là một “thử nghiệm phi tham số” và có thể được áp dụng cho một tập hợp phân phối rộng hơn nhiều.</p>
+<p>Trong phần còn lại của bài viết, chúng tôi sẽ cố gắng trả lời câu hỏi về cách chọn bài kiểm tra thống kê phù hợp cho vấn đề cụ thể của bạn và cách diễn giải kết quả của nó một cách chính xác.</p>
+<h2 id="ctr-distribution">Phân phối TLB</h2>
+<p>Đây là cách phân phối CTR điển hình trong Tiki Search:</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 1 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/01-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Hình 1 về phân bổ CTR">
+  </button>
+  <figcaption>Hình 1 · Phân bổ CTR</figcaption>
+</figure>
+<p>Đây là biểu đồ mật độ có các giá trị CTR cụ thể trên trục x và số lượng người dùng có CTR cụ thể đó là mức trung bình theo trục y. Các mức cao nhất khoảng 0,25, 0,20, v.v. là những người dùng chỉ thực hiện một vài lần hiển thị trước khi nhấp vào nội dung họ muốn tìm và không bao giờ quay lại trong thời gian thử nghiệm - số lượng “lượt xem” thấp là lý do khiến CTR của họ có vẻ cao như vậy.</p>
+<p>Lưu ý rằng chúng tôi đã chia CTR theo người dùng trong bản phân phối của mình, vì hầu hết các thử nghiệm thống kê đều hoạt động dựa trên giả định rằng các quan sát phải độc lập với nhau (và chúng tôi cho rằng những người dùng Tiki khác nhau hành động độc lập với nhau). Chúng tôi có thể đã sử dụng các phiên tìm kiếm thay vì người dùng, nhưng sau đó, nếu cùng một người dùng thực hiện tìm kiếm hai lần thì quan sát thứ hai có thể phụ thuộc vào phiên tìm kiếm đầu tiên (ví dụ: bạn tìm kiếm “rau” vì bạn không tìm thấy bất cứ điều gì cho “dưa chuột”) và do đó có thể khó sử dụng các kiểm tra thống kê hơn.</p>
+<p>Hãy bắt đầu với một ý tưởng đơn giản - hãy tìm cách lập mô hình phân phối CTR ở trên và tạo ra N phân phối như thế. Chúng tôi sẽ gọi nó là nhóm A1 của chúng tôi. Sau đó, hãy thực hiện một phép phân phối N khác bằng cách sử dụng các tham số tương tự và gọi nó là nhóm A2. Và cuối cùng, hãy thực hiện một phép phân phối N khác, nhưng thay đổi các tham số của chúng tôi với hệ số nâng không đổi, sao cho giá trị trung bình của các phân phối trong nhóm thứ 3 này sẽ cao hơn một chút so với A1 và A2. Đây sẽ là nhóm B của chúng tôi.</p>
+<p>Chúng tôi sẽ sử dụng nhóm A1 và A2 để kiểm tra xem Tỷ lệ dương tính giả (FPR) trong bài kiểm tra thống kê của chúng tôi có thấp hơn ngưỡng bắt buộc hay không. Và chúng tôi sẽ sử dụng A1 và B để kiểm tra xem độ nhạy của thử nghiệm của chúng tôi có đủ cao với xác suất lỗi được chấp nhận hay không.</p>
+<p>FPR được định nghĩa là xác suất làm giảm H0 trong khi nó thực sự đúng (điều này là xấu). Và độ nhạy được định nghĩa là xác suất để giảm H0 trong khi nó thực sự sai (điều này là tốt).</p>
+<h2 id="modelling-the-ctr-distribution">Lập mô hình phân phối CTR</h2>
+<p>Thật khó để lập mô hình phân bổ CTR một cách trực tiếp vì những mức cao nhất đó do người dùng có số lượt “xem” thấp gây ra. Thay vì cố gắng làm điều đó, hãy mô hình hóa nó một cách gián tiếp. Hãy bắt đầu từ “lượt xem”. Đây là cách phân phối lượt xem điển hình trong Tiki Search:</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 2 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/02-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Hình 2 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 2 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Nó trông “đẹp” hơn nhiều so với CTR, vì vậy chúng ta có thể lập mô hình nó bằng cách sử dụng phân phối log-chuẩn. Đây là mã python để làm điều đó:</p>
+<pre><code>import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from scipy import stats</code></pre>
+<pre><code>mu = 5
+sigma2 = 1.3
+N = 1000000
+views = np.absolute(np.exp(stats.norm(mu, sigma2).rvs(N)).astype(np.int64) + 1)</code></pre>
+<pre><code>p00 = np.percentile(views, 0)
+p99 = np.percentile(views, 99)
+ax = sns.histplot(views, bins=np.linspace(p00, p99, 50))
+ax.set_title(&#39;Views, P99 = {}&#39;.format(p99))
+ax.set(xlabel = &#39;Views&#39;)
+plt.tight_layout()
+plt.show()</code></pre>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 3 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/03-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Hình 3 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 3 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Tuyệt vời! Nó trông rất giống với bản phân phối thực sự của chúng tôi! :)</p>
+<p>Bây giờ chúng ta cũng cần phải tạo ra sự phân bổ số lần nhấp chuột bằng cách nào đó. Giả định đơn giản nhất là mỗi người dùng đều có xác suất “thực tế cơ bản” như nhau để nhấp vào sản phẩm trong kết quả tìm kiếm vì những kết quả đó hoàn toàn giống nhau. Sau đó, chúng tôi có thể sử dụng xác suất “thực tế cơ bản” đó để tạo các sự kiện nhấp chuột mô phỏng của mình. Tuy nhiên, giả định này khác xa với thực tế. Những người dùng khác nhau có hành vi nhấp chuột khác nhau — một số muốn kiểm tra nhiều kết quả hơn trước khi nhấp vào một kết quả, những người khác sẽ chỉ thực hiện việc đó nếu kết quả đầu tiên có vẻ phù hợp. Tất nhiên, điều này phụ thuộc vào ngữ cảnh truy vấn, nhưng nó CŨNG phụ thuộc vào ngữ cảnh người dùng.</p>
+<p>Chúng tôi có thể cố gắng ước tính mức phân bổ CTR “thực tế” bằng cách sử dụng CTR lịch sử thực tế nhưng chỉ tính đến những người dùng đã tạo đủ “lượt xem” trước đó để CTR thực tế của họ có nhiều khả năng gần với CTR “thực tế” hơn trong tìm kiếm. Đây là cách phân phối như vậy trong Tiki Search:</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 4 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/04-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Hình 4 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 4 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Cách tốt nhất để mô phỏng nó là sử dụng bản phân phối beta. Nó được xác định trong khoảng từ 0 đến 1 và kỳ vọng của nó chỉ có thể được biểu thị bằng hai tham số của nó - <code>alpha</code> và <code>beta</code>. Chúng tôi sẽ sử dụng thực tế này sau trong bài viết. Nếu bạn muốn hiểu trực quan hơn về lý do tại sao phân phối beta là một lựa chọn tốt ở đây, hãy đọc <a href="https://towardsdatascience.com/beta-distribution-intuition-examples-and-derivation-cf00f4db57af" target="_blank" rel="noopener noreferrer">bài đăng blog này</a>. Đây là cách xác định kỳ vọng:</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 5 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/05-figure.png" width="170" height="62" loading="lazy" decoding="async" alt="Hình 5 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 5 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Hãy viết mã để làm điều đó:</p>
+<pre><code># expectation of our ground truth CTR, we will use it later to simulate B group
+success_rate = 0.02
+beta = 100
+alpha = success_rate * beta / (1 - success_rate)
+N = 1000000
+success_rate = stats.beta(alpha, beta).rvs(N)</code></pre>
+<pre><code>p00 = np.percentile(success_rate, 0)
+p99 = np.percentile(success_rate, 99)
+ax = sns.histplot(success_rate, bins=np.linspace(p00, p99, 50))
+ax.set_title(&#39;CTR, P99 = {}&#39;.format(p99))
+ax.set(xlabel = &#39;CTR&#39;)
+plt.tight_layout()
+plt.show()</code></pre>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 6 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/06-figure.png" width="640" height="480" loading="lazy" decoding="async" alt="Hình 6 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 6 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Lưu ý rằng chúng tôi đã chọn các tham số cho cả hai mô phỏng ở trên để chúng trông gần với biểu đồ phân phối thực của chúng tôi, nhưng chúng tôi sẽ thay đổi chúng ở phần sau của bài viết để cho thấy thử nghiệm thống kê nào hoạt động tốt hơn trong những điều kiện nào.</p>
+<p>Bây giờ chúng ta đã có cả lượt xem và ctr trung thực, cuối cùng hãy tạo phân bổ số nhấp chuột. Chúng tôi có thể mô phỏng các nhấp chuột như <code>views</code> số thí nghiệm với <code>success_rate</code> xác suất thành công khi sử dụng phân phối nhị thức được xác định như sau:</p>
+<pre><code>clicks = scipy.stats.binom(n=views, p=success_rate).rvs()</code></pre>
+<p>Cuối cùng chúng ta hãy viết hàm để tạo dữ liệu thử nghiệm A/A và A/B. Đối với nhóm A1 và A2, chúng tôi sẽ chỉ sử dụng cùng một cài đặt cho cả hai <code>views</code> và <code>success_rate</code> phân phối. Đối với nhóm B, chúng ta sẽ thay đổi các tham số sao cho kỳ vọng của <code>success_rate</code> có một số nhất định <code>uplift</code>, điều này thể hiện rằng người dùng trong phân bổ đó có xu hướng nhấp vào nhiều hơn so với nhóm A1 hoặc A2. Đây là sự thay đổi mà chúng tôi muốn các bài kiểm tra thống kê của mình nắm bắt được.</p>
+<pre><code>import os
+import math
+import numpy as np
+import seaborn as sns
+from scipy import stats
+from matplotlib import pyplot as plt
+from matplotlib.axes import Axes</code></pre>
+<pre><code># generate A1, A2 and B groups with given settings
+def generate(N=20000, experiments=2000, mu=5, sigma2=1.3, \
+        success_rate=0.02, uplift=0.03, beta=100):
+    # generate {experiments} number of views distributions each containing {N} users
+    views_a_1 = np.absolute(np.exp(stats.norm(mu, sigma2).rvs(experiments * N)) \
+        .astype(np.int64).reshape(experiments, N) + 1)
+    views_a_2 = np.absolute(np.exp(stats.norm(mu, sigma2).rvs(experiments * N)) \
+        .astype(np.int64).reshape(experiments, N) + 1)
+    views_b = np.absolute(np.exp(stats.norm(mu, sigma2).rvs(experiments * N)) \
+        .astype(np.int64).reshape(experiments, N) + 1)</code></pre>
+<pre><code>    # ground truth CTR for groups A1 and A2
+    alpha_a = success_rate * beta / (1 - success_rate)
+    success_rate_a_1 = stats.beta(alpha_a, beta).rvs(experiments * N) \
+        .reshape(experiments, N)
+    success_rate_a_2 = stats.beta(alpha_a, beta).rvs(experiments * N) \
+        .reshape(experiments, N)</code></pre>
+<pre><code>    # ground truth CTR for group B (with uplift)
+    alpha_b = success_rate * (1 + uplift) * beta / (1 - success_rate * (1 + uplift))
+    success_rate_b = stats.beta(alpha_b, beta).rvs(experiments * N) \
+        .reshape(experiments, N)</code></pre>
+<pre><code>    # clicks distribution
+    clicks_a_1 = stats.binom(n=views_a_1, p=success_rate_a_1).rvs()
+    clicks_a_2 = stats.binom(n=views_a_2, p=success_rate_a_2).rvs()
+    clicks_b = stats.binom(n=views_b, p=success_rate_b).rvs()</code></pre>
+<pre><code>    return views_a_1, views_a_2, views_b, \
+        success_rate_a_1, success_rate_a_2, success_rate_b, \
+        clicks_a_1, clicks_a_2, clicks_b</code></pre>
+<p>Bây giờ đối với các thử nghiệm thực tế, chúng tôi sẽ chỉ sử dụng cách triển khai chúng có sẵn trong <code>scipy.stats</code> gói.</p>
+<pre><code># T-Test implementation
+def t_test(a, b):
+    result = list(map(lambda x: stats.ttest_ind(x[0], x[1]).pvalue, zip(a, b)))
+    return np.array(result)</code></pre>
+<pre><code># Mann-Whitney U-Test implementation
+def mannwhitney(a, b):
+    result = list(map(lambda x: stats.mannwhitneyu(x[0], x[1], \
+        alternative=&#39;two-sided&#39;).pvalue, zip(a, b)))
+    return np.array(result)</code></pre>
+<p>Và chúng ta cũng hãy xác định một hàm mà sau này chúng ta sẽ sử dụng để vẽ đồ thị.</p>
+<pre><code>colors = sns.color_palette(&quot;deep&quot;)</code></pre>
+<pre><code>def plot_cdf(data: np.ndarray, label: str, ax: Axes, color: str = colors[0], linewidth=3):
+    sorted_data = np.sort(data)
+    position = stats.rankdata(sorted_data, method=&#39;ordinal&#39;)
+    cdf = position / data.shape[0]
+    sorted_data = np.hstack((sorted_data, 1))
+    cdf = np.hstack((cdf, 1))
+    return ax.plot(sorted_data, cdf, color=color, linestyle=&#39;solid&#39;, \
+        label=label, linewidth=linewidth)</code></pre>
+<p>Trước tiên, hãy so sánh bài kiểm tra A1/A2 và xem giá trị p của chúng tôi trông như thế nào trong cả T-Test và Mann-Whitney U-Test:</p>
+<pre><code>views_a_1, views_a_2, views_b, \
+    success_rate_a_1, success_rate_a_2, success_rate_b, \
+    clicks_a_1, clicks_a_2, clicks_b = generate()</code></pre>
+<pre><code>ctrs_a_1 = clicks_a_1.astype(np.float) / views_a_1
+ctrs_a_2 = clicks_a_2.astype(np.float) / views_a_2
+ctrs_b = clicks_b.astype(np.float) / views_b</code></pre>
+<pre><code>p_values_t_test = t_test(ctrs_a_1, ctrs_a_2)
+p_values_mannwhitney = mannwhitney(ctrs_a_1, ctrs_a_2)</code></pre>
+<pre><code>def plot_pvalues(p_values, title):
+    fig, axes = plt.subplots(ncols=1, nrows=1)
+    p_values_distr = sns.histplot(p_values, bins=np.linspace(0, 1, 20), \
+        kde=False, ax=axes, stat=&#39;probability&#39;)
+    axes.set_xlim((0, 1))
+    axes.set_title(title)
+    axes.set(xlabel = &#39;p-value&#39;)
+    plt.tight_layout()
+    plt.show()</code></pre>
+<pre><code>plot_pvalues(p_values_t_test, &#39;p-values in A/A test (T-Test)&#39;)
+plot_pvalues(p_values_mannwhitney, &#39;p-values in A/A test (Mann-Whitney)&#39;)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 7 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/07-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Hình 7 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 7 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Và đây là cách biểu đồ CDF (hàm phân phối tích lũy) của phân phối giá trị p:</p>
+<pre><code>def plot_pvalues_cdf(p_values, title):
+    fig, ax = plt.subplots()
+    gr = ax.grid(True)
+    xlim = ax.set_xlim(-0.05,1.02)
+    ylim = ax.set_ylim(-0.02,1.02)
+    ax.axvline(0.05, color=&#39;k&#39;, alpha=0.5)
+    ax.set_xlabel(r&#39;$\alpha$&#39;)
+    ax.set_ylabel(&#39;Sensitivity&#39;)
+    ax.set_title(title)
+    cdf = plot_cdf(p_values, &#39;&#39;, ax)
+    plt.show()</code></pre>
+<pre><code>plot_pvalues_cdf(p_values_t_test, &#39;p-values CDF in A/A test (T-Test)&#39;)
+plot_pvalues_cdf(p_values_mannwhitney, &#39;p-values CDF in A/A test (Mann-Whitney)&#39;)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 8 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/08-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Hình 8 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 8 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Chúng ta có thể thấy rằng trong cả hai thử nghiệm, giá trị p có khả năng nằm trong khoảng từ 0 đến 1 như nhau, điều đó có nghĩa là nếu ngưỡng FPR chấp nhận được của chúng ta là 5% thì thử nghiệm này sẽ chỉ giảm H0 do nhầm lẫn trong khoảng 5% trong tất cả các trường hợp. Các trường hợp còn lại sẽ hiển thị giá trị p &gt; 5% và do đó chúng tôi sẽ chấp nhận H0, vì giá trị p lớn hơn ngưỡng của chúng tôi.</p>
+<p>Bây giờ chúng ta hãy xem giá trị p trong bài kiểm tra A1/B:</p>
+<pre><code>p_values_t_test = t_test(ctrs_a_1, ctrs_b)
+p_values_mannwhitney = mannwhitney(ctrs_a_1, ctrs_b)</code></pre>
+<pre><code>plot_pvalues(p_values_t_test, &#39;p-values in A/B test (T-Test)&#39;)
+plot_pvalues(p_values_mannwhitney, &#39;p-values in A/B test (Mann-Whitney)&#39;)</code></pre>
+<pre><code>plot_pvalues_cdf(p_values_t_test, &#39;p-values CDF in A/B test (T-Test)&#39;)
+plot_pvalues_cdf(p_values_mannwhitney, &#39;p-values CDF in A/B test (Mann-Whitney)&#39;)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 9 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/09-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Hình 9 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 9 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Và cả đồ thị CDF:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 10 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/10-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Hình 10 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 10 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Chúng ta có thể thấy rằng cả hai bài kiểm tra đều có độ nhạy tương đối tốt dưới ngưỡng FPR chấp nhận được, nhưng Mann-Whitney U-Test cho thấy độ nhạy tốt hơn T-Test với các cài đặt ở trên.</p>
+<p>Bây giờ chúng ta hãy thử điều chỉnh <code>views</code> và <code>success_rate</code> phân phối để mô phỏng hành vi khác nhau của người dùng và xem nó ảnh hưởng như thế nào đến độ nhạy và FPR của cả hai thử nghiệm. Chúng tôi sẽ sử dụng <code>sigma2</code> tham số để điều chỉnh <code>views</code> và <code>beta</code> chỉnh sửa <code>success_rate</code>. Với mục đích trình bày, chúng tôi sẽ hiển thị tất cả thông tin quan trọng trong một màn hình tóm tắt và sau đó hợp nhất tất cả chúng thành một ảnh GIF động tại đây.</p>
+<pre><code>def plot_summary(data, ground_truth_ctr, views, sigma2, beta):
+    cdf_h1_title = &#39;p-value if H1 is correct (Sensitivity)&#39;
+    cdf_h0_title = &#39;p-value if H0 is correct (FPR)&#39;</code></pre>
+<pre><code>    # create layout
+    fig = plt.figure(constrained_layout=False, figsize=(3 * 3.5, 3.5 * 3), dpi = 100)
+    gs = fig.add_gridspec(4, 3)</code></pre>
+<pre><code>    # fill the layout
+    ax_h1 = fig.add_subplot(gs[:2, :2]) # sensitivity in A/B
+    ax_h0 = fig.add_subplot(gs[0, 2]) # FPR in A/A
+    ax_views = fig.add_subplot(gs[1, 2]) # views in A/A
+    ax_clicks = fig.add_subplot(gs[2, 2]) # ctr in A/A
+    ax_powers = fig.add_subplot(gs[2, :2]) # sensitivity at alpha = 0.05
+    ax_fpr = fig.add_subplot(gs[3, :2]) # FPR at alpha = 0.05
+    ax_hint = fig.add_subplot(gs[3, 2]) # current parameters hint</code></pre>
+<pre><code>    # adjustments
+    fig.subplots_adjust(left=0.2, wspace=0.3, hspace=0.4)</code></pre>
+<pre><code>    # diagonals at h1 and h0 for simpler comparison
+    ax_h1.plot(np.linspace(0, 1, 10000), np.linspace(0, 1, 10000), &#39;k&#39;, alpha=0.1)
+    ax_h0.plot(np.linspace(0, 1, 10000), np.linspace(0, 1, 10000), &#39;k&#39;, alpha=0.1)</code></pre>
+<pre><code>    ax_h1.set_title(cdf_h1_title)
+    ax_h0.set_title(cdf_h0_title)</code></pre>
+<pre><code>    ax_h1.axvline(0.05, color=&#39;k&#39;, alpha=0.5)</code></pre>
+<pre><code>    # plot cdf for all
+    for title, (ab_pvals, aa_pvals, color) in data.items():
+        plot_cdf(ab_pvals, title, ax_h1, color, linewidth=3)
+        plot_cdf(aa_pvals, title, ax_h0, color, linewidth=1.5)</code></pre>
+<pre><code>    ax_h1.grid(True)
+    ax_h0.grid(True)</code></pre>
+<pre><code>    ax_powers.set_title(&#39;Sensitivity&#39;)
+    ax_fpr.set_title(r&#39;False Positive rate at $\alpha = 0.05$&#39;)
+    tests_powers = []
+    tests_fprs = []
+    tests_labels = []
+    tests_colours = []</code></pre>
+<pre><code>    for title, (ab_pvals,aa_pvals, color) in data.items():
+        tests_labels.append(title)
+        tests_colours.append(color)
+        tests_powers.append(np.mean(ab_pvals &lt; 0.05))
+        tests_fprs.append(np.mean(aa_pvals &lt; 0.05))
+    ax_powers.barh(np.array(tests_labels), np.array(tests_powers), color=np.array(tests_colours))
+    ax_fpr.barh(np.array(tests_labels), np.array(tests_fprs), color=np.array(tests_colours))</code></pre>
+<pre><code>    views_p99 = np.percentile(views[:100].ravel(), 99)
+    sns.histplot(views.ravel(),
+                 bins=np.linspace(0, views_p99, 100),
+                 ax=ax_views,
+                 kde=False,
+                 stat=&#39;probability&#39;).set(ylabel=None)
+    ax_views.set_title(f&#39;Views, P99 = {views_p99:7.1f}&#39;)</code></pre>
+<pre><code>    success_rate_p99 = np.percentile(ground_truth_ctr[:100].ravel(), 99)
+    sns.histplot(ground_truth_ctr[:10].ravel(),
+                 bins=np.linspace(0, success_rate_p99, 100),
+                 ax=ax_clicks,
+                 kde=False,
+                 stat=&#39;probability&#39;).set(ylabel=None)
+    success_rate_std = ground_truth_ctr[:100].flatten().std()
+    ax_clicks.set_title(f&#39;Ground truth CTR, std = {success_rate_std:2.3f}&#39;)</code></pre>
+<pre><code>    ax_hint.axis(&#39;off&#39;)
+    ax_hint.text(0.5, 0.5, f&#39;sigma2 = {sigma2}\nbeta = {beta}&#39;, \
+        ha=&#39;center&#39;, va=&#39;center&#39;, size=&#39;xx-large&#39;)</code></pre>
+<pre><code>    plt.close()
+    return fig</code></pre>
+<pre><code>def plot_all(N=20000, experiments=2000, mu=5, sigma2=1.3, success_rate=0.02, uplift=0.03, beta=100):
+    views_a_1, views_a_2, views_b, \
+    success_rate_a_1, success_rate_a_2, success_rate_b, \
+    clicks_a_1, clicks_a_2, clicks_b = generate(N=N, experiments=experiments, mu=mu, \
+        sigma2=sigma2, success_rate=success_rate, uplift=uplift, beta=beta)
+    titles = [
+        &#39;t-test&#39;,
+        &#39;Mann-Whitney&#39;
+    ]</code></pre>
+<pre><code>    ctrs_a_1 = clicks_a_1.astype(np.float) / views_a_1
+    ctrs_a_2 = clicks_a_2.astype(np.float) / views_a_2
+    ctrs_b = clicks_b.astype(np.float) / views_b</code></pre>
+<pre><code>    # debug print
+    print(success_rate_a_1[0])</code></pre>
+<pre><code>    p_values_ab = [
+        t_test(ctrs_a_1, ctrs_b),
+        mannwhitney(ctrs_a_1, ctrs_b)
+    ]</code></pre>
+<pre><code>    p_values_aa = [
+        t_test(ctrs_a_1, ctrs_a_2),
+        mannwhitney(ctrs_a_1, ctrs_a_2)
+    ]</code></pre>
+<pre><code>    views_target = views_b
+    ground_truth_ctr_target = success_rate_b
+    color = colors[0]</code></pre>
+<pre><code>    test_data = {}
+    for i,j in enumerate(titles):
+        test_data[j] = (p_values_ab[i],p_values_aa[i],colors[i])
+    pict = plot_summary(test_data, ground_truth_ctr_target, views_target, sigma2, beta)
+    name = f&#39;exp={experiments}_N={N}_uplift={uplift}_sr={success_rate}_beta={beta}_sigma2={sigma2}.png&#39;
+    pict.savefig(f&#39;{name}&#39;)
+    return f&#39;{name}&#39;</code></pre>
+<p>Đây là cách kết quả thay đổi đối với các <code>sigma2</code> giá trị:</p>
+<pre><code>sigma_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.0, 1.3, 1.5, 1.8, 2.0, 2.5, 3.0, 4.0, 4.5]</code></pre>
+<pre><code>for sigma2 in sigma_list:
+    plot_all(sigma2 = sigma2)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 11 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/11-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Hình 11 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 11 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Và đây là những thay đổi khác nhau <code>beta</code> giá trị:</p>
+<pre><code>beta_list = [1, 5, 10, 20, 40, 80, 100, 150, 300, 500, 1000, 2000, 10000]</code></pre>
+<pre><code>for beta in beta_list:
+    plot_all(beta = beta)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 12 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/12-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Hình 12 để lập mô hình phân phối CTR">
+  </button>
+  <figcaption>Hình 12 · Lập mô hình phân bổ CTR</figcaption>
+</figure>
+<p>Mann-Whitney U-Test cho thấy độ nhạy tốt hơn trong tất cả các trường hợp trên, sự khác biệt đặc biệt cao khi <code>views</code> phân phối dịch chuyển nhiều sang trái. Một điều thú vị khác cần lưu ý là nếu phân phối CTR thực tế được dịch chuyển sang trái, hiệu suất của cả hai bài kiểm tra đều tương đối thấp (nhưng Mann-Whitney U-Test vẫn vượt trội hơn T-Test).</p>
+<p>Hãy cùng thảo luận về cách chúng ta có thể cải thiện nó hơn nữa!</p>
+<h2 id="bucketing">Xô</h2>
+<p>Một cách tiếp cận thường được sử dụng để cải thiện hiệu suất kiểm tra thống kê được gọi là "xếp nhóm". Thay vì lấy riêng từng người dùng và so sánh phân bổ CTR giữa họ, chúng tôi có thể nhóm người dùng thành các nhóm và so sánh phân bổ CTR giữa các nhóm đó. Yêu cầu duy nhất ở đây là mỗi người dùng chỉ nên thuộc về một nhóm. Để đạt được điều này, chúng ta có thể băm từng id người dùng bằng muối và chia hàm băm theo số nhóm. Trong trường hợp mô phỏng của chúng tôi, chúng tôi sẽ chỉ phân chia dữ liệu trực tiếp mà không cần băm vì dù sao đây cũng là một mô phỏng ngẫu nhiên.</p>
+<p>Hãy viết một hàm để phân loại một phân phối nhất định và cả các trình bao bọc để áp dụng cả hai kiểm tra thống kê cho phân phối được phân loại:</p>
+<pre><code>def bucketize(ctrs_0, weights_0, ctrs_1, weights_1, bucket_size=10):
+    n_experiments, n_users = ctrs_0.shape
+    n_buckets = math.ceil(n_users / bucket_size)
+    values_0 = np.zeros((n_experiments, n_buckets))
+    values_1 = np.zeros((n_experiments, n_buckets))
+    for b in np.arange(n_buckets):
+        ind = np.arange(b * n_users / n_buckets, b * n_users / n_buckets + n_users / n_buckets).astype(np.int)
+        values_0[:, b] = np.sum(ctrs_0[:, ind] * weights_0[:, ind], axis=1) / np.sum(weights_0[:, ind], axis=1)
+        values_1[:, b] = np.sum(ctrs_1[:, ind] * weights_1[:, ind], axis=1) / np.sum(weights_1[:, ind], axis=1)
+    return values_0, values_1</code></pre>
+<pre><code>def t_test_buckets(ctrs_0, weights_0, ctrs_1, weights_1, bucket_size=10):
+    return t_test(*bucketize(ctrs_0, weights_0, ctrs_1, weights_1, bucket_size))</code></pre>
+<pre><code>def mannwhitney_buckets(ctrs_0, weights_0, ctrs_1, weights_1, bucket_size=10):
+    return mannwhitney(*bucketize(ctrs_0, weights_0, ctrs_1, weights_1, bucket_size))</code></pre>
+<p>Chúng ta sẽ sử dụng phạm vi tương tự của <code>sigma2</code> và <code>beta</code> và vẽ cùng một loạt biểu đồ hoạt hình để xem cách phân nhóm hoạt động như thế nào so với các bài kiểm tra thông thường. Đây là những thay đổi cho <code>sigma2</code>. Sửa đổi để <code>plot_all</code> để hỗ trợ các phiên bản thử nghiệm được nhóm rất đơn giản, vì vậy chúng tôi sẽ không cung cấp <code>plot_all_buckets</code> mã ở đây, nhưng bạn có thể tìm thấy nó trong <a href="https://github.com/bachan/articles/tree/master/ab_testing_in_tiki_search_1" target="_blank" rel="noopener noreferrer">kho lưu trữ này</a>.</p>
+<pre><code>for sigma2 in sigma_list:
+    plot_all_buckets(sigma2 = sigma2)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 13 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/13-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Hình 13 cho Xô">
+  </button>
+  <figcaption>Hình 13 · Xô</figcaption>
+</figure>
+<p>Và đây là những thay đổi cho <code>beta</code>:</p>
+<pre><code>for beta in beta_list:
+    plot_all_buckets(beta = beta)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 14 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/14-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Hình 14 cho Xô">
+  </button>
+  <figcaption>Hình 14 · Xô</figcaption>
+</figure>
+<p>Mặc dù trong hầu hết các trường hợp, việc xô đẩy không hoạt động tốt hơn Mann-Whitney U-Test và đôi khi thậm chí còn hoạt động tệ hơn T-Test, có thể thấy rằng dưới sự phân phối CTR thực tế “thường xuyên” hơn khi <code>beta</code> cao, nó cho thấy hiệu suất tốt nhất trong số tất cả các bài kiểm tra. Hãy thử mô phỏng các bản phân phối trong đó sự cải thiện bằng cách gộp sẽ được thấy rõ hơn.</p>
+<pre><code>plot_all_buckets(N=20000, experiments=2000, mu=5, sigma2=4.5, success_rate=0.02, uplift=0.03, beta=1000, bucket_size=10)
+plot_all_buckets(N=50000, experiments=2000, mu=1, sigma2=4.5, success_rate=0.02, uplift=0.03, beta=1000, bucket_size=10)
+plot_all_buckets(N=20000, experiments=2000, mu=1, sigma2=4.5, success_rate=0.02, uplift=0.03, beta=1000, bucket_size=10)</code></pre>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 15 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/15-figure.gif" width="1050" height="1050" loading="lazy" decoding="async" alt="Hình 15 cho Xô">
+  </button>
+  <figcaption>Hình 15 · Xô</figcaption>
+</figure>
+<p>Chúng tôi sẽ để lại câu hỏi tại sao tính năng xô lại có hiệu quả sau bài viết này. Chúng tôi cũng sẽ để lại câu hỏi về cách chọn kích thước của nhóm - nó phụ thuộc rất nhiều vào các bản phân phối thực tế và cách tốt nhất để chọn nó là chạy thử nghiệm tương tự trên các bản phân phối của riêng bạn và xem điều gì mang lại kết quả tốt nhất.</p>
+<h2 id="the-real-data">Dữ liệu thực</h2>
+<p>Tất cả các thử nghiệm ở trên đều được thực hiện trên các phân phối mô phỏng, nhưng chúng tôi thực sự có thể tạo bất kỳ số lượng thử nghiệm A/A nào từ dữ liệu thực của mình. Chúng tôi chỉ cần đảm bảo rằng cách chúng tôi phân chia người dùng độc lập với bất kỳ thử nghiệm nào đang diễn ra, sao cho thứ hạng đằng sau họ hoàn toàn giống nhau hoặc thậm chí chỉ lấy dữ liệu từ một tập hợp con người dùng hiện chưa tham gia bất kỳ thử nghiệm nào.</p>
+<p>Đây là biểu đồ giá trị p cho thử nghiệm A/A trên 2000 bản phân phối ngẫu nhiên được tạo từ dữ liệu thực của chúng tôi:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 16 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/16-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Hình 16 cho dữ liệu thực">
+  </button>
+  <figcaption>Hình 16 · Dữ liệu thực</figcaption>
+</figure>
+<p>Và đây là biểu đồ CDF cho nó:</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 17 ở kích thước đầy đủ">
+    <img src="assets/case-studies/02-a-b-testing-in-tiki-search/17-figure.png" width="1280" height="480" loading="lazy" decoding="async" alt="Hình 17 cho dữ liệu thực">
+  </button>
+  <figcaption>Hình 17 · Dữ liệu thực</figcaption>
+</figure>
+<p>Hiện tại, đối với các thử nghiệm A/B dữ liệu thực, chúng tôi không thể tính toán độ nhạy một cách trực tiếp vì chúng tôi không biết sự khác biệt thực tế cơ bản (nếu biết điều đó, chúng tôi đã không cần thử nghiệm A/B ngay từ đầu). Nhưng các mô phỏng ở trên đã giúp chúng tôi hiểu được độ nhạy của từng thử nghiệm trên nhiều phân bố có hình dạng khác nhau, vì vậy chúng tôi chỉ có thể sử dụng thử nghiệm có độ nhạy tốt nhất trên mô phỏng gần nhất của mình. Và chúng ta cũng có thể tự kiểm tra lại bằng cách xem liệu thử nghiệm A/A dữ liệu thực có còn cho FPR chấp nhận được hay không.</p>
+<h2 id="conclusion">Kết luận</h2>
+<p>Điểm chính của bài viết này là không đưa ra câu trả lời chính xác về điều gì hiệu quả nhất và không đưa ra giải pháp “viên đạn bạc” cho tất cả các trường hợp có thể xảy ra. Những gì chúng tôi đã cố gắng làm ở đây là trình bày kỹ thuật mà mọi người có thể áp dụng cho các bản phân phối của riêng họ để tìm ra phương pháp thử nghiệm nào sẽ có độ nhạy tốt nhất với tỷ lệ dương tính giả có thể chấp nhận được đối với miền cụ thể của họ.</p>
+<p>Đây là kỹ thuật một lần nữa:</p>
+<ul>
+  <li>vẽ ra sự phân bổ số lượt xem thực tế của bạn và cố gắng ước tính CTR thực tế cơ bản của bạn sẽ trông như thế nào;</li>
+  <li>tìm mô phỏng phù hợp cho các bản phân phối thực của bạn;</li>
+  <li>tạo ra càng nhiều thử nghiệm A/A và A/B với những mô phỏng đó;</li>
+  <li>tính toán độ nhạy và FPR cho từng thử nghiệm thống kê bằng cách sử dụng các mô phỏng đó.</li>
+</ul>
+<p>Nếu không thể mô phỏng các thử nghiệm vì một số lý do thì ít nhất bạn phải luôn đảm bảo kiểm tra xem thử nghiệm thống kê hoạt động như thế nào với thử nghiệm A/A dữ liệu thực của bạn và đảm bảo rằng tỷ lệ dương tính giả nằm trong giới hạn. Các trường hợp người dùng bị phân chia không chính xác giữa các biến thể thử nghiệm không phải là hiếm trong thử nghiệm A/B trong thế giới thực và việc thực hiện các kiểm tra như vậy cũng là một trong những cách để nắm bắt được điều này.</p>
+<h2 id="what-s-next">Tiếp theo là gì?</h2>
+<p>Có một số điều chúng tôi muốn để lại sau bài viết này.</p>
+<p>Trước hết, chúng ta nên chạy thử nghiệm trong bao lâu để đảm bảo rằng chúng ta sẽ nhận thấy sự thay đổi X% trong phân phối với FPR nằm trong giới hạn chấp nhận được. Phương pháp thường được sử dụng ở đây được gọi là Hiệu ứng có thể phát hiện tối thiểu (MDE), chúng tôi có thể cung cấp thêm chi tiết về phương pháp này trong bài viết tiếp theo. Ở đây cũng có thể có một số hạn chế liên quan đến sản phẩm, ví dụ: hành vi của khách hàng vào Thứ Hai khác với Thứ Bảy và điều này có thể đặt ra một số yêu cầu bổ sung về thời lượng thử nghiệm.</p>
+<p>Điều thứ hai chưa được đề cập là cách làm việc với các số liệu không phải tỷ lệ. Ví dụ: chúng tôi muốn tối ưu hóa mức lương trung bình từ tìm kiếm hoặc tăng tỷ lệ người dùng mua hàng hóa ít nhất 100 nghìn đồng. Chúng tôi hy vọng sẽ làm sáng tỏ nó trong bài viết tiếp theo.</p>
+<p>Thứ ba, có một kỹ thuật phổ biến khác để thực hiện kiểm tra thống kê được gọi là bootstrapping. Nó phức tạp hơn một chút (cả về mặt tính toán và triển khai) so với các kỹ thuật được mô tả ở trên, nhưng nó có thể là lựa chọn tốt nhất cho một số bản phân phối. Nó cũng có sẵn trong <code>scipy.stats</code> gói, vì vậy bạn có thể tự nghiên cứu.</p>
+<p>Ngoài những điều này, chúng tôi đã cố gắng đề cập nhiều nhất có thể về quá trình đưa ra quyết định về kết quả thử nghiệm A/B mà chúng tôi sử dụng trong Tiki Search. Hy vọng nó hữu ích và dễ hiểu.</p>
+<h2 id="references">Tài liệu tham khảo</h2>
+<p>Ý tưởng thử nghiệm và hầu hết mã được lấy từ <a href="https://youtu.be/ObzlKVCiBqI" target="_blank" rel="noopener noreferrer">hội thảo trực tuyến này</a>. Nó bằng tiếng Nga, nhưng có sẵn sổ ghi chép jupyter với mã đầy đủ ở đó.</p>
+<p>Mã đầy đủ cho bài viết này cũng có sẵn trong <a href="https://github.com/bachan/articles/tree/master/ab_testing_in_tiki_search_1" target="_blank" rel="noopener noreferrer">kho lưu trữ này</a>.</p>
+<h2 id="were-hiring">Chúng tôi đang tuyển dụng!</h2>
+<p>Nhóm Tiki Search đang tích cực tuyển dụng kỹ sư; ngoài thử nghiệm A/B, vai trò này còn có nhiều thách thức khác mà nhóm đang phải đối mặt. Nếu bạn muốn tham gia, vui lòng đăng ký!</p>

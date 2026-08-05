@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/06-tai-sao-tiki-chon-react-native.vi.html",
+  "guide": {
+    "title": "Quyết định quan trọng không phải React Native hay Native cho toàn app, mà là chọn đúng công nghệ cho từng module.",
+    "problem": "Native cho hiệu năng và quyền truy cập nền tảng tốt nhưng tốn hai luồng phát triển; cross-platform giúp thử nghiệm nhanh nhưng tăng phụ thuộc framework, kích thước ứng dụng và rủi ro hiệu năng. Một lựa chọn duy nhất cho toàn bộ app khiến trade-off trở nên cứng nhắc.",
+    "core_idea": "Tiki dùng kiến trúc đa module với native app làm nền. Mỗi tính năng có thể chọn Native hoặc React Native tùy vòng đời và yêu cầu; các module liên kết với app chính qua Android library hoặc iOS Pod.",
+    "outcome": "Mô hình cho phép các tính năng thử nghiệm hoặc ngắn hạn đi nhanh bằng React Native, trong khi phần cần kiểm soát nền tảng vẫn giữ Native. React Native cũng tận dụng được nguồn lực ReactJS sẵn có tại thời điểm quyết định.",
+    "takeaways": [
+      "Architecture boundary quan trọng hơn framework: module độc lập làm cho lựa chọn công nghệ có thể thay đổi mà không kéo theo toàn ứng dụng.",
+      "Cross-platform phù hợp nhất khi tốc độ thử nghiệm và khả năng chia sẻ nhân lực quan trọng hơn việc tối ưu tuyệt đối từng millisecond.",
+      "Native shell tạo escape hatch cho SDK mới, tích hợp thiết bị và các màn hình có yêu cầu hiệu năng đặc biệt.",
+      "Chi phí không biến mất mà chuyển vị trí: bridge, navigation, dependency, release coordination và kỹ năng debug hai phía phải được tính vào quyết định.",
+      "Chất lượng đội ngũ và kỷ luật triển khai có thể ảnh hưởng hiệu năng thực tế nhiều hơn nhãn công nghệ được chọn."
+    ],
+    "review_lenses": [
+      "Định nghĩa contract cho navigation, authentication, analytics và data sharing giữa native và cross-platform.",
+      "Xác định tiêu chí module nào được dùng React Native và khi nào cần chuyển về Native.",
+      "Quản lý version framework, native dependency và lịch release để một module không khóa toàn app.",
+      "Đo startup time, memory, crash-free rate và kích thước binary theo từng module thay vì tranh luận bằng cảm tính."
+    ]
+  }
+}

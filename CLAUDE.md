@@ -36,7 +36,9 @@ public/
     constants.js     TOPIC_TYPES, DIFFICULTIES — the closed-set identifiers, label source
     markdown.js      renderMarkdown + renderUser (escaping variant)
     ui.js            chevSVG, BADGE, debounce, localDay
-    content.js       loads data/manifest.json + meta.json + per-topic files; owns the language
+    i18n.js          shared language storage + paired base/.vi JSON loader
+    content.js       topic data model; owns the global content language and change events
+    case-studies.js  numbered bilingual case-study data model + article-body cache
     api.js           transport to Apps Script
     auth.js          Google Identity Services + header avatar/state machine
     store.js         offline-first progress, notes, study log
@@ -51,12 +53,15 @@ public/
     meta.json            label/title/intro/tags/key/topic_type per topic, VI + EN in one file
     topics/NN-slug.json     complete English base, one file per topic (324 items total across 25 files)
     topics/NN-slug.vi.json  complete Vietnamese companion, same shape and item IDs
-    case-studies/manifest.json  case-study categories, metadata, source and body paths
-    case-studies/articles/*.html trusted local long-form article fragments
+    case-studies/manifest.json  ordered case-study rows (n, file, slug, immutable source fields)
+    case-studies/meta.json      library/category/article metadata, VI + EN in one file
+    case-studies/NN-slug.json     English guide + numbered English body path
+    case-studies/NN-slug.vi.json  Vietnamese guide + numbered Vietnamese body path
+    case-studies/articles/NN-slug[.vi].html trusted local long-form article pairs
     interviews.json     seed entries, merged under everyone's own Sheet rows
   assets/case-studies/  local article figures; never hotlinked from a publisher
 apps-script/Code.gs  the entire backend (Google Sheet as database)
-tests/               security · interviews.merge · auth.state · content.i18n
+tests/               security · interviews.merge · auth.state · content.i18n · case-studies
 tools/               validate-content.mjs · audit-content.mjs · add-content.mjs
 docs/content-playbook.md  how to add/update study content end to end
 secret/              GITIGNORED. Personal setup notes and credentials
@@ -152,14 +157,19 @@ secret/              GITIGNORED. Personal setup notes and credentials
   route to it, so a hash matching its id falls back to the track. That is how
   sibling apps under `public/` (e.g. `fshare-tool/`) join the menu.
 
-- **Case studies are not Study Track topics.** They do not have item ids,
-  difficulty, reviewed state or notes, and never change the progress
-  denominator. `views/case-studies.js` reads its own manifest and trusted HTML
-  fragments. Article figures live under `assets/case-studies/` because the CSP
-  deliberately permits local images, not publisher hotlinks. The router passes
-  trailing hash segments to views, so an article gets a bookmarkable URL such
-  as `#/case-studies/arcturus-inventory-processing-system` while the panel keeps
-  `Case Studies` selected.
+- **Case studies are numbered and bilingual, but are not Study Track topics.**
+  They do not have item ids, difficulty, reviewed state or notes, and never
+  change the progress denominator. Their manifest follows the Topic convention:
+  an immutable numbered row points at `NN-slug.json`, with a complete
+  `NN-slug.vi.json` companion; localized metadata stays in the collection's own
+  `meta.json`. `lib/i18n.js` provides the paired loader used by both data models,
+  while `Content.lang` remains the one global EN/VI state. Full article bodies
+  are paired as `articles/NN-slug.html` and `articles/NN-slug.vi.html`; their
+  heading ids, code blocks and figure order must stay aligned. Figures live in
+  the matching `assets/case-studies/NN-slug/` directory because the CSP permits
+  local images, not publisher hotlinks. The visible URL deliberately keeps the
+  unnumbered slug (for example `#/case-studies/arcturus-inventory-processing-system`),
+  so reorganizing source files never breaks bookmarks.
 
 - **The nav panel is `inert` while closed.** Without it the off-screen links
   stay in the tab order — the drawer is moved by `transform`, not `display`.

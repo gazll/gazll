@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/11-how-to-handle-hot-deals-at-the-peak-time.html",
+  "guide": {
+    "title": "The difficult invariant spans price, promotional quantity and physical inventory at the same time.",
+    "problem": "A flash deal is not safe merely because its displayed price changes on time. Thousands of concurrent checkouts can oversell the special quantity, race with normal inventory and continue seeing stale price data while deal and catalog systems converge.",
+    "core_idea": "Give each price version a unique identifier, use the deal id as the special-price id and send that identity with inventory reservations. Arcturus validates both warehouse stock and deal quantity, while sold-out events turn off the deal and propagate the normal price.",
+    "outcome": "The new flow removes the split responsibility that previously required the deal system to close promotions reactively. Price replication, inventory reservation and checkout now share explicit identifiers and events for the deal lifecycle.",
+    "takeaways": [
+      "Correctness needs an identity for the price a customer actually saw; comparing only numeric price values cannot distinguish versions or overlapping updates.",
+      "The special-quantity check belongs beside the physical inventory decision so one acceptance cannot violate the other invariant.",
+      "Eventual price propagation is acceptable only when checkout sends the version identity and the reservation service rejects stale or exhausted deals.",
+      "A sold-out event is both a business transition and a cache-invalidation signal; consumers must handle duplicates and reordering.",
+      "Peak handling is a coordinated flow across price, deal, catalog, inventory and checkout—not a throughput optimization inside one service."
+    ],
+    "review_lenses": [
+      "Race analysis: enumerate deal start, price update, final reservation and sold-out event interleavings.",
+      "Idempotency: protect repeated checkout reservations and duplicate quantity-update events.",
+      "Staleness policy: define which price versions remain acceptable during propagation and for how long.",
+      "Load shedding: preserve inventory correctness when downstream price or deal consumers fall behind peak traffic."
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/04-o1-android-build-time-at-tiki.vi.html",
+  "guide": {
+    "title": "Động thái quan trọng là giảm biểu đồ xây dựng cục bộ, không chỉ làm cho cùng một biểu đồ được biên dịch nhanh hơn.",
+    "problem": "Một thay đổi trong mô-đun dữ liệu dùng chung đã vô hiệu hóa hầu hết các mô-đun tính năng, biến vòng lặp chỉnh sửa-biên dịch-chạy thông thường thành một bản dựng kéo dài 5 đến 8 phút. Với mười đến hai mươi bản dựng mỗi ngày, sự chậm trễ đã trở thành chi phí năng suất lớn và lặp đi lặp lại.",
+    "core_idea": "Thuộc tính Gradle tùy chỉnh chỉ bao gồm tính năng hiện đang được phát triển. Các tham chiếu tính năng bị thiếu sẽ được thay thế bằng các nhóm nguồn giả mạo nhỏ và các liên kết sâu sẽ mở màn hình mục tiêu trong APK gỡ lỗi đã giảm bớt.",
+    "outcome": "Bài báo cho biết thời gian xây dựng đã giảm gần một nửa và giảm xuống còn khoảng một hoặc hai phút. APK gỡ lỗi cũng trở nên nhỏ hơn vì các tính năng không liên quan không có trong bản dựng cục bộ.",
+    "takeaways": [
+      "Việc tối ưu hóa các nhiệm vụ bên trong biểu đồ phụ thuộc khổng lồ có mức trần. Việc loại trừ công việc khỏi biểu đồ có thể mang lại sự cải thiện lớn hơn so với việc điều chỉnh các trình biên dịch riêng lẻ.",
+      "Chỉ mô-đun hóa tính năng không đảm bảo xây dựng nhanh; hướng phụ thuộc xác định liệu chỉnh sửa mô-đun dùng chung có còn hoạt động tốt trên mọi tính năng hay không.",
+      "Nguồn giả là ranh giới tương thích tại thời điểm biên dịch. Nó chỉ hoạt động khi hợp đồng giữa vỏ ứng dụng và các mô-đun tính năng có kích thước nhỏ một cách có chủ ý.",
+      "APK giảm cần có đường dẫn điều hướng thay thế. Các liên kết sâu duy trì vòng lặp của nhà phát triển ngay cả khi các mô-đun định tuyến và nhà thông thường bị loại trừ.",
+      "Cách tiếp cận này tối ưu hóa công việc tính năng cục bộ chứ không phải phát hành bản dựng. CI vẫn phải biên dịch và kiểm tra biểu đồ hoàn chỉnh."
+    ],
+    "review_lenses": [
+      "Trôi hợp đồng: đảm bảo các khai báo giả sẽ thất bại nhanh chóng khi giao diện tính năng thực thay đổi.",
+      "Phạm vi kiểm tra: xác định kiểm tra nào chạy trên biểu đồ rút gọn cục bộ và kiểm tra nào phải chạy trên biểu đồ đầy đủ trong CI.",
+      "Vệ sinh phần phụ thuộc: đo lường số lượng tham chiếu vỏ ứng dụng buộc triển khai giả mạo và coi sự tăng trưởng là một cảnh báo về kiến trúc.",
+      "Công thái học của nhà phát triển: làm cho lựa chọn tính năng có thể được phát hiện và tránh lệnh âm thầm tạo ra APK không hoàn chỉnh."
+    ]
+  }
+}

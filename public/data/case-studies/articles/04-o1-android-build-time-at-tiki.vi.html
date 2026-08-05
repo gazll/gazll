@@ -1,0 +1,169 @@
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 1 ở kích thước đầy đủ">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/01-figure.jpeg" width="2000" height="595" loading="lazy" decoding="async" alt="Ảnh của Benjamin Suter trên Bapt">
+  </button>
+  <figcaption>Ảnh chụp bởi <a href="https://unsplash.com/@benjaminjsuter" target="_blank" rel="noopener noreferrer">Benjamin Suter</a><strong> </strong>trên <a href="https://unsplash.com/photos/CgoRzWX4CDg" target="_blank" rel="noopener noreferrer">Bapt</a></figcaption>
+</figure>
+<h2 id="the-problem">vấn đề</h2>
+<p>Thời gian xây dựng luôn là vấn đề lớn đối với các nhà phát triển Android. Để giảm thời gian xây dựng, các nhà phát triển thường chia dự án thành nhiều mô-đun để tận dụng lợi thế của Gradle. <a href="https://guides.gradle.org/performance/#parallel_execution" target="_blank" rel="noopener noreferrer">thực hiện song song</a> tính năng. Tại Tiki, chúng tôi mô-đun hóa dự án của mình theo cách tiếp cận “theo từng tính năng”, nghĩa là mỗi tính năng sẽ nằm trong mô-đun riêng.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 2 ở kích thước đầy đủ">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/02-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Hình 2 cho vấn đề">
+  </button>
+  <figcaption>Hình 2 · Vấn đề</figcaption>
+</figure>
+<p>Khi phát triển tính năng mới hoặc duy trì tính năng cũ, các nhà phát triển Tiki thường phải thực hiện những thay đổi trong <code>:data</code> module khiến toàn bộ dự án phải biên dịch lại vì hầu hết các mô-đun tính năng của chúng tôi đều dựa trên nó. Toàn bộ quá trình sẽ mất khoảng 5–8 phút. Bạn càng có nhiều mô-đun/tính năng thì quá trình xây dựng sẽ càng mất nhiều thời gian. Chúng tôi gọi đây là <strong>O(n) thời gian xây dựng</strong>.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 3 ở kích thước đầy đủ">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/03-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Hình 3 cho vấn đề">
+  </button>
+  <figcaption>Hình 3 · Vấn đề</figcaption>
+</figure>
+<p>Chúng tôi muốn phát triển nhanh, do đó việc phát triển các tính năng mới phải nhanh, điều này dẫn đến vấn đề cốt lõi là thời gian xây dựng của chúng tôi phải nhanh. 5–8 phút không phải là nhanh vì mỗi ngày có khoảng 10–20 bản dựng được thực hiện. Lãng phí tổng cộng 50–160 phút mỗi ngày hoàn toàn không hiệu quả.</p>
+<h2 id="the-solution">Giải pháp</h2>
+<p>Hóa ra, Gradle không cần phải biên dịch lại các mô-đun bị ảnh hưởng nếu chúng không được đưa vào dự án ngay từ đầu.</p>
+<p>Giả sử bạn đang làm việc trên Màn hình chính trong <code>:home</code> mô-đun, bạn chỉ quan tâm đến những thay đổi chỉ trên Màn hình chính (vì việc biên dịch lại các mô-đun tính năng khác không có ý nghĩa gì đối với bạn, nó chỉ lãng phí thời gian!). Vì lý do đó, chúng tôi quyết định tạm thời loại trừ các mô-đun tính năng khác để Gradle không phải biên dịch lại chúng.</p>
+<p>Ý tưởng rất đơn giản, chúng ta sẽ sử dụng dòng lệnh Gradle với một tham số tùy chỉnh để biết chúng ta nên đưa mô-đun nào vào bản dựng đó.</p>
+<pre><code>./gradlew :app:installDebug -Ponly=&quot;home&quot;</code></pre>
+<pre><code>// app/build.gradle
+apply plugin: &#39;com.android.application&#39;
+
+def include(moduleName) {
+if (hasProperty(&#39;only&#39;)) {
+return only.split(&quot;,&quot;).contains(moduleName)
+}
+return true
+}
+
+dependencies {
+implementation &#39;androidx.appcompat:appcompat:1.0.2&#39;
+if (include(&quot;home&quot;)) {
+implementation project(&quot;:home&quot;)
+}
+if (include(&quot;detail&quot;)) {
+implementation project(&quot;:detail&quot;)
+}
+if (include(&quot;search&quot;)) {
+implementation project(&quot;:search&quot;)
+}
+}</code></pre>
+<p>Đối với lệnh xây dựng cụ thể này, chỉ có 3 mô-đun được biên dịch lại nếu có gì đó thay đổi trong <code>:data</code> mô-đun.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 4 ở kích thước đầy đủ">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/04-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Hình 4 cho giải pháp">
+  </button>
+  <figcaption>Hình 4 · Giải pháp</figcaption>
+</figure>
+<h2 id="implementation-detail">Chi tiết triển khai</h2>
+<p>Trong dự án Github được hiển thị bên dưới, tôi đã thực hiện một dự án mẫu để cho bạn thấy ý tưởng này có thể được thực hiện như thế nào. Trong phần tiếp theo, tôi sẽ thảo luận về một số thách thức mà chúng tôi gặp phải khi cố gắng áp dụng ý tưởng này vào cơ sở mã của mình.</p>
+<p class="cs-link-card"><a href="https://github.com/nlgtuankiet/modularization" target="_blank" rel="noopener noreferrer">nlgtuankiet/mô đun hóa ↗</a></p>
+<p>Đầu tiên và quan trọng nhất, chúng ta phải biên dịch ứng dụng. Vì tất cả các mô-đun tính năng đều bị loại khỏi dự án, <code>:app</code> mô-đun không thể giải quyết lớp bạn đã đề cập trong mô-đun tính năng. Số lượng tài liệu tham khảo có thể khác nhau tùy thuộc vào cơ sở mã. Đối với cơ sở mã của chúng tôi, chỉ có 2 tài liệu tham khảo:</p>
+<p><strong>Lớp hoạt động: </strong>chúng tôi sử dụng một phương thức tĩnh trong lớp hoạt động để truy xuất mục đích ban đầu cho việc điều hướng. Để loại bỏ tham chiếu này, cách đơn giản và dễ hiểu nhất là sử dụng sự phản chiếu.</p>
+<pre><code>// :detail module
+
+class DetailActivity : DaggerAppCompatActivity() {
+// omitted
+
+companion object {
+@JvmStatic
+@Keep
+fun starterIntent(context:Context, productId:String): Intent {
+return Intent(context, DetailActivity::class.java).apply {
+putExtra(&quot;productId&quot;, productId)
+}
+}
+}
+}</code></pre>
+<pre><code>// :app module
+
+override fun detailIntent(context:Context, productId:String): Intent {
+// old way
+// return DetailActivity.starterIntent(context = context, productId = productId)
+
+// new way
+return Class.forName(&quot;com.nlgtuankiet.modularization.detail.DetailActivity&quot;)
+.getDeclaredMethod(&quot;starterIntent&quot;, Context::class.java, String::class.java)
+.invoke(null, context, productId) as Intent
+}</code></pre>
+<p>Mặc dù phương pháp này dễ thực hiện nhưng đi kèm với một số chi phí phản ánh, nhưng trong dự án ví dụ, chúng tôi sử dụng một phương pháp khác tận dụng <code>Dagger 2</code>' là <code>@BindOptionalOf</code> để loại bỏ những khuyết điểm với sự phản ánh. Tôi sẽ không đi xa hơn vì điều này liên quan đến Dagger 2, nhưng bạn có thể xem mã nguồn để biết nó được thực hiện như thế nào.</p>
+<p><strong>Mô-đun dao găm của hoạt động: </strong>kết quả từ<code>Dagger 2</code> cách thực hành tốt nhất, mỗi hoạt động có mô-đun tương ứng và <code>AppComponent</code> trong <code>:app</code> mô-đun tham chiếu đến tất cả các mô-đun này.</p>
+<pre><code>// :app
+@Singleton
+@Component(
+modules = [
+AndroidSupportInjectionModule::class,
+HomeActivityModule::class,
+DetailActivityModule::class,
+SearchActivityModule::class
+]
+)
+interface AppComponent
+
+// :home
+@Module
+interface HomeActivityModule {
+@ContributesAndroidInjector
+fun activity(): HomeActivity
+}</code></pre>
+<p>Lúc đầu, chúng tôi cố gắng tạo ra một sản phẩm độc lập <code>Component</code> cho từng hoạt động thay vì <code>Subcomponent</code> từ <code>AppComponent</code>, do đó <code>AppComponent</code>, không cần phải tham chiếu đến mô-đun của hoạt động nữa. Tái cấu trúc từ <code>Subcomponent</code> để <code>Component</code> tốn thời gian và chúng tôi có rất nhiều mô-đun để cấu trúc lại. Cách tiếp cận này sẽ giải quyết được vấn đề nhưng cũng sẽ đòi hỏi nhiều thời gian (và chúng tôi không muốn điều đó!).</p>
+<p>Cuối cùng, chúng tôi nghĩ ra một kỹ thuật đơn giản gọi là <strong>nguồn giả, </strong>tạo một bộ nguồn giả để phản ánh nguồn thực bị thiếu</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở hình 5 ở kích thước đầy đủ">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/05-figure.png" width="422" height="383" loading="lazy" decoding="async" alt="Hình 5 để biết chi tiết thực hiện">
+  </button>
+  <figcaption>Hình 5 · Chi tiết triển khai</figcaption>
+</figure>
+<p>và bao gồm các bộ nguồn này tương ứng với mô-đun bị loại trừ.</p>
+<pre><code>// app/build.gradle
+def include(moduleName) {
+if (hasProperty(&#39;only&#39;)) {
+return only.split(&quot;,&quot;).contains(moduleName)
+}
+return true
+}
+android {
+sourceSets {
+if (project.hasProperty(&quot;only&quot;)) {
+new File(projectDir, &quot;src/fake&quot;).listFiles().each { f-&gt;
+if (!include(f.name)) {
+// include fake source set
+main.java.srcDir &quot;src/fake/${f.name}&quot;
+}
+}
+}
+}
+}</code></pre>
+<p>Nguồn giả so với nguồn thật:</p>
+<pre><code>// real source
+package com.nlgtuankiet.modularization.home
+
+import dagger.Module
+import dagger.android.ContributesAndroidInjector
+
+@Module
+interface HomeActivityModule {
+@ContributesAndroidInjector
+fun activity(): HomeActivity
+}
+
+// fake source (app/src/fake/home/HomeActivityModule.kt)
+package com.nlgtuankiet.modularization.home
+
+import dagger.Module
+
+@Module
+interface HomeActivityModule</code></pre>
+<p>Lối này, <code>AppComponent</code> bây giờ hãy tham chiếu một mô-đun trống và biên dịch thành công. Vấn đề đã được giải quyết!</p>
+<p>Vẫn còn một vấn đề nữa. Vì hầu hết tất cả các màn hình đều bị loại khỏi APK gỡ lỗi, làm cách nào chúng tôi có thể mở màn hình mà chúng tôi đang phát triển?<br>Điều này có thể dễ dàng thực hiện được bằng liên kết sâu bằng lệnh ADB:</p>
+<pre><code>adb shell am start -a android.intent.action.VIEW -d sample://sample</code></pre>
+<h2 id="the-result">kết quả</h2>
+<p>Sau khi triển khai ý tưởng này vào dự án Tiki Android, thời gian xây dựng đã giảm đi một nửa. Một trong những điểm cộng của việc này là kích thước APK gỡ lỗi trở nên thực sự nhỏ do tất cả tính năng của ứng dụng bị loại trừ, điều này cũng sẽ tiết kiệm rất nhiều thời gian khi triển khai APK trên thiết bị thử nghiệm.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở hình 6 ở kích thước đầy đủ">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/06-figure.jpeg" width="2000" height="475" loading="lazy" decoding="async" alt="Hình 6 cho kết quả">
+  </button>
+  <figcaption>Hình 6 · Kết quả</figcaption>
+</figure>
+<p>Như bạn có thể thấy, với thiết lập này, bất kể dự án của bạn lớn đến đâu hay bạn có bao nhiêu mô-đun, thời gian xây dựng của bạn vẫn giữ nguyên và đó là lý do tại sao chúng tôi gọi đây là <strong>O(1) thời gian xây dựng</strong>.</p>
+<h2 id="the-next-step">Bước tiếp theo</h2>
+<p>1–2 phút là khá tốt nhưng chúng tôi nghĩ mình luôn có thể làm tốt hơn thế.<strong>15 giây</strong> là con số chúng ta hướng tới thì làm sao chúng ta có thể làm được điều đó? Hãy theo dõi phần tiếp theo!</p>

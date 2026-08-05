@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/09-pegasus-catalog-product-api-architecture.html",
+  "guide": {
+    "title": "Pegasus is a read-path design built around ownership, cache coherence and payload cost.",
+    "problem": "Catalog data lived inside a large system where modules shared databases and ownership boundaries were unclear. Product data appears on nearly every customer touchpoint, so the replacement API needed high throughput, low latency and a migration path away from direct database access.",
+    "core_idea": "Mercury replicates product changes from the MySQL write side to MongoDB, Pegasus owns the read API and local Guava cache, and Kafka invalidation events keep cached products fresh. Compression and gRPC address CPU, network and connection-management costs.",
+    "outcome": "The article reports 24k requests per second with TP99 around 20 ms for a single-product API under one benchmark setup. It also shows why L4 load balancing and persistent gRPC connections can outperform a PHP client that opens many HTTP connections.",
+    "takeaways": [
+      "Separating reads from writes is also an ownership migration: clients must stop treating the catalog database as a shared integration interface.",
+      "Cache invalidation is event-driven, but a miss still needs a reliable path through MongoDB; both hot and cold behaviour matter.",
+      "Batch APIs require different loading logic from single-key APIs or repeated cache misses can turn into inefficient database access.",
+      "Compression trades CPU for network and storage. The useful choice depends on payload shape, cache layer and caller capabilities.",
+      "Protocol performance can be dominated by client connection behaviour and load balancers, not only server handler code."
+    ],
+    "review_lenses": [
+      "Freshness contract: define acceptable invalidation lag and recovery when Kafka events are delayed or lost.",
+      "Migration safety: observe and block remaining direct database consumers before changing ownership.",
+      "Cache protection: prevent stampedes and bound memory while preserving the hit rate for hot products.",
+      "Benchmark realism: include payload sizes, batch mixes, connection pools, load balancers and cold-cache periods."
+    ]
+  }
+}

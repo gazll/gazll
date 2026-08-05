@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/02-a-b-testing-in-tiki-search.vi.html",
+  "guide": {
+    "title": "Kết quả hữu ích không phải là một bài kiểm tra thắng lợi; đó là một cách có thể lặp lại để chọn một cách phân phối số liệu của riêng bạn.",
+    "problem": "Những khác biệt nhỏ về CTR có thể có ý nghĩa về mặt tài chính, nhưng hành vi ngẫu nhiên của người dùng có thể tạo ra những khác biệt có cùng quy mô ngay cả khi cả hai biến thể xếp hạng đều giống hệt nhau. Do đó, việc so sánh trực tiếp sẽ nhầm lẫn giữa tiếng ồn lấy mẫu với việc cải tiến sản phẩm.",
+    "core_idea": "Chế độ xem mô hình và xác suất nhấp chuột tiềm ẩn của mỗi người dùng tạo ra nhiều thử nghiệm A/A và A/B được kiểm soát, sau đó đo lường cả tỷ lệ dương tính giả và độ nhạy cho các biến thể T-Test, Mann–Whitney và nhóm. Lưu lượng truy cập A/A thực được sử dụng làm bước kiểm tra hiệu chỉnh cuối cùng.",
+    "outcome": "Các hình dạng phân phối khác nhau ủng hộ các thử nghiệm khác nhau. Mann–Whitney hoạt động tốt trong nhiều mô phỏng, trong khi việc phân nhóm trở nên cạnh tranh dưới sự phân bổ CTR thực tế thường xuyên hơn. Bài viết cố tình tránh trình bày một bài kiểm tra thống kê phổ quát.",
+    "takeaways": [
+      "Bắt đầu từ đơn vị độc lập. Tiki nhóm các quan sát theo người dùng vì coi số lần hiển thị hoặc phiên phụ thuộc là độc lập khiến giá trị p trông chắc chắn hơn thực tế.",
+      "Xác thực thử nghiệm bằng dữ liệu A/A trước khi tin cậy vào kết quả A/B của nó. Nếu trường hợp không đã vượt quá tỷ lệ dương tính giả được chấp nhận thì các quyết định về sản phẩm được xây dựng trên đó sẽ không an toàn.",
+      "Độ nhạy và tỷ lệ dương tính giả phải được đánh giá cùng nhau. Một bài kiểm tra thận trọng không bao giờ phát hiện ra mức tăng thực sự không tự động là một bài kiểm tra tốt.",
+      "Mô phỏng hữu ích nhất khi số lượt xem và CTR tiềm ẩn của nó giống với sản xuất. Những giả định tao nhã bỏ lỡ sự phân phối thực tế có thể chọn sai phương pháp.",
+      "Bucketing thay đổi đơn vị quan sát và hành vi tính trọng số; kích thước nhóm là tham số miền cần kiểm tra, không phải hằng số kỳ diệu."
+    ],
+    "review_lenses": [
+      "Phân công thử nghiệm: xác minh sự phân bổ người dùng ổn định, quy tắc loại trừ và tính độc lập khỏi các thử nghiệm đồng thời.",
+      "Định nghĩa số liệu: chỉ định mẫu số, đơn vị tổng hợp và cách xử lý những người dùng có rất ít hoạt động.",
+      "Lập kế hoạch năng lượng: kết nối hiệu ứng tối thiểu có thể phát hiện được, cỡ mẫu và hành vi đầy đủ hàng tuần trước khi cài đặt thời lượng.",
+      "Chính sách quyết định: ghi lại các chỉnh sửa qua nhiều thử nghiệm, số liệu lan can và điều gì xảy ra khi ý nghĩa thống kê và kinh doanh không đồng nhất."
+    ]
+  }
+}

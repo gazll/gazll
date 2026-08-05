@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/03-tiki-scale-in-10-years.html",
+  "guide": {
+    "title": "Read this as a map of the simultaneous evolution of the product, architecture, and engineering organization.",
+    "problem": "A system that works for an online bookstore and a small team cannot remain the same as Tiki expands its product line, marketplace, fulfillment, payment, and sales traffic. The bottleneck lies not only in the server but also in ownership boundaries and how teams coordinate.",
+    "core_idea": "Tiki went through many layers of change: building the Talaria platform, gradually separating the architecture and domain, developing a distributed system, consolidating the infrastructure and then building a team capable of owning each part of the problem. Each stage solves a new constraint created by the previous stage.",
+    "outcome": "The article does not describe a single rewrite. It shows the process of scaling through many intentional moves, interspersed with incidents, sales seasons, and infrastructure moves that force the organization to mature.",
+    "takeaways": [
+      "Scale is a linked problem: traffic, data, business scope, number of teams and decision-making speed increase at the same time.",
+      "Centralized architecture helps the early stages go quickly, but as the domain grows it blurs ownership and makes changes by one group impact the entire system.",
+      "Platforms only create leverage when they provide shared primitives and standards; it should not take away domain teams' ownership of their products.",
+      "Incidents and sales seasons are a test of both architecture and operating mechanism: observation, reaction, rollback and how to share responsibility.",
+      "Human capacity is part of architecture. The system can only be decentralized when the team is capable of operating it and taking responsibility for its decisions."
+    ],
+    "review_lenses": [
+      "Determine which signals indicate that a module or database is time to separate ownership.",
+      "Balance between company-wide standardization and each domain's technological autonomy.",
+      "Plan migrations that have a safe intermediate state instead of depending on one big cut-over.",
+      "Track both technical and organizational metrics: lead time, blast radius, number of cross dependencies, and team operational load."
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/10-xac-thuc-va-phan-quyen-trong-microservices.html",
+  "guide": {
+    "title": "The article should be read as a series of trust boundary decisions, not just a list of tokens and protocols.",
+    "problem": "In a monolith, sessions and authorization checks are often part of the same process. When decoupling microservices, identities must traverse the network, each service can be invoked in multiple paths, and access needs to be consistent without turning an auth service into a new bottleneck.",
+    "core_idea": "The article compares JWT signing RSA with opaque tokens, puts OAuth 2 into the authorization problem, and then looks at two places of enforcement: the edge layer and each service. The access control part goes from ACL to RBAC and PBAC to increase policy expression capabilities.",
+    "outcome": "There is no one option that wins every time. JWT reduces lookups but is difficult to retrieve immediately; opaque token increases session control but adds network dependency; The gateway simplifies the client, but the service still needs to protect its own boundary.",
+    "takeaways": [
+      "Authentication answers who is calling; authorization determines what the call does on a particular resource. Combining two steps makes the policy difficult to verify.",
+      "Self-contained tokens optimize the read path by accepting permission data that may be stale until the token expires.",
+      "Asymmetric signing allows multiple verification services without keeping secrets to be able to issue new tokens.",
+      "A gateway is a useful enforcement point but is not sufficient for service-to-service traffic or calls that bypass the edge layer.",
+      "RBAC is easier to manage than ACL as it scales; PBAC is more flexible but requires policy language, precedence, and decision interpretation tools."
+    ],
+    "review_lenses": [
+      "Draw the trust boundary and indicate where to issue, verify, refresh and revoke credential.",
+      "Choose token lifetime based on legacy risk, auth service availability, and user experience.",
+      "Specify which service is the source of truth for roles, permissions, and attributes used in the policy.",
+      "Log decides to delegate enough permissions to answer who was denied, by what rule, and with what policy version."
+    ]
+  }
+}

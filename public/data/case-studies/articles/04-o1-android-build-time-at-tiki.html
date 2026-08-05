@@ -1,6 +1,6 @@
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
-    <img src="assets/case-studies/android-build-time/01-figure.jpeg" width="2000" height="595" loading="lazy" decoding="async" alt="Photo by Benjamin Suter on Unsplash">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/01-figure.jpeg" width="2000" height="595" loading="lazy" decoding="async" alt="Photo by Benjamin Suter on Unsplash">
   </button>
   <figcaption>Photo by <a href="https://unsplash.com/@benjaminjsuter" target="_blank" rel="noopener noreferrer">Benjamin Suter</a><strong> </strong>on <a href="https://unsplash.com/photos/CgoRzWX4CDg" target="_blank" rel="noopener noreferrer">Unsplash</a></figcaption>
 </figure>
@@ -8,14 +8,14 @@
 <p>Build time has always been a big issue for Android developers. In order to reduce build time, developers usually split the project into multiple modules to take advantage of the Gradle’s <a href="https://guides.gradle.org/performance/#parallel_execution" target="_blank" rel="noopener noreferrer">parallel execution</a> feature. At Tiki, we modularize our project with the “per feature” approach, which means each feature will sit in its own module.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
-    <img src="assets/case-studies/android-build-time/02-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Figure 2 for The problem">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/02-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Figure 2 for The problem">
   </button>
   <figcaption>Figure 2 · The problem</figcaption>
 </figure>
 <p>When developing new features or maintaining old ones, Tiki developers usually have to make changes in the <code>:data</code> module which causes the whole project to recompile because most of our feature modules are based upon it. The whole process would take about 5–8 minutes. The more modules/features you have, the more time the process will take to build. We call this <strong>O(n) build time</strong>.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
-    <img src="assets/case-studies/android-build-time/03-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Figure 3 for The problem">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/03-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Figure 3 for The problem">
   </button>
   <figcaption>Figure 3 · The problem</figcaption>
 </figure>
@@ -50,7 +50,7 @@ implementation project(&quot;:search&quot;)
 <p>For this particular build command, only 3 modules get recompiled if something changes in the <code>:data</code> module.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
-    <img src="assets/case-studies/android-build-time/04-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Figure 4 for The solution">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/04-figure.png" width="1870" height="1052" loading="lazy" decoding="async" alt="Figure 4 for The solution">
   </button>
   <figcaption>Figure 4 · The solution</figcaption>
 </figure>
@@ -109,7 +109,7 @@ fun activity(): HomeActivity
 <p>In the end, we come up with a simple technique called <strong>fake source, </strong>creating a fake source set to mirror the missing real source</p>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
-    <img src="assets/case-studies/android-build-time/05-figure.png" width="422" height="383" loading="lazy" decoding="async" alt="Figure 5 for Implementation detail">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/05-figure.png" width="422" height="383" loading="lazy" decoding="async" alt="Figure 5 for Implementation detail">
   </button>
   <figcaption>Figure 5 · Implementation detail</figcaption>
 </figure>
@@ -160,7 +160,7 @@ interface HomeActivityModule</code></pre>
 <p>After implementing this idea to the Tiki Android project, the build time has reduced by half. One of the bonus from this is the debug APK size become really small since all of the app’s feature is excluded, this will also save a lot of time when deploying the APK to test device.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
-    <img src="assets/case-studies/android-build-time/06-figure.jpeg" width="2000" height="475" loading="lazy" decoding="async" alt="Figure 6 for The result">
+    <img src="assets/case-studies/04-o1-android-build-time-at-tiki/06-figure.jpeg" width="2000" height="475" loading="lazy" decoding="async" alt="Figure 6 for The result">
   </button>
   <figcaption>Figure 6 · The result</figcaption>
 </figure>

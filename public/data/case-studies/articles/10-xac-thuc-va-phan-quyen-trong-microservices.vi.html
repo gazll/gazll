@@ -3,7 +3,7 @@
 <p>Tiki xuất phát là 1 hệ thống monolithic, thông thường ở hệ thống như vậy sẽ có 1 module chung quản lý việc xác thực và phân quyền, mỗi user sau khi đăng nhập sẽ được cấp cho 1 Session ID duy nhất để định danh. Phía client có thể lưu Session ID lại dưới dạng cookie và gửi kèm nó trong mọi request. Hệ thống sau đó sẽ dùng Session ID được gửi đi để xác định danh tính của user truy cập, để người dùng không cần phải nhập lại thông tin đăng nhập lần sau.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
-    <img src="assets/case-studies/microservices-auth/01-figure.png" width="1322" height="906" loading="lazy" decoding="async" alt="Figure 1 for Bắt đầu từ Monolithic">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/01-figure.png" width="1322" height="906" loading="lazy" decoding="async" alt="Figure 1 for Bắt đầu từ Monolithic">
   </button>
   <figcaption>Figure 1 · Bắt đầu từ Monolithic</figcaption>
 </figure>
@@ -18,7 +18,7 @@
 </ul>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
-    <img src="assets/case-studies/microservices-auth/02-figure.png" width="2000" height="1225" loading="lazy" decoding="async" alt="Figure 2 for Bài toán khó Microservices">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/02-figure.png" width="2000" height="1225" loading="lazy" decoding="async" alt="Figure 2 for Bài toán khó Microservices">
   </button>
   <figcaption>Figure 2 · Bài toán khó Microservices</figcaption>
 </figure>
@@ -33,7 +33,7 @@
 </ul>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
-    <img src="assets/case-studies/microservices-auth/03-figure.png" width="1888" height="1024" loading="lazy" decoding="async" alt="Figure 3 for Sử dụng JWT">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/03-figure.png" width="1888" height="1024" loading="lazy" decoding="async" alt="Figure 3 for Sử dụng JWT">
   </button>
   <figcaption>Figure 3 · Sử dụng JWT</figcaption>
 </figure>
@@ -54,7 +54,7 @@
 <p>Transparent Token (còn được gọi là stateless token) thông thường chính là dạng JWT, token này bản thân chứa thông tin và không cần 1 service trung gian để kiểm tra. Hãy cùng so sánh 2 loại token này.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
-    <img src="assets/case-studies/microservices-auth/04-figure.png" width="1574" height="312" loading="lazy" decoding="async" alt="Figure 4 for Sử dụng Opaque Token khi muốn để kiểm soát phiên làm việc tốt hơn">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/04-figure.png" width="1574" height="312" loading="lazy" decoding="async" alt="Figure 4 for Sử dụng Opaque Token khi muốn để kiểm soát phiên làm việc tốt hơn">
   </button>
   <figcaption>Figure 4 · Sử dụng Opaque Token khi muốn để kiểm soát phiên làm việc tốt hơn</figcaption>
 </figure>
@@ -67,7 +67,7 @@
 <h3 id="xac-thuc-phan-quyen-tai-lop-ria">Xác thực, phân quyền tại lớp rìa</h3>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
-    <img src="assets/case-studies/microservices-auth/05-figure.png" width="1022" height="1162" loading="lazy" decoding="async" alt="Figure 5 for Xác thực, phân quyền tại lớp rìa">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/05-figure.png" width="1022" height="1162" loading="lazy" decoding="async" alt="Figure 5 for Xác thực, phân quyền tại lớp rìa">
   </button>
   <figcaption>Figure 5 · Xác thực, phân quyền tại lớp rìa</figcaption>
 </figure>
@@ -81,7 +81,7 @@
 </ul>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
-    <img src="assets/case-studies/microservices-auth/06-figure.png" width="1780" height="858" loading="lazy" decoding="async" alt="Figure 6 for Xác thực, phân quyền tại lớp rìa">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/06-figure.png" width="1780" height="858" loading="lazy" decoding="async" alt="Figure 6 for Xác thực, phân quyền tại lớp rìa">
   </button>
   <figcaption>Figure 6 · Xác thực, phân quyền tại lớp rìa</figcaption>
 </figure>
@@ -91,7 +91,7 @@
 <p>Để làm được việc này, vai trò rất lớn sẽ nằm ở service IAM (Identity Access Management), IAM nắm giữ các định danh của toàn bộ các đối tượng (user, service, command…) cùng với các bộ luật phân quyền chi tiết cho từng loại tài nguyên.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 7 at full size">
-    <img src="assets/case-studies/microservices-auth/07-figure.png" width="1746" height="830" loading="lazy" decoding="async" alt="Figure 7 for Xác thực, phân quyền tại các service">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/07-figure.png" width="1746" height="830" loading="lazy" decoding="async" alt="Figure 7 for Xác thực, phân quyền tại các service">
   </button>
   <figcaption>Figure 7 · Xác thực, phân quyền tại các service</figcaption>
 </figure>
@@ -102,7 +102,7 @@
 <h3 id="access-control-list-acl">Access Control List (ACL)</h3>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 8 at full size">
-    <img src="assets/case-studies/microservices-auth/08-figure.png" width="1706" height="448" loading="lazy" decoding="async" alt="Figure 8 for Access Control List (ACL)">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/08-figure.png" width="1706" height="448" loading="lazy" decoding="async" alt="Figure 8 for Access Control List (ACL)">
   </button>
   <figcaption>Figure 8 · Access Control List (ACL)</figcaption>
 </figure>
@@ -111,7 +111,7 @@
 <p>RBAC liên kết đối tượng tới các vai trò (role), và từ vai trò tới các quyền. Chẳng hạn vai trò <strong>Administrator</strong>có thể thừa hưởng mọi quyền mà vai trò <strong>Manager </strong>có, điều này giúp làm giảm độ phức tạp của ma trận quyền, thay vì gán toàn bộ quyền cho <strong>Administrator </strong>thì chỉ cần cho <strong>Administrator </strong>thừa hưởng các quyền của <strong>Manager</strong>.</p>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open figure 9 at full size">
-    <img src="assets/case-studies/microservices-auth/09-figure.png" width="899" height="432" loading="lazy" decoding="async" alt="Figure 9 for Role-Based Access Control (RBAC)">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/09-figure.png" width="899" height="432" loading="lazy" decoding="async" alt="Figure 9 for Role-Based Access Control (RBAC)">
   </button>
   <figcaption>Figure 9 · Role-Based Access Control (RBAC)</figcaption>
 </figure>
@@ -120,7 +120,7 @@
 <p>PBAC được xây dựng dựa trên Attribute Based Access Control (ABAC), qua đó định nghĩa các quyền để diễn đạt một yêu cầu được cho phép hay từ chối. ABAC sử dụng các thuộc tính (attribute) để mô tả cho đối tượng cần được kiểm tra, mỗi thuộc tính là 1 cặp key-value ví dụ <strong>Department </strong>= <strong>Marketing</strong>. Nhờ đó ABAC có thể giúp phân quyền mịn hơn, phù hợp với nhiều ngữ cảnh (context) và nghiệp vụ (business rules) khác nhau.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 10 at full size">
-    <img src="assets/case-studies/microservices-auth/10-figure.png" width="1616" height="1290" loading="lazy" decoding="async" alt="Figure 10 for Policy-Based Access Control (PBAC)">
+    <img src="assets/case-studies/10-xac-thuc-va-phan-quyen-trong-microservices/10-figure.png" width="1616" height="1290" loading="lazy" decoding="async" alt="Figure 10 for Policy-Based Access Control (PBAC)">
   </button>
   <figcaption>Figure 10 · Policy-Based Access Control (PBAC)</figcaption>
 </figure>

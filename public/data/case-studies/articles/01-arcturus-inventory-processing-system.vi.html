@@ -1,0 +1,172 @@
+<h2 id="introduction">1. Giới thiệu.</h2>
+<p>Trong một thời gian dài, việc xử lý hàng tồn kho là một vấn đề nan giải đối với hệ thống TIKI của chúng tôi. Chúng tôi không thể phục vụ lưu lượng truy cập lớn trong sự kiện bán hàng cao điểm và ngăn chặn việc bán vượt quá số lượng giao dịch chớp nhoáng có hạn. Mỗi sự kiện như Giựt Cô Hồn, những mùa sale huyền thoại đều là cơn ác mộng với chúng tôi. Chúng tôi phải xây dựng một trang web riêng hoặc làm nhiều thủ thuật để phục vụ khách hàng. Nhưng kết quả không được khuyến khích.</p>
+<p>Đơn hàng của khách hàng bị hủy do hệ thống bán hết hàng trong kho hoặc bị mất game mà không hiểu lý do. Tất cả những vấn đề này đều đến từ việc xử lý hàng tồn kho. Hệ thống của chúng tôi không thể đảm bảo tính nhất quán của dữ liệu tại sự kiện bán hàng cao điểm. Chúng tôi chỉ có hai lựa chọn: tính nhất quán của dữ liệu nhưng bị quá tải vào thời điểm cao điểm hoặc không nhất quán nhưng vẫn tồn tại - một lựa chọn thực sự tồi tệ và một lựa chọn tồi. Tất nhiên, chúng tôi phải chọn phương án thứ hai.</p>
+<p>Đôi khi chúng tôi chấp nhận bán quá số lượng một số sản phẩm hot và phải hủy đơn hàng cũng như bồi thường phiếu giảm giá cho khách hàng. Nhưng thực sự nó rất đau khổ, căng thẳng và kiệt sức. Vào mỗi thời điểm cao điểm, nhóm kinh doanh của chúng tôi phải xem báo cáo hiệu suất để tắt SKU nóng theo cách thủ công. Nhưng theo thời gian, hoạt động kinh doanh của chúng tôi ngày càng phát triển nhanh hơn. Nó lớn quá thỏ. Chúng tôi không thể chấp nhận những trải nghiệm tồi tệ như vậy của khách hàng nữa.</p>
+<p>Vào tháng 6/2018, thách thức được đẩy lên trong lộ trình của chúng tôi, chúng tôi phải xây dựng lại nền tảng danh mục để mở rộng quy mô và thích ứng với hoạt động kinh doanh của mình. Nhưng chúng tôi chỉ có thể khởi công dự án vào tháng 6/2019 khi đã hiểu rõ vấn đề, công nghệ và tập hợp đủ những kỹ sư giỏi nhất. Chúng tôi phát hành vào cuối tháng 9/2019, ngay trước ngày 10.10.2019. Kể từ thời điểm đó, hệ thống của chúng tôi chứng tỏ độ tin cậy và khả năng mở rộng để phục vụ tăng trưởng kinh doanh.</p>
+
+<h2 id="inventory-problems">2. Vấn đề về hàng tồn kho.</h2>
+<p>Hàng tồn kho rất quan trọng đối với một hệ thống thương mại điện tử. Mọi giao dịch đều dựa trên giá cả và số lượng của sản phẩm. Độ tin cậy của hệ thống phụ thuộc rất nhiều vào lượng hàng tồn kho. Để mở rộng quy mô kinh doanh, hệ thống phải xử lý nhiều vấn đề quan trọng về hàng tồn kho. Có hai vấn đề quan trọng:</p>
+<ul>
+  <li><strong>Dữ liệu nhất quán của hàng tồn kho:</strong> Số liệu kiểm kê cần có tính nhất quán cao. Hệ thống không cho phép bán vượt quá số lượng sản phẩm. Có hàng triệu sản phẩm và mỗi sản phẩm đều có hàng tại nhiều địa điểm, nhiều kho hàng. Số lượng của mỗi kho được cộng dồn vào kho của một sản phẩm trên website Thương mại điện tử. Số liệu tồn kho được khách hàng và hoạt động kho hàng cập nhật thường xuyên. Vì vậy, việc đảm bảo tính nhất quán của dữ liệu là rất phức tạp. Sẽ khó khăn hơn nhiều khi hệ thống phải mở rộng quy mô để xử lý lưu lượng truy cập lớn. Vào thời điểm cao điểm, hàng nghìn khách hàng đua nhau đặt mua những sản phẩm giá cực rẻ. Làm thế nào để mở rộng quy mô nhưng vẫn đảm bảo tính nhất quán của dữ liệu là bài toán thách thức nhất của hệ thống kiểm kê.</li>
+  <li><strong>Sự phức tạp của việc tích hợp với các hệ thống khác.</strong> Việc định lượng số lượng của một sản phẩm rất quan trọng đối với mọi hoạt động. Vì vậy hệ thống kiểm kê phải tích hợp sâu với các hệ thống khác, đặc biệt là với hệ thống kiểm kê, kho bãi. Luồng dữ liệu dài, xuất phát từ kho, qua khâu thanh toán, đặt hàng và giao hàng. Nếu dữ liệu bị thiếu ở bất kỳ bước nào, nó có thể phá vỡ hệ thống và khó theo dõi sự không nhất quán.</li>
+</ul>
+
+<h2 id="approaches">3. Cách tiếp cận.</h2>
+<p>Xử lý dữ liệu của hàng tồn kho nhất quán theo quy mô là thách thức để thiết kế hệ thống. Để giải quyết những vấn đề này, các phương pháp sau là:</p>
+<ul>
+  <li><strong>Sử dụng bộ nhớ cục bộ và xử lý không chặn để xử lý các vấn đề có thể mở rộng.</strong> Nút cổ chai I/O là vấn đề chính để mở rộng hệ thống. Dữ liệu kiểm kê được lưu trữ trong bộ nhớ cục bộ và được xử lý bằng cách áp dụng mô hình không chặn để tối đa hóa sức mạnh của CPU.</li>
+  <li><strong>Sử dụng một hàng đợi lệnh duy nhất và một mô hình chính duy nhất.</strong> Thật khó để giải quyết các vấn đề về tính nhất quán trong hệ thống phân tán nếu hệ thống cho phép các luồng dữ liệu cập nhật khác nhau. Bằng cách sử dụng một luồng dữ liệu duy nhất, bạn có thể dễ dàng duy trì tính nhất quán của dữ liệu và phục hồi.</li>
+  <li><strong>Chủ động duy trì tính nhất quán của dữ liệu khi tích hợp với các hệ thống bên ngoài.</strong> Khi khách hàng đặt hàng, giao dịch của họ được thực hiện trên nhiều hệ thống: thanh toán, tồn kho, thanh toán… Vì vậy, tính nhất quán của dữ liệu tồn kho không chỉ phụ thuộc vào chính hàng tồn kho mà còn phụ thuộc vào các hệ thống bên ngoài như hệ thống thanh toán. Nếu dữ liệu hàng tồn kho được cập nhật nhưng đơn hàng không thành công, hệ thống kiểm kê phải đảo ngược để duy trì tính nhất quán của dữ liệu.</li>
+  <li><strong>Sử dụng một luồng dữ liệu cập nhật để tích hợp với hệ thống kho.</strong> Dữ liệu tồn kho được cập nhật bởi cả 2 phía: khách hàng và kho hàng. Như thường lệ, có hai luồng dữ liệu: một cho khách hàng và một cho kho, dữ liệu được đồng bộ từ hệ thống kho, sau đó cập nhật để khách hàng thao tác. Nhưng việc duy trì tính nhất quán của dữ liệu sẽ khó hơn nếu có nhiều luồng dữ liệu. Hệ thống kiểm kê xử lý thông tin cập nhật từ kho giống như thông tin cập nhật từ khách hàng. Nó sử dụng hàng đợi lệnh thống nhất để duy trì tất cả các cập nhật của dữ liệu kiểm kê.</li>
+</ul>
+
+<h2 id="architecture">4. Kiến trúc.</h2>
+<p>Thử thách lớn nhất là xử lý tính nhất quán của dữ liệu hàng tồn kho. Dữ liệu của hàng tồn kho đòi hỏi tính nhất quán cao. Hệ thống không cho phép bán nhiều hơn số lượng của mỗi SKU. Cách đơn giản nhất là sử dụng cơ chế khóa. Nhưng theo cách này, nó gây ra hiệu suất kém và không thể mở rộng quy mô để xử lý lượng truy cập lớn, đặc biệt là vào thời điểm cao điểm khi hàng nghìn khách hàng đua nhau đặt hàng. Để giải quyết vấn đề này, kiến trúc phải thỏa mãn hai điều quan trọng:</p>
+<ul>
+  <li><strong>Đảm bảo tính nhất quán cuối cùng của dữ liệu hàng tồn kho.</strong> Có nhiều loại nguồn dữ liệu, như MySQL, Kafka, bộ nhớ cục bộ. Những nguồn dữ liệu này có những đặc điểm khác nhau. MySQL giỏi về tính kiên trì và nhất quán nhưng lại không tốt về hiệu suất khi phải xử lý việc khóa; bộ nhớ cục bộ có hiệu suất tốt nhưng không bền… Nhưng bằng cách kết hợp các đặc điểm của từng nguồn dữ liệu, hệ thống có thể xử lý được vấn đề mở rộng quy mô. Nhưng nếu dữ liệu hàng tồn kho được lưu trữ trong các nguồn dữ liệu khác nhau thì tất cả các nguồn dữ liệu này cuối cùng phải nhất quán ngay cả khi hệ thống gặp sự cố đột ngột, nếu không, hệ thống sẽ không đáng tin cậy để xử lý các giao dịch hàng tồn kho.</li>
+  <li><strong>Sử dụng mô hình dựa trên một luồng và bộ nhớ cục bộ nhưng phải xử lý khối lượng lưu lượng lớn.</strong> Nếu hệ thống có thể đảm bảo tính nhất quán cuối cùng của dữ liệu kiểm kê của nhiều nguồn dữ liệu, nó sẽ cho phép áp dụng các kỹ thuật tiên tiến để xử lý giao dịch. Cách tiếp cận ở đây là lưu trữ dữ liệu trong bộ nhớ cục bộ và sử dụng các kỹ thuật không chặn để tối đa hóa thông lượng.</li>
+</ul>
+
+<h3 id="consistency-model">4.1. Mô hình nhất quán</h3>
+<p>Để giải quyết các vấn đề về tính nhất quán cuối cùng, thiết kế dựa trên mô hình nhật ký giao dịch. Trạng thái của hệ thống không chỉ là trạng thái của dữ liệu trong cơ sở dữ liệu mà còn là trạng thái của từng lệnh cập nhật dữ liệu kiểm kê. Như vậy trạng thái của hệ thống đã bị thay đổi kể từ khi nhận được lệnh cập nhật từ hệ thống bên ngoài (hệ thống thu ngân, kho hàng, quản lý đơn hàng…). Mỗi thay đổi trạng thái của hệ thống được lưu trữ trong hàng đợi lệnh với độ lệch cụ thể.</p>
+<p>Phần bù của trạng thái được sử dụng làm điểm kiểm tra để khôi phục trạng thái của hệ thống bất cứ lúc nào. Ý tưởng chính là đảm bảo tính nhất quán cuối cùng của dữ liệu.</p>
+<p>Hệ thống có một hàng đợi lệnh. Nếu một hệ thống bên ngoài muốn cập nhật dữ liệu hàng tồn kho, nó sẽ gửi lệnh đến hệ thống kiểm kê. Lệnh được lưu trữ trong hàng đợi lệnh. Hàng đợi lệnh được sử dụng làm nhật ký giao dịch để duy trì trạng thái của hệ thống. Có hai nguồn dữ liệu chính cuối cùng cần phải nhất quán: hàng đợi lệnh và cơ sở dữ liệu liên tục. Độ lệch của cơ sở dữ liệu liên tục luôn nhỏ hơn hoặc bằng độ lệch mới nhất của hàng đợi lệnh.</p>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở sơ đồ mô hình nhất quán ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/01-consistency-model.jpeg" width="783" height="370" loading="lazy" decoding="async" alt="Sự bù đắp hàng đợi lệnh chảy qua bộ xử lý giao dịch vào cơ sở dữ liệu liên tục">
+  </button>
+  <figcaption>Mô hình nhất quán: phần bù hàng đợi đóng vai trò là điểm kiểm tra tính bền vững và khả năng phục hồi.</figcaption>
+</figure>
+<p>Thuật toán để duy trì tính nhất quán cuối cùng là:</p>
+<ul>
+  <li><strong>Bước 0:</strong> Bộ xử lý tải dữ liệu có offset mới nhất từ cơ sở dữ liệu và bắt đầu sử dụng các lệnh</li>
+  <li><strong>Bước 1:</strong> Nếu phần bù của cơ sở dữ liệu nhỏ hơn phần bù mới nhất của bộ xử lý giao dịch, nó sẽ bắt đầu sử dụng và áp dụng các thay đổi từ phần bù của cơ sở dữ liệu cho đến khi đạt đến phần bù mới nhất của hàng đợi lệnh và tiếp tục xử lý các lệnh tiếp theo trong tương lai khi chúng đến.</li>
+  <li><strong>Bước 2:</strong> Nếu phần bù của cơ sở dữ liệu lớn hơn phần bù cuối cùng của bộ xử lý giao dịch, nó sẽ bắt đầu sử dụng phần bù cuối cùng, áp dụng các thay đổi đối với dữ liệu trong bộ nhớ nhưng không duy trì những thay đổi dữ liệu này cho đến khi đạt đến phần bù của cơ sở dữ liệu.</li>
+</ul>
+<p>Bằng cách áp dụng mô hình này, hệ thống sẽ giải quyết được vấn đề nhất quán cuối cùng một cách chính xác. Nó đảm bảo tính nhất quán cuối cùng giữa tất cả các nguồn dữ liệu. Cơ chế này là xương sống để mở rộng quy mô hệ thống sau này, nó mở ra nhiều giải pháp xử lý các yêu cầu đồng thời cao và giữ được độ tin cậy của toàn hệ thống. Người ta thường nói: “Trong Khoa học Máy tính chỉ có hai điều khó: vô hiệu hóa bộ đệm và đặt tên cho mọi thứ”.</p>
+<p>Nhưng với mô hình này, hệ thống có thể sao chép dữ liệu giữa nhiều nguồn dữ liệu một cách đáng tin cậy: hàng đợi lệnh, bộ nhớ cục bộ, cơ sở dữ liệu và nút máy chủ.</p>
+
+<h3 id="processing-model">4.2. Mô hình xử lý.</h3>
+<figure class="cs-figure">
+  <button type="button" data-zoom-image aria-label="Mở sơ đồ mô hình xử lý Arcturus ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/02-processing-model.jpeg" width="641" height="421" loading="lazy" decoding="async" alt="Mô hình xử lý Arcturus với bộ đệm vòng lệnh và thay đổi, bộ đệm bộ nhớ cục bộ, cơ sở dữ liệu và tính bền vững không đồng bộ">
+  </button>
+  <figcaption>Mô hình xử lý: thực thi trên bộ nhớ cục bộ, sau đó thay đổi hàng loạt sang bộ lưu trữ liên tục không đồng bộ.</figcaption>
+</figure>
+<p>Hệ thống phải xử lý hàng nghìn giao dịch mỗi giây khi khách hàng đua nhau đặt hàng. Nhiều khách hàng có thể mua một SKU và một khách hàng có thể mua nhiều SKU cùng một lúc. Hệ thống phải giải quyết hai vấn đề khó khăn: thông lượng cao nhưng đảm bảo tính nhất quán của dữ liệu. Những vấn đề này đòi hỏi các chiến lược tối ưu hóa khác nhau và các chiến lược này thường xung đột với nhau.</p>
+<p>Nếu hệ thống muốn tối đa hóa thông lượng, nó sẽ khiến điều kiện chạy đua cập nhật dữ liệu và để đảm bảo tính nhất quán của dữ liệu, nó sẽ chặn quá trình xử lý của dữ liệu kia.</p>
+<p>Cách tiếp cận phổ biến là tối ưu hóa CPU để xử lý nhiều tác vụ cùng lúc. Nhưng thực tế, CPU hoạt động không tốt khi phải xử lý nhiều tác vụ cùng lúc. CPU phải chuyển ngữ cảnh để xử lý các tác vụ riêng biệt, mỗi khi chuyển ngữ cảnh sẽ làm chậm quá trình xử lý. Càng tệ hơn khi hệ thống phải xử lý nhiều khách hàng hơn vào thời gian cao điểm. Hơn thế nữa, hệ thống phải đảm bảo tính nhất quán của dữ liệu tồn kho.</p>
+<p>Nếu nhiều khách hàng đua nhau đặt SKU, sẽ có nhiều luồng đang cố gắng cập nhật dữ liệu hàng tồn kho. Nếu CPU phục vụ một luồng, nó phải chặn các luồng khác và chuyển sang các luồng khác sau khi hoàn thành. Nó sẽ gây ra nhiều chuyển đổi ngữ cảnh hơn và giảm hiệu suất cũng như thông lượng rất nhiều. Để tối đa hóa sức mạnh của CPU, hệ thống phải giảm chuyển đổi ngữ cảnh.</p>
+<p>Có hai cách tiếp cận để giải quyết vấn đề này: giảm số lượng luồng đồng thời và lưu trữ dữ liệu càng gần CPU càng tốt.</p>
+<p>Tất cả dữ liệu hàng tồn kho được lưu trữ trong bộ nhớ cục bộ. Nó được tải từ cơ sở dữ liệu nếu nó không có sẵn trong bộ nhớ cục bộ. Tất cả các thay đổi dữ liệu được xuất bản sang hàng đợi khác để tồn tại theo lô không đồng bộ. Bằng cách áp dụng mô hình nhất quán ở trên, hệ thống có thể đảm bảo tính nhất quán cuối cùng giữa hàng đợi lệnh, bộ nhớ cục bộ và cơ sở dữ liệu. Luồng dữ liệu là một chiều, việc tải dữ liệu, xử lý và ghi dữ liệu được phân tách theo các luồng khác nhau.</p>
+<p>Dựa trên phần bù của dữ liệu, hệ thống có thể quản lý tính nhất quán một cách dễ dàng. Nó có thể quyết định sử dụng các lệnh để phát lại trạng thái của dữ liệu trong bộ nhớ hoặc bỏ qua. Do luồng dữ liệu một chiều nên nó cũng loại bỏ tình trạng khóa tại cơ sở dữ liệu và tối ưu hóa nút thắt I/O nhiều.</p>
+<p>Khi dữ liệu đã sẵn sàng và có sẵn trong bộ nhớ cục bộ, CPU có thể truy cập dữ liệu một cách nhanh chóng và dễ dàng. Làm thế nào để tối ưu hóa hiệu suất của CPU là một thách thức. Thay vì giải quyết vấn đề đa luồng, hệ thống được thiết kế để sử dụng một luồng duy nhất để xử lý các giao dịch. Đó là cách tốt nhất để giải quyết các yêu cầu đồng thời cao. Nó làm giảm việc chuyển đổi ngữ cảnh và tối đa hóa thông lượng xử lý. Có một hàng đợi để đệm các lệnh để xử lý tuần tự.</p>
+<p>Hệ thống sử dụng hàng đợi không chặn đặc biệt: bộ đệm vòng. Nó dựa trên mã nguồn mở nổi tiếng: Disruptor L-Max. Nó có thể xử lý tới 1 triệu giao dịch mỗi giây. Có hai vòng: một vòng để xử lý các lệnh đệm để xử lý và một vòng để đệm các thay đổi dữ liệu để duy trì không đồng bộ trong cơ sở dữ liệu.</p>
+
+<h3 id="checkout-integration">4.3. Tích hợp thanh toán.</h3>
+<p>Dữ liệu nhất quán về đơn đặt hàng và hàng tồn kho là rất quan trọng. Nó đòi hỏi tính toàn vẹn và nhất quán của số lượng mặt hàng đã bán với số lượng của từng SKU. Khi khách hàng đặt hàng, hệ thống phải cập nhật rất nhiều dữ liệu. Có hai dữ liệu quan trọng: đơn hàng và hàng tồn kho. Những dữ liệu này được quản lý bởi hai hệ thống riêng biệt: thanh toán và kiểm kê. Các hệ thống này hiển thị API HTTP để tích hợp.</p>
+<p>Do thuộc tính của HTTP nên hệ thống không thể tạo giao dịch nguyên tử để cập nhật dữ liệu đơn hàng và tồn kho của hai hệ thống. Vì vậy có nguy cơ xảy ra sự không nhất quán giữa dữ liệu đơn hàng và tồn kho: dữ liệu tồn kho được cập nhật cho một đơn hàng mới nhưng không thể tạo đơn hàng thành công, khi đó tồn kho của một SKU sẽ bị mất và không thể sử dụng cho khách hàng tiếp theo. Để giải quyết vấn đề này, quá trình xử lý được chia thành hai giai đoạn:</p>
+<ul>
+  <li><strong>Dự trữ hàng tồn kho.</strong> Khi một đơn hàng được đặt, hệ thống thanh toán sẽ đưa ra yêu cầu tới hệ thống kiểm kê để dự trữ hàng tồn kho của SKU. Số lượng SKU được bảo lưu tạm thời.</li>
+  <li><strong>Sự kiện nhận đơn hàng</strong> để xác nhận số lượng hoặc đảo ngược số lượng và cung cấp hàng tồn kho cho khách hàng mới.</li>
+</ul>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở sơ đồ tích hợp thanh toán ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/03-checkout-integration.jpeg" width="1076" height="281" loading="lazy" decoding="async" alt="Luồng đơn đặt hàng của khách hàng thông qua Thanh toán, Bộ xử lý hàng tồn kho, Cơ sở dữ liệu đơn hàng và Trình lập lịch kiểm tra hàng tồn kho">
+  </button>
+  <figcaption>Tích hợp thanh toán: đặt trước, sau đó xác nhận hoặc đảo ngược kết quả đơn hàng.</figcaption>
+</figure>
+
+<h3 id="warehouse-integration">4.4. Tích hợp kho.</h3>
+<p>Hàng tồn kho được cập nhật bởi cả người tiêu dùng và hệ thống kho. Dữ liệu tồn kho được lấy từ hệ thống kho và sẽ được khách hàng trừ đi khi đặt hàng. Tại hệ thống kho, các thao tác vận hành rất phức tạp, sản phẩm ra vào kho rất thường xuyên. Luồng dữ liệu từ kho rất quan trọng đối với mọi hoạt động của nền tảng Thương mại điện tử TIKI. Nó duy trì tính chính xác của hàng tồn kho của từng sản phẩm.</p>
+<p>Chúng tôi đã tiếp cận bằng cách tách luồng này khỏi luồng tiêu dùng. Đó là suy nghĩ rất bình thường, một hệ thống truyền dữ liệu từ kho, một hệ thống để người tiêu dùng cập nhật hàng tồn kho. Chúng tôi đã dành vài tháng trước khi hoàn thành mô-đun này, đặt tên là mô-đun này là Ursa. Thực ra logic của nó phức tạp hơn logic của người tiêu dùng rất nhiều. Sau khi hoàn thiện Ursa, chúng tôi khởi động Arcturus và nhận ra rằng bằng cách tách thành hai hệ thống, chúng tôi phải duy trì logic trùng lặp về số lượng sản phẩm.</p>
+<p>Đặc biệt, rất khó để duy trì tính nhất quán của dữ liệu. Dữ liệu kiểm kê được cập nhật theo hai luồng khác nhau, nhưng dữ liệu của nó được lưu trữ trong hai nguồn dữ liệu: trong bộ nhớ và lớp liên tục - MySQL. Thay vì cố gắng khắc phục nhược điểm của kiến ​​trúc này, chúng tôi tuân theo cách tiếp cận ban đầu bằng cách sử dụng một hàng đợi lệnh duy nhất để duy trì lệnh cập nhật. Chúng tôi xử lý tất cả các nguồn thay đổi một cách bình đẳng, bất kể từ nhà kho hay từ người tiêu dùng. Bằng cách này, chúng tôi áp dụng một mô hình một cách nhất quán.</p>
+<p>Việc duy trì tính logic và tính nhất quán của dữ liệu sẽ dễ dàng hơn nhiều.</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở sơ đồ tích hợp kho ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/04-warehouse-integration.jpeg" width="951" height="281" loading="lazy" decoding="async" alt="Các cập nhật về kho và thanh toán hội tụ trên một luồng Lệnh Kiểm kê trước Bộ xử lý Kiểm kê">
+  </button>
+  <figcaption>Tích hợp kho: mọi thay đổi hàng tồn kho đều đi vào cùng một luồng lệnh.</figcaption>
+</figure>
+
+<h3 id="overall-architecture">4.5. Kiến trúc tổng thể.</h3>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở sơ đồ kiến trúc tổng thể Arcturus ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/05-overall-architecture.jpeg" width="1201" height="341" loading="lazy" decoding="async" alt="Kiến trúc Arcturus tổng thể kết nối thanh toán, kho hàng, bus sự kiện, API, hàng đợi lệnh, bộ xử lý và cơ sở dữ liệu hàng tồn kho">
+  </button>
+  <figcaption>Kiến trúc tổng thể của hệ thống xử lý kho lưu trữ Arcturus.</figcaption>
+</figure>
+<p>Hệ thống được xây dựng dựa trên:</p>
+<ul>
+  <li>Java 11</li>
+  <li>MySQL — Cơ sở dữ liệu</li>
+  <li>Kafka - Hàng đợi tin nhắn</li>
+  <li>Quả ổi - Bộ đệm cục bộ</li>
+  <li>Bộ ngắt L-Max - Bộ đệm vòng</li>
+  <li>Gridgo — Khung I/O không chặn</li>
+  <li>ZeroMQ - để phản hồi nhanh kết quả lệnh</li>
+  <li>Atomik — Lib nội bộ dựa trên Disruptor để xử lý các giao dịch trong bộ nhớ.</li>
+</ul>
+
+<h3 id="benchmark">4.6. Điểm chuẩn.</h3>
+<p>Chỉ xử lý giao dịch trong bộ nhớ, không cần quan tâm đến cơ sở dữ liệu, bộ xử lý hàng tồn kho có thể xử lý với tốc độ <strong>giao dịch 350k/s</strong> với nhiều toán tử trên 1 phím.</p>
+<figure class="cs-figure cs-figure-compact">
+  <button type="button" data-zoom-image aria-label="Mở kết quả điểm chuẩn trong bộ nhớ ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/06-in-memory-benchmark.png" width="680" height="46" loading="lazy" decoding="async" alt="Đầu ra điểm chuẩn hiển thị tỷ lệ giao dịch một thao tác và nhiều thao tác">
+  </button>
+  <figcaption>Đầu ra điểm chuẩn giao dịch trong bộ nhớ.</figcaption>
+</figure>
+<p>Và thử nghiệm với đầy đủ IO (yêu cầu đầu vào từ ZeroMQ, đầu ra sang MySQL), bộ xử lý kho có thể xử lý <strong>Giao dịch 120k/s</strong> (không chụp ảnh nên không có gì để show!)</p>
+<h4>Thông lượng</h4>
+<p>Trên Dàn dựng, chúng tôi có thể xử lý tối đa <strong>5600 yêu cầu/giây:</strong></p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở tổng quan về thông lượng dàn ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/07-throughput-overview.png" width="1400" height="411" loading="lazy" decoding="async" alt="Đầu ra của thiết bị đầu cuối từ quá trình kiểm tra thông lượng theo giai đoạn giữa các công nhân song song">
+  </button>
+  <figcaption>Kiểm tra thông lượng theo giai đoạn giữa các công nhân song song.</figcaption>
+</figure>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở chi tiết thông lượng dàn ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/08-throughput-detail.png" width="1400" height="395" loading="lazy" decoding="async" alt="Đầu ra chi tiết của thiết bị đầu cuối từ thử nghiệm thông lượng dàn dựng của Arcturus">
+  </button>
+  <figcaption>Đầu ra kiểm tra thông lượng chi tiết.</figcaption>
+</figure>
+<h4>Độ trễ</h4>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở biểu đồ độ trễ yêu cầu ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/09-latency.png" width="1360" height="516" loading="lazy" decoding="async" alt="Biểu đồ độ trễ yêu cầu Grafana trung bình khoảng 7 mili giây trong khoảng thời gian được hiển thị">
+  </button>
+  <figcaption>Yêu cầu độ trễ trong quá trình chạy thử.</figcaption>
+</figure>
+<h4>Lượt truy cập bộ đệm.</h4>
+<p>Bộ nhớ cache AVG đạt: 99%</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở biểu đồ tỷ lệ truy cập bộ đệm Guava ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/10-cache-hit.png" width="1350" height="462" loading="lazy" decoding="async" alt="Biểu đồ tỷ lệ truy cập bộ đệm Grafana Guava trung bình là 99%">
+  </button>
+  <figcaption>Tỷ lệ trúng bộ đệm ổi, trung bình 99%.</figcaption>
+</figure>
+<p>Tốc độ tải cơ sở dữ liệu: 0,3 yêu cầu mỗi giây</p>
+<figure class="cs-figure cs-figure-wide">
+  <button type="button" data-zoom-image aria-label="Mở biểu đồ tốc độ tải cơ sở dữ liệu trực tiếp ở kích thước đầy đủ">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/11-database-load-rate.png" width="1358" height="520" loading="lazy" decoding="async" alt="Biểu đồ tốc độ tải cơ sở dữ liệu trực tiếp Grafana với đường cơ sở thấp và một đợt tăng đột biến ngắn">
+  </button>
+  <figcaption>Tốc độ tải trực tiếp vào cơ sở dữ liệu trong cửa sổ thử nghiệm.</figcaption>
+</figure>
+
+<h2 id="conclusion">5. Kết luận.</h2>
+<p>Để xây dựng một sản phẩm, chúng ta phải giải quyết nhiều vấn đề một cách có hệ thống. Thách thức lớn nhất của dự án này là kết hợp nhiều cách tiếp cận và giải pháp vào một phương án để giải quyết một lần. Chúng tôi không phản ứng để giải quyết từng vấn đề một. Bởi vì độ tin cậy của hệ thống phụ thuộc vào từng vấn đề. Có hai chiến lược rất quan trọng để xây dựng dự án này thành công:</p>
+<ul>
+  <li><strong>Đảm bảo tính nhất quán của dữ liệu.</strong> Thiết kế tuân thủ nguyên tắc này rất nghiêm ngặt. Dữ liệu giống như một dòng chảy, nếu có một điểm rò rỉ sẽ làm đứt dòng chảy. Hệ thống phải đảm bảo luồng dữ liệu kể từ khi có yêu cầu cho đến khi lưu trữ thành công.</li>
+  <li><strong>Tối ưu hóa sức mạnh của CPU càng nhiều càng tốt.</strong> Bộ đệm vòng, xử lý không chặn, bộ nhớ đệm cục bộ được thiết kế tập trung. Nó làm giảm việc chuyển đổi ngữ cảnh, loại bỏ khóa, đưa dữ liệu đến gần quá trình xử lý để đạt được thông lượng cao nhất của CPU.</li>
+</ul>
+
+<h2 id="contributors">6. Người đóng góp.</h2>
+<p>Arcturus là một trong những dự án quan trọng nhất của TIKI. Nó phức tạp, cứng rắn và rất nhạy cảm. May mắn thay, TIKI có những người phù hợp vào đúng thời điểm. Nó được xây dựng bởi những người giỏi nhất của TIKI và nhận được nhiều sự hỗ trợ từ toàn công ty để hoàn thiện và phát hành dưới áp lực cao của doanh nghiệp. Những người đóng góp chính là:</p>
+<ul>
+  <li>Trần Nguyên Bản — Kỹ sư trưởng</li>
+  <li>Bùi Anh Dũng — Kỹ sư trưởng</li>
+  <li>Nguyễn Hoàng Bách — Kỹ sư trưởng cao cấp</li>
+  <li>Lê Mạnh Cường — Kỹ sư cao cấp</li>
+  <li>Nguyễn Thị Yến Linh — Chuyên viên QC</li>
+</ul>

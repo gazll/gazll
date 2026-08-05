@@ -5,7 +5,7 @@
 <h2 id="2-technical-approach"><strong>2. Technical approach</strong></h2>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 1 at full size">
-    <img src="assets/case-studies/brand-logo/01-figure.png" width="1024" height="768" loading="lazy" decoding="async" alt="Figure 1 for 2. Technical approach">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/01-figure.png" width="1024" height="768" loading="lazy" decoding="async" alt="Figure 1 for 2. Technical approach">
   </button>
   <figcaption>Figure 1 · 2. Technical approach</figcaption>
 </figure>
@@ -20,7 +20,7 @@
 <p>The set of considered seven brands includes: Apple, Adidas, Lego, Nike, Kingston, Calvin Klein, Bosch. Datasets used for training Darknet and Resnet are described in the following:</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 2 at full size">
-    <img src="assets/case-studies/brand-logo/02-figure.png" width="1282" height="1036" loading="lazy" decoding="async" alt="Figure 2 for 3. Dataset descriptions">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/02-figure.png" width="1282" height="1036" loading="lazy" decoding="async" alt="Figure 2 for 3. Dataset descriptions">
   </button>
   <figcaption>Figure 2 · 3. Dataset descriptions</figcaption>
 </figure>
@@ -32,7 +32,7 @@
 </ul>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 3 at full size">
-    <img src="assets/case-studies/brand-logo/03-figure.png" width="1320" height="626" loading="lazy" decoding="async" alt="Figure 3 for 4. Evaluation methods">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/03-figure.png" width="1320" height="626" loading="lazy" decoding="async" alt="Figure 3 for 4. Evaluation methods">
   </button>
   <figcaption>Figure 3 · 4. Evaluation methods</figcaption>
 </figure>
@@ -41,7 +41,7 @@
 </ul>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 4 at full size">
-    <img src="assets/case-studies/brand-logo/04-figure.png" width="1276" height="342" loading="lazy" decoding="async" alt="Figure 4 for 4. Evaluation methods">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/04-figure.png" width="1276" height="342" loading="lazy" decoding="async" alt="Figure 4 for 4. Evaluation methods">
   </button>
   <figcaption>Figure 4 · 4. Evaluation methods</figcaption>
 </figure>
@@ -49,51 +49,51 @@
 <p>We validate Darknet on the holdout validation set including 20 images / brand → 140 images in total. Darknet achieves a <strong>91.73% mAP</strong> at IOU threshold 0.5. Intuitively speaking, <strong>91.73%</strong> of logo areas are localized and predicted correctly (<em>correctly</em> here means more than <strong>50%</strong> area of the true bounding box are localized and assigned to the correct brand). Some good examples are shown in the following:</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 5 at full size">
-    <img src="assets/case-studies/brand-logo/05-figure.png" width="1296" height="1316" loading="lazy" decoding="async" alt="Figure 5 for 5. Performance of Darknet">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/05-figure.png" width="1296" height="1316" loading="lazy" decoding="async" alt="Figure 5 for 5. Performance of Darknet">
   </button>
   <figcaption>Figure 5 · 5. Performance of Darknet</figcaption>
 </figure>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 6 at full size">
-    <img src="assets/case-studies/brand-logo/06-figure.png" width="1030" height="1292" loading="lazy" decoding="async" alt="Figure 6 for 5. Performance of Darknet">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/06-figure.png" width="1030" height="1292" loading="lazy" decoding="async" alt="Figure 6 for 5. Performance of Darknet">
   </button>
   <figcaption>Figure 6 · 5. Performance of Darknet</figcaption>
 </figure>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 7 at full size">
-    <img src="assets/case-studies/brand-logo/07-figure.png" width="1032" height="1228" loading="lazy" decoding="async" alt="Figure 7 for 5. Performance of Darknet">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/07-figure.png" width="1032" height="1228" loading="lazy" decoding="async" alt="Figure 7 for 5. Performance of Darknet">
   </button>
   <figcaption>Figure 7 · 5. Performance of Darknet</figcaption>
 </figure>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 8 at full size">
-    <img src="assets/case-studies/brand-logo/08-figure.png" width="1282" height="750" loading="lazy" decoding="async" alt="Figure 8 for 5. Performance of Darknet">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/08-figure.png" width="1282" height="750" loading="lazy" decoding="async" alt="Figure 8 for 5. Performance of Darknet">
   </button>
   <figcaption>Figure 8 · 5. Performance of Darknet</figcaption>
 </figure>
 <p>While at the moment we are targeting only seven brands, we expect Darknet to be robust on an open set scenario where unknown brands appear. For this reason, we further test Darknet on 10,000 unknown images (having no logo or logo outside the set of seven brands) on production environment. On this set, Darknet makes <strong>2.18%</strong> mistake by assigning <strong>218</strong> unknown images to seven brands. Some bad examples are shown in the following.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 9 at full size">
-    <img src="assets/case-studies/brand-logo/09-figure.png" width="1284" height="728" loading="lazy" decoding="async" alt="Figure 9 for 5. Performance of Darknet">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/09-figure.png" width="1284" height="728" loading="lazy" decoding="async" alt="Figure 9 for 5. Performance of Darknet">
   </button>
   <figcaption>Figure 9 · 5. Performance of Darknet</figcaption>
 </figure>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 10 at full size">
-    <img src="assets/case-studies/brand-logo/10-figure.png" width="1016" height="1354" loading="lazy" decoding="async" alt="Figure 10 for 5. Performance of Darknet">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/10-figure.png" width="1016" height="1354" loading="lazy" decoding="async" alt="Figure 10 for 5. Performance of Darknet">
   </button>
   <figcaption>Figure 10 · 5. Performance of Darknet</figcaption>
 </figure>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 11 at full size">
-    <img src="assets/case-studies/brand-logo/11-figure.png" width="1282" height="718" loading="lazy" decoding="async" alt="Figure 11 for 5. Performance of Darknet">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/11-figure.png" width="1282" height="718" loading="lazy" decoding="async" alt="Figure 11 for 5. Performance of Darknet">
   </button>
   <figcaption>Figure 11 · 5. Performance of Darknet</figcaption>
 </figure>
 <p>Performance of Darknet on 11,313 unknown images and 1,844 images belonging to seven brands is shown in the following.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 12 at full size">
-    <img src="assets/case-studies/brand-logo/12-figure.png" width="1086" height="490" loading="lazy" decoding="async" alt="Figure 12 for 5. Performance of Darknet">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/12-figure.png" width="1086" height="490" loading="lazy" decoding="async" alt="Figure 12 for 5. Performance of Darknet">
   </button>
   <figcaption>Figure 12 · 5. Performance of Darknet</figcaption>
 </figure>
@@ -103,7 +103,7 @@
 <p>Finally, we compute the performance of the entire system on the mixture of 11,313 unknown images and 1,844 images belonging to seven brands, shown in the following table.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 13 at full size">
-    <img src="assets/case-studies/brand-logo/13-figure.png" width="1078" height="478" loading="lazy" decoding="async" alt="Figure 13 for 6. Performance of Darknet + Resnet (the entire system).">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/13-figure.png" width="1078" height="478" loading="lazy" decoding="async" alt="Figure 13 for 6. Performance of Darknet + Resnet (the entire system).">
   </button>
   <figcaption>Figure 13 · 6. Performance of Darknet + Resnet (the entire system).</figcaption>
 </figure>
@@ -111,7 +111,7 @@
 <p>The following confusion matrix shows how models are confused among classes.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 14 at full size">
-    <img src="assets/case-studies/brand-logo/14-figure.png" width="1408" height="778" loading="lazy" decoding="async" alt="Figure 14 for 6. Performance of Darknet + Resnet (the entire system).">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/14-figure.png" width="1408" height="778" loading="lazy" decoding="async" alt="Figure 14 for 6. Performance of Darknet + Resnet (the entire system).">
   </button>
   <figcaption>Figure 14 · 6. Performance of Darknet + Resnet (the entire system).</figcaption>
 </figure>
@@ -119,14 +119,14 @@
 <p>We further investigate the effectiveness of the entire system on request level rather than image level. Specifically, we would like to count how many predictions coincide with human decisions. We employ two basic rules counting number of correct predictions made by bot in the following:</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 15 at full size">
-    <img src="assets/case-studies/brand-logo/15-figure.png" width="1284" height="332" loading="lazy" decoding="async" alt="Figure 15 for 7. Effectiveness on production.">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/15-figure.png" width="1284" height="332" loading="lazy" decoding="async" alt="Figure 15 for 7. Effectiveness on production.">
   </button>
   <figcaption>Figure 15 · 7. Effectiveness on production.</figcaption>
 </figure>
 <p>We crawled requests in the last three months, and report the number of bot corrections according to two cases `approved` and `rejected` related to seven brands in Figure 3.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open figure 16 at full size">
-    <img src="assets/case-studies/brand-logo/16-figure.png" width="1340" height="852" loading="lazy" decoding="async" alt="Figure 16 for 7. Effectiveness on production.">
+    <img src="assets/case-studies/08-applying-machine-learning-to-solve-brand-logo-detection-problem/16-figure.png" width="1340" height="852" loading="lazy" decoding="async" alt="Figure 16 for 7. Effectiveness on production.">
   </button>
   <figcaption>Figure 16 · 7. Effectiveness on production.</figcaption>
 </figure>

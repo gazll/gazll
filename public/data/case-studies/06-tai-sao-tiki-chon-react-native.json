@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/06-tai-sao-tiki-chon-react-native.html",
+  "guide": {
+    "title": "The important decision is not React Native or Native for the entire app, but choosing the right technology for each module.",
+    "problem": "Native offers good performance and platform access but costs two development streams; Cross-platform helps speed testing but increases framework dependencies, application size, and performance risks. A single option for the entire app makes trade-off rigid.",
+    "core_idea": "Tiki uses a multi-module architecture with a native app as the foundation. Each feature can choose Native or React Native depending on the lifecycle and requirements; Modules link to the main app via Android library or iOS Pod.",
+    "outcome": "The model allows experimental or short-term features to move quickly using React Native, while the part that needs to control the platform remains Native. React Native also takes advantage of ReactJS resources available at the time of decision.",
+    "takeaways": [
+      "Architecture boundaries are more important than frameworks: independent modules make technology choices changeable without affecting the entire application.",
+      "Cross-platform is best suited when speed of testing and the ability to share human resources are more important than absolute optimization of every millisecond.",
+      "Native shells create escape hatches for new SDKs, device integration, and screens with special performance requirements.",
+      "Costs do not disappear but are relocated: bridges, navigation, dependencies, release coordination and two-way debugging skills must be factored into the decision.",
+      "Team quality and implementation discipline can influence actual performance more than the technology label chosen."
+    ],
+    "review_lenses": [
+      "Define contracts for navigation, authentication, analytics and data sharing between native and cross-platform.",
+      "Determine criteria for which modules to use React Native and when to switch back to Native.",
+      "Manage framework version, native dependencies and release schedules so that one module does not lock the entire app.",
+      "Measure startup time, memory, crash-free rate and binary size for each module instead of arguing with emotions."
+    ]
+  }
+}

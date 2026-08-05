@@ -33,7 +33,7 @@
 <p>The system has one command queue. If an external system wants to update the inventory’s data, it will send a command to the inventory system. The command is stored in a command queue. The command queue is used as a transaction log to maintain the state of the system. There are two main data sources that need to be eventually consistent: the command queue and the persistent database. The offset of the persistent database is always less than or equal to the latest offset of the command queue.</p>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open the consistency model diagram at full size">
-    <img src="assets/case-studies/arcturus/01-consistency-model.jpeg" width="783" height="370" loading="lazy" decoding="async" alt="Command queue offsets flowing through a transaction processor into a persistent database">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/01-consistency-model.jpeg" width="783" height="370" loading="lazy" decoding="async" alt="Command queue offsets flowing through a transaction processor into a persistent database">
   </button>
   <figcaption>Consistency model: the queue offset acts as a checkpoint for persistence and recovery.</figcaption>
 </figure>
@@ -49,7 +49,7 @@
 <h3 id="processing-model">4.2. Processing Model.</h3>
 <figure class="cs-figure">
   <button type="button" data-zoom-image aria-label="Open the Arcturus processing model diagram at full size">
-    <img src="assets/case-studies/arcturus/02-processing-model.jpeg" width="641" height="421" loading="lazy" decoding="async" alt="Arcturus processing model with command and change ring buffers, local-memory cache, database and asynchronous persistence">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/02-processing-model.jpeg" width="641" height="421" loading="lazy" decoding="async" alt="Arcturus processing model with command and change ring buffers, local-memory cache, database and asynchronous persistence">
   </button>
   <figcaption>Processing model: execute against local memory, then batch changes to persistent storage asynchronously.</figcaption>
 </figure>
@@ -72,7 +72,7 @@
 </ul>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open the checkout integration diagram at full size">
-    <img src="assets/case-studies/arcturus/03-checkout-integration.jpeg" width="1076" height="281" loading="lazy" decoding="async" alt="Customer order flow through Checkout, Inventory Processor, Order DB and Inventory Checking Scheduler">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/03-checkout-integration.jpeg" width="1076" height="281" loading="lazy" decoding="async" alt="Customer order flow through Checkout, Inventory Processor, Order DB and Inventory Checking Scheduler">
   </button>
   <figcaption>Checkout integration: reserve first, then confirm or reverse from the order outcome.</figcaption>
 </figure>
@@ -84,7 +84,7 @@
 <p>It is much easier to maintain the logic and consistency of data.</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open the warehouse integration diagram at full size">
-    <img src="assets/case-studies/arcturus/04-warehouse-integration.jpeg" width="951" height="281" loading="lazy" decoding="async" alt="Warehouse and checkout updates converging on one Inventory Command flow before the Inventory Processor">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/04-warehouse-integration.jpeg" width="951" height="281" loading="lazy" decoding="async" alt="Warehouse and checkout updates converging on one Inventory Command flow before the Inventory Processor">
   </button>
   <figcaption>Warehouse integration: every inventory change enters the same command flow.</figcaption>
 </figure>
@@ -92,7 +92,7 @@
 <h3 id="overall-architecture">4.5. Overall Architecture.</h3>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open the overall Arcturus architecture diagram at full size">
-    <img src="assets/case-studies/arcturus/05-overall-architecture.jpeg" width="1201" height="341" loading="lazy" decoding="async" alt="Overall Arcturus architecture connecting checkout, warehouse, event bus, API, command queue, processor and inventory database">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/05-overall-architecture.jpeg" width="1201" height="341" loading="lazy" decoding="async" alt="Overall Arcturus architecture connecting checkout, warehouse, event bus, API, command queue, processor and inventory database">
   </button>
   <figcaption>Overall architecture of the Arcturus inventory processing system.</figcaption>
 </figure>
@@ -112,7 +112,7 @@
 <p>With only processing transaction in memory, don’t care database, the inventory processor can process with rate <strong>350k transaction / s</strong> with multi-operator on 1 key.</p>
 <figure class="cs-figure cs-figure-compact">
   <button type="button" data-zoom-image aria-label="Open the in-memory benchmark result at full size">
-    <img src="assets/case-studies/arcturus/06-in-memory-benchmark.png" width="680" height="46" loading="lazy" decoding="async" alt="Benchmark output showing single-operation and multi-operation transaction rates">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/06-in-memory-benchmark.png" width="680" height="46" loading="lazy" decoding="async" alt="Benchmark output showing single-operation and multi-operation transaction rates">
   </button>
   <figcaption>In-memory transaction benchmark output.</figcaption>
 </figure>
@@ -121,20 +121,20 @@
 <p>On the Staging, we can handle up to <strong>5600 requests/ seconds:</strong></p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open the staging throughput overview at full size">
-    <img src="assets/case-studies/arcturus/07-throughput-overview.png" width="1400" height="411" loading="lazy" decoding="async" alt="Terminal output from a staging throughput test across parallel workers">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/07-throughput-overview.png" width="1400" height="411" loading="lazy" decoding="async" alt="Terminal output from a staging throughput test across parallel workers">
   </button>
   <figcaption>Staging throughput test across parallel workers.</figcaption>
 </figure>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open the staging throughput detail at full size">
-    <img src="assets/case-studies/arcturus/08-throughput-detail.png" width="1400" height="395" loading="lazy" decoding="async" alt="Detailed terminal output from the Arcturus staging throughput test">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/08-throughput-detail.png" width="1400" height="395" loading="lazy" decoding="async" alt="Detailed terminal output from the Arcturus staging throughput test">
   </button>
   <figcaption>Detailed throughput test output.</figcaption>
 </figure>
 <h4>Latency</h4>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open the request latency chart at full size">
-    <img src="assets/case-studies/arcturus/09-latency.png" width="1360" height="516" loading="lazy" decoding="async" alt="Grafana request latency chart averaging about 7 milliseconds over the displayed period">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/09-latency.png" width="1360" height="516" loading="lazy" decoding="async" alt="Grafana request latency chart averaging about 7 milliseconds over the displayed period">
   </button>
   <figcaption>Request latency during the staging run.</figcaption>
 </figure>
@@ -142,14 +142,14 @@
 <p>AVG cache hit: 99%</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open the Guava cache hit-rate chart at full size">
-    <img src="assets/case-studies/arcturus/10-cache-hit.png" width="1350" height="462" loading="lazy" decoding="async" alt="Grafana Guava cache hit-rate chart averaging 99 percent">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/10-cache-hit.png" width="1350" height="462" loading="lazy" decoding="async" alt="Grafana Guava cache hit-rate chart averaging 99 percent">
   </button>
   <figcaption>Guava cache hit rate, averaging 99%.</figcaption>
 </figure>
 <p>Load database rate: 0.3 requests per second</p>
 <figure class="cs-figure cs-figure-wide">
   <button type="button" data-zoom-image aria-label="Open the direct database load-rate chart at full size">
-    <img src="assets/case-studies/arcturus/11-database-load-rate.png" width="1358" height="520" loading="lazy" decoding="async" alt="Grafana direct database load-rate chart with a low baseline and one brief spike">
+    <img src="assets/case-studies/01-arcturus-inventory-processing-system/11-database-load-rate.png" width="1358" height="520" loading="lazy" decoding="async" alt="Grafana direct database load-rate chart with a low baseline and one brief spike">
   </button>
   <figcaption>Direct load-to-database rate during the test window.</figcaption>
 </figure>

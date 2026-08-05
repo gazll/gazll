@@ -259,7 +259,6 @@
   .page em{color:var(--clay);font-style:normal;font-weight:500}
 
   /* ---------- Experience: long-form engineering case studies ---------- */
-  body.view-case-studies .hdr-lang{display:none}
   .cs-shell{animation:fade .35s ease}
   .cs-loading{min-height:48vh;display:grid;place-items:center;align-content:center;gap:12px;color:var(--muted)}
   .cs-loading span{width:28px;height:28px;border:3px solid var(--line-strong);border-top-color:var(--emerald);

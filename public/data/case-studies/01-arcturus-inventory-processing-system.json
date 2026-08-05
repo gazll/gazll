@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/01-arcturus-inventory-processing-system.html",
+  "guide": {
+    "title": "Read this as a consistency design first, and a peak-traffic story second.",
+    "problem": "Inventory changes arrived from checkout and warehouse operations at the same time. During major sales, database locking protected correctness but limited throughput; relaxing consistency kept the site alive but created overselling and cancelled orders.",
+    "core_idea": "Put every mutation through one ordered command log, rebuild in-memory state from queue offsets, process conflicts on a single thread and persist changes asynchronously in batches. Integrations use reserve, confirm and reverse instead of pretending that several HTTP services share one atomic transaction.",
+    "outcome": "The article reports roughly 350k in-memory transactions per second, 120k transactions per second with full I/O, 5,600 requests per second in staging and a 99% cache-hit rate. More importantly, the same offset model defines normal processing and crash recovery.",
+    "takeaways": [
+      "Serialization can be a scaling technique when the real contention is concentrated on a small number of inventory keys; removing locks and context switches may matter more than adding worker threads.",
+      "The queue offset is not only consumer metadata. It is a checkpoint that connects the transaction log, local memory and the persistent database into one recoverable state machine.",
+      "Warehouse adjustments and customer purchases share one mutation path. A unified command model removes duplicated inventory logic and makes ordering rules explicit.",
+      "Cross-service correctness is handled as a lifecycle: reserve stock, observe the order result, then confirm or compensate. Timeouts, duplicate events and reversals are part of the design rather than exceptional cases.",
+      "The architecture separates the latency-sensitive decision from durable persistence, but only because replay and idempotency make that separation safe."
+    ],
+    "review_lenses": [
+      "Recovery boundary: identify exactly which offset is durable and prove that replay cannot apply an inventory mutation twice.",
+      "Hot-key strategy: decide when one processor is enough and how a SKU or warehouse could be partitioned without breaking ordering.",
+      "Backpressure: define what happens when the persistence ring buffer or MySQL falls behind the command stream.",
+      "Reservation lifecycle: make expiry, late order events, cancellation and compensation observable and idempotent."
+    ]
+  }
+}

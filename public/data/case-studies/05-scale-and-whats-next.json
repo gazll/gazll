@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/05-scale-and-whats-next.html",
+  "guide": {
+    "title": "This is the story of scaling operations from \"running\" to \"optimizing\", not just adding more servers.",
+    "problem": "As the number of orders, warehouses, products and partners increases, paper-based picking, approximate inventory management, file exchange and manual accounting processing are no longer fast or accurate enough. Each step of delivery opens up a series of after-sales and financial problems behind.",
+    "core_idea": "Operation Product progressively digitizes the entire lifecycle: precise inventory location, pick-by-batch and optimal routing, warehouse PDA, delivery route configuration, partner integration, proof-of-delivery, after-sales and receivable/payable flows.",
+    "outcome": "Once the basic foundation is up and running, the next focus turns to inventory optimization, single prioritization, real-time routing, accounting automation and human capacity building. The article puts process and organizational quality on an equal footing with algorithms.",
+    "takeaways": [
+      "A local optimization is only valid when the input data is sufficiently accurate; Good picking paths don't help if the system doesn't know which shelf the product is actually on.",
+      "Designing for the operator needs to reduce cognitive load and make exceptions clear, because physical deviations often start with manual operations.",
+      "Logistics integration is a long state machine: handover, shipping, collection, status updates and proof of delivery all need to be controlled.",
+      "The financial system is subject to a different type of scale: it is not necessarily the lowest latency, but the data must be traceable and accurate for each transaction.",
+      "The next stage of scaling is often about optimizing decisions and people, not just replacing new technology."
+    ],
+    "review_lenses": [
+      "Draw the state machine from inbound to aftermarket and show the owner of each transition.",
+      "Design a reconcile mechanism when other system data exists in physical inventory or partner data.",
+      "Set end-to-end metrics like delivery time, cost per order, and defect rate instead of just service-specific metrics.",
+      "Evaluate the UX of internal tools by operational errors, training time, and actual operator productivity."
+    ]
+  }
+}

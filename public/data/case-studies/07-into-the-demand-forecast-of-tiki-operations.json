@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/07-into-the-demand-forecast-of-tiki-operations.html",
+  "guide": {
+    "title": "Forecast quality matters only when it changes replenishment, placement and workforce decisions safely.",
+    "problem": "Millions of products, multiple warehouses and promotions make manual purchasing decisions impossible to scale. Too little inventory causes stock-outs, too much locks cash, and placing the right quantity in the wrong region still increases delivery time.",
+    "core_idea": "Combine several classical time-series methods with DeepAR, let models compete per product, maintain a reusable signal pool and run tagged experiments against the production baseline. SMAPE provides the principal weekly evaluation metric.",
+    "outcome": "The article reports forecasts up to 60% more accurate and describes the next operational steps: regional forecasts, automated replenishment for reliable product segments and daily forecasts for warehouse workforce planning.",
+    "takeaways": [
+      "One model is unlikely to fit the mixture of smooth, seasonal, sparse and intermittent demand found across a large catalog.",
+      "Model competition moves selection to the SKU level; evaluation data must stay out of training or the apparent winner will be biased.",
+      "A signal pool turns feature engineering into platform capability, allowing promotions, traffic and other hypotheses to be tested repeatedly.",
+      "Under-forecasting and over-forecasting have different business costs. A single symmetric error metric is useful but cannot express every inventory consequence.",
+      "Automation should begin with segments where historical forecast reliability crosses a defined threshold, leaving uncertain cases with human review."
+    ],
+    "review_lenses": [
+      "Backtesting: preserve temporal order and reproduce the information that would actually have been available at forecast time.",
+      "Business loss: translate forecast error into stock-out, holding cost, markdown risk and delivery distance.",
+      "Drift: monitor new products, promotion changes and regional behaviour that can invalidate historical patterns.",
+      "Decision integration: record which purchase or staffing action used which forecast version so outcomes can be audited."
+    ]
+  }
+}

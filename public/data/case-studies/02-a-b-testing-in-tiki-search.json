@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/02-a-b-testing-in-tiki-search.html",
+  "guide": {
+    "title": "The useful result is not a winning test; it is a repeatable way to choose one for your own metric distribution.",
+    "problem": "Small CTR differences can be financially meaningful, but random user behaviour can produce differences of the same size even when both ranking variants are identical. A direct comparison therefore confuses sampling noise with a product improvement.",
+    "core_idea": "Model views and each user’s latent click probability, generate many controlled A/A and A/B experiments, then measure both false-positive rate and sensitivity for T-Test, Mann–Whitney and bucketed variants. Real A/A traffic is used as a final calibration check.",
+    "outcome": "Different distribution shapes favour different tests. Mann–Whitney performs well in many simulations, while bucketing becomes competitive under more regular ground-truth CTR distributions. The article deliberately avoids presenting one universal statistical test.",
+    "takeaways": [
+      "Start from the unit of independence. Tiki groups observations by user because treating dependent impressions or sessions as independent makes p-values look more certain than they are.",
+      "Validate a test with A/A data before trusting its A/B verdict. If the null case already exceeds the accepted false-positive rate, product decisions built on it are unsafe.",
+      "Sensitivity and false-positive rate must be evaluated together. A conservative test that never detects a real uplift is not automatically a good test.",
+      "Simulation is most useful when its view counts and latent CTRs resemble production. Elegant assumptions that miss the real distribution can select the wrong method.",
+      "Bucketing changes the observation unit and weighting behaviour; bucket size is a domain parameter to test, not a magic constant."
+    ],
+    "review_lenses": [
+      "Experiment assignment: verify stable user allocation, exclusion rules and independence from concurrent experiments.",
+      "Metric definition: specify the denominator, aggregation unit and treatment of users with very little activity.",
+      "Power planning: connect minimum detectable effect, sample size and full weekly behaviour before setting duration.",
+      "Decision policy: document multiple-testing corrections, guardrail metrics and what happens when statistical and business significance disagree."
+    ]
+  }
+}

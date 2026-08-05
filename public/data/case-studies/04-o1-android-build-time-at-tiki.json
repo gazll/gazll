@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/04-o1-android-build-time-at-tiki.html",
+  "guide": {
+    "title": "The key move is to reduce the local build graph, not merely make the same graph compile faster.",
+    "problem": "A change in the shared data module invalidated most feature modules, turning a normal edit–compile–run loop into a five-to-eight-minute build. With ten to twenty builds per day, the delay became a large and repeated productivity cost.",
+    "core_idea": "A custom Gradle property includes only the feature currently under development. Missing feature references are replaced with small fake source sets, and deep links open the target screen in the reduced debug APK.",
+    "outcome": "The article reports that build time was cut roughly in half and fell to around one or two minutes. The debug APK also became smaller because unrelated features were absent from the local build.",
+    "takeaways": [
+      "Optimizing tasks inside a huge dependency graph has a ceiling. Excluding work from the graph can deliver a larger improvement than tuning individual compilers.",
+      "Feature modularization alone does not guarantee fast builds; dependency direction determines whether a shared-module edit still fans out across every feature.",
+      "Fake source is a compile-time compatibility boundary. It works only when the contract between the app shell and feature modules is deliberately small.",
+      "A reduced APK needs an alternate navigation path. Deep links preserve the developer loop even when the normal home and routing modules are excluded.",
+      "The approach optimizes local feature work, not release builds. CI must still compile and test the complete graph."
+    ],
+    "review_lenses": [
+      "Contract drift: ensure fake declarations fail quickly when the real feature interface changes.",
+      "Test coverage: define which checks run on the reduced graph locally and which must run on the full graph in CI.",
+      "Dependency hygiene: measure how many app-shell references force fake implementations and treat growth as an architecture warning.",
+      "Developer ergonomics: make feature selection discoverable and avoid a command that silently produces an incomplete APK."
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "body_file": "data/case-studies/articles/08-applying-machine-learning-to-solve-brand-logo-detection-problem.vi.html",
+  "guide": {
+    "title": "Thiết kế sản xuất tách biệt việc tìm kiếm một biểu tượng với việc quyết định nó đại diện cho thương hiệu nào.",
+    "problem": "Quy mô thị trường khiến việc xác minh hình ảnh thủ công trở nên tốn kém, trong khi chỉ hình thức bên ngoài của sản phẩm thường không thể phân biệt được thương hiệu. Hệ thống cũng phải xử lý một thế giới mở trong đó hầu hết các hình ảnh không thuộc về bất kỳ thương hiệu nào trong số bảy thương hiệu được hỗ trợ ban đầu.",
+    "core_idea": "Sử dụng YOLO v3 thông qua Darknet để bản địa hóa các vùng biểu trưng ứng cử viên, sau đó chuyển các phần cắt đó sang bộ phân loại ResNet để dự đoán thương hiệu chính xác hơn. Mô hình này hoạt động như một tín hiệu ban đầu cho QC nội dung chứ không phải là sự thay thế chắc chắn cho các quyết định của con người.",
+    "outcome": "Darknet đạt 91,73% mAP ở IoU 0,5 trong xác thực được báo cáo. Trên 10.000 hình ảnh sản xuất chưa xác định, việc thêm ResNet giúp giảm tỷ lệ gán nhầm cho bảy thương hiệu đã biết từ 2,18% xuống 0,26%; hệ thống kết hợp báo cáo điểm F1 trung bình là 94,01% trên bộ đánh giá hỗn hợp.",
+    "takeaways": [
+      "Việc phân tách nội địa hóa và phân loại cho phép mỗi mô hình giải quyết nhiệm vụ mà nó xử lý tốt nhất và hiển thị các chế độ lỗi riêng biệt.",
+      "Độ chính xác tập hợp đóng là không đủ để kiểm duyệt thị trường. Những thương hiệu và hình ảnh không rõ ràng không có logo chiếm ưu thế trong việc phân phối sản phẩm.",
+      "Người giới thiệu trong vòng lặp có thể tạo ra giá trị trước khi mức thu hồi đủ cao để từ chối hoàn toàn tự động.",
+      "Thỏa thuận ở cấp độ yêu cầu với các quyết định QC là một thước đo mang tính hoạt động cao hơn so với chỉ độ chính xác ở cấp độ hình ảnh.",
+      "Việc phủ định sai vẫn khó xảy ra khi logo bị sửa đổi, che khuất hoặc loại bỏ; quy trình làm việc của sản phẩm phải làm rõ giới hạn đó."
+    ],
+    "review_lenses": [
+      "Chính sách ngưỡng: sử dụng các ngưỡng tin cậy khác nhau cho đề xuất, đánh giá thủ công và hành động tự động.",
+      "Giám sát mở: theo dõi các thông tin sai lệch về thương hiệu không xác định, tách biệt khỏi sự nhầm lẫn giữa các thương hiệu được hỗ trợ.",
+      "Tình trạng tập dữ liệu: đánh giá xu hướng người bán, danh mục và kiểu hình ảnh khi thị trường và các chiến thuật thao túng thay đổi.",
+      "Vòng phản hồi: phân biệt các nhãn QC đã được xác minh với các quyết định lịch sử ồn ào trước khi đào tạo lại."
+    ]
+  }
+}

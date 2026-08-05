@@ -6,30 +6,16 @@
    suffix. Both sources load eagerly, so switching languages never needs a
    refetch. */
 
-const LANG_KEY = 'gazl.contentLang';
-const DEFAULT_LANG = 'en';
-const LANGS = ['en', 'vi'];
+import {
+  CONTENT_LANGS,
+  fetchJson,
+  loadBilingualJsonRows,
+  localizedRecord,
+  readContentLanguage,
+  writeContentLanguage
+} from './i18n.js';
 
 const listeners = new Set();
-
-async function fetchJson(path) {
-  const res = await fetch(path, { cache: 'no-cache' });
-  if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + path);
-  return res.json();
-}
-
-/** The .vi.json companion always exists for every topic — this is only
-    optional in the sense that a broken/missing file degrades instead of
-    throwing, not because translation is sparse (VI is always complete). */
-async function fetchOptionalJson(path) {
-  try {
-    const res = await fetch(path, { cache: 'no-cache' });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (e) {
-    return null;
-  }
-}
 
 function cloneSections(sections) {
   return (sections || []).map(s => ({ ...s, items: (s.items || []).map(it => ({ ...it })) }));
@@ -37,19 +23,11 @@ function cloneSections(sections) {
 
 function applyMeta(target, metaEntry, lang) {
   if (!metaEntry) return;
-  const src = metaEntry[lang] || metaEntry.en || metaEntry.vi || {};
+  const src = localizedRecord(metaEntry, lang);
   const fallback = metaEntry.en || metaEntry.vi || {};
   for (const k of ['label', 'title', 'intro']) target[k] = src[k] || fallback[k];
   const tags = (Array.isArray(src.tags) && src.tags.length) ? src.tags : fallback.tags;
   if (Array.isArray(tags)) target.tags = [...tags];
-}
-
-function readLang() {
-  try {
-    const v = localStorage.getItem(LANG_KEY);
-    if (LANGS.includes(v)) return v;
-  } catch (e) {}
-  return DEFAULT_LANG;
 }
 
 export const Content = {
@@ -57,7 +35,7 @@ export const Content = {
   loaded: false,
   error: null,
 
-  lang: readLang(),
+  lang: readContentLanguage(),
 
   /** Manifest + meta + both language files, kept so switching language needs no refetch. */
   _manifest: null,
@@ -72,13 +50,9 @@ export const Content = {
     this._meta = await fetchJson('data/meta.json');
     const rows = this._manifest.topics || [];
 
-    const [enContents, viContents] = await Promise.all([
-      Promise.all(rows.map(row => fetchJson('data/' + row.file))),
-      Promise.all(rows.map(row => fetchOptionalJson('data/' + row.file.replace(/\.json$/, '.vi.json'))))
-    ]);
-
-    this._en = new Map(rows.map((row, i) => [row.n, { row, content: enContents[i] }]));
-    this._vi = new Map(rows.map((row, i) => [row.n, viContents[i]]));
+    const pairs = await loadBilingualJsonRows(rows);
+    this._en = new Map([...pairs].map(([n, pair]) => [n, { row: pair.row, content: pair.en }]));
+    this._vi = new Map([...pairs].map(([n, pair]) => [n, pair.vi]));
     this._buildItemPairs();
 
     this._apply();
@@ -127,9 +101,9 @@ export const Content = {
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
 
   async setLang(lang) {
-    if (!LANGS.includes(lang) || lang === this.lang) return;
+    if (!CONTENT_LANGS.includes(lang) || lang === this.lang) return;
     this.lang = lang;
-    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+    writeContentLanguage(lang);
     this._apply();
     for (const fn of listeners) { try { fn(this); } catch (e) {} }
   },

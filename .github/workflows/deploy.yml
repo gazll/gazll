@@ -98,7 +98,8 @@ jobs:
             tests/security.test.mjs \
             tests/interviews.merge.test.mjs \
             tests/auth.state.test.mjs \
-            tests/content.i18n.test.mjs
+            tests/content.i18n.test.mjs \
+            tests/case-studies.test.mjs
 
       - uses: actions/configure-pages@v6
 

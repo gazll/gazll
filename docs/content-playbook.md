@@ -364,6 +364,27 @@ patch một ngôn ngữ**.
 
 Vòng tiến độ tự tính theo tổng số mục, không hardcode — không phải sửa gì thêm.
 
+### 4.4 Thêm case study dài
+
+Case Studies dùng cùng quy ước số và cặp ngôn ngữ với Topics, nhưng không đi
+vào Study Track hay mẫu question/answer:
+
+1. Thêm row `n` kế tiếp vào `public/data/case-studies/manifest.json`; `file`
+   phải là `case-studies/NN-slug.json`. Giữ `slug` không có số để URL cũ ổn định.
+2. Thêm metadata `en` + `vi` vào `case-studies/meta.json`; `key` phải đúng
+   `NN-slug`.
+3. Tạo `NN-slug.json` + `NN-slug.vi.json`, mỗi file chứa `guide` đầy đủ và
+   `body_file` tương ứng.
+4. Tạo đủ `articles/NN-slug.html` + `articles/NN-slug.vi.html`. Hai body phải
+   có cùng heading ID, thứ tự hình và code block; không dịch nội dung trong
+   `<pre><code>`.
+5. Đặt toàn bộ hình tại `assets/case-studies/NN-slug/`; cấm hotlink ảnh từ
+   publisher và không để asset mồ côi.
+
+`tests/case-studies.test.mjs` khóa các quy tắc trên, đồng thời kiểm tra đủ 96
+hình hiện tại trong cả hai nguồn. Header EN/VI dùng chung `Content.lang`; không
+tạo language state riêng cho Case Studies.
+
 ---
 
 ## 5. Kiểm chứng trước khi push
