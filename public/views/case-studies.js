@@ -1,7 +1,9 @@
 import { escapeHtml } from '../lib/markdown.js';
 
 const MANIFEST_URL = 'data/case-studies/manifest.json';
+const GUIDES_URL = 'data/case-studies/guides.json';
 let manifestPromise;
+let guidesPromise;
 let mountToken = 0;
 
 const sourceHref = url => /^https:\/\/engineering\.tiki\.vn\//.test(url || '')
@@ -16,6 +18,16 @@ function loadManifest() {
     });
   }
   return manifestPromise;
+}
+
+function loadGuides() {
+  if (!guidesPromise) {
+    guidesPromise = fetch(GUIDES_URL).then(response => {
+      if (!response.ok) throw new Error('Case-study guides returned HTTP ' + response.status);
+      return response.json();
+    });
+  }
+  return guidesPromise;
 }
 
 function formatDate(value) {
@@ -74,9 +86,31 @@ function articleMeta(article) {
     + '</header>';
 }
 
-function renderArticle(article, body) {
+function renderGuide(article, guide) {
+  if (!guide) return '';
+  const vi = article.language === 'vi';
+  const takeaways = (guide.takeaways || []).map(item => '<li>' + escapeHtml(item) + '</li>').join('');
+  const reviewLenses = (guide.review_lenses || []).map(item => '<li>' + escapeHtml(item) + '</li>').join('');
+  return '<section class="cs-guide" aria-labelledby="cs-guide-title">'
+    + '<header><p>' + (vi ? 'Gợi ý đọc · Tổng hợp biên tập' : 'Reading guide · Editorial synthesis') + '</p>'
+    + '<h2 id="cs-guide-title">' + escapeHtml(guide.title) + '</h2></header>'
+    + '<div class="cs-guide-brief">'
+    + '<article><b>' + (vi ? 'Bài toán' : 'Problem') + '</b><p>' + escapeHtml(guide.problem) + '</p></article>'
+    + '<article><b>' + (vi ? 'Ý tưởng cốt lõi' : 'Core idea') + '</b><p>' + escapeHtml(guide.core_idea) + '</p></article>'
+    + '<article><b>' + (vi ? 'Kết quả trong bài' : 'Reported outcome') + '</b><p>' + escapeHtml(guide.outcome) + '</p></article>'
+    + '</div><div class="cs-guide-depth">'
+    + '<article><h3>' + (vi ? 'Điểm nên ghi nhớ' : 'Key takeaways') + '</h3><ul>' + takeaways + '</ul></article>'
+    + '<article><h3>' + (vi ? 'Góc review thiết kế' : 'Design review lens') + '</h3><ul>' + reviewLenses + '</ul></article>'
+    + '</div><p class="cs-guide-note">' + (vi
+      ? 'Phần trên là tổng hợp biên tập để hỗ trợ đọc; nguyên tác Tiki Engineering được bảo toàn bên dưới.'
+      : 'The guide above is editorial synthesis; the preserved Tiki Engineering article continues below.')
+    + ' ↓</p></section>';
+}
+
+function renderArticle(article, body, guide) {
   const href = sourceHref(article.source_url);
   return '<div class="cs-article">' + articleMeta(article)
+    + renderGuide(article, guide)
     + '<details class="cs-toc-mobile"><summary>On this page</summary><nav data-case-toc-mobile></nav></details>'
     + '<div class="cs-article-grid">'
     + '<article class="cs-article-body" data-case-body>' + body + '</article>'
@@ -132,12 +166,12 @@ async function showArticle(root, manifest, slug, token) {
     return;
   }
 
-  const response = await fetch(article.body_file);
+  const [response, guides] = await Promise.all([fetch(article.body_file), loadGuides()]);
   if (!response.ok) throw new Error('Article body returned HTTP ' + response.status);
   const body = await response.text();
   if (token !== mountToken) return;
 
-  root.innerHTML = renderArticle(article, body);
+  root.innerHTML = renderArticle(article, body, guides.guides?.[article.slug]);
   document.title = article.title + ' · Backend Engineering';
   buildToc(root, article.slug);
   wireLightbox(root);

@@ -1,0 +1,214 @@
+{
+  "version": 1,
+  "guides": {
+    "arcturus-inventory-processing-system": {
+      "title": "Read this as a consistency design first, and a peak-traffic story second.",
+      "problem": "Inventory changes arrived from checkout and warehouse operations at the same time. During major sales, database locking protected correctness but limited throughput; relaxing consistency kept the site alive but created overselling and cancelled orders.",
+      "core_idea": "Put every mutation through one ordered command log, rebuild in-memory state from queue offsets, process conflicts on a single thread and persist changes asynchronously in batches. Integrations use reserve, confirm and reverse instead of pretending that several HTTP services share one atomic transaction.",
+      "outcome": "The article reports roughly 350k in-memory transactions per second, 120k transactions per second with full I/O, 5,600 requests per second in staging and a 99% cache-hit rate. More importantly, the same offset model defines normal processing and crash recovery.",
+      "takeaways": [
+        "Serialization can be a scaling technique when the real contention is concentrated on a small number of inventory keys; removing locks and context switches may matter more than adding worker threads.",
+        "The queue offset is not only consumer metadata. It is a checkpoint that connects the transaction log, local memory and the persistent database into one recoverable state machine.",
+        "Warehouse adjustments and customer purchases share one mutation path. A unified command model removes duplicated inventory logic and makes ordering rules explicit.",
+        "Cross-service correctness is handled as a lifecycle: reserve stock, observe the order result, then confirm or compensate. Timeouts, duplicate events and reversals are part of the design rather than exceptional cases.",
+        "The architecture separates the latency-sensitive decision from durable persistence, but only because replay and idempotency make that separation safe."
+      ],
+      "review_lenses": [
+        "Recovery boundary: identify exactly which offset is durable and prove that replay cannot apply an inventory mutation twice.",
+        "Hot-key strategy: decide when one processor is enough and how a SKU or warehouse could be partitioned without breaking ordering.",
+        "Backpressure: define what happens when the persistence ring buffer or MySQL falls behind the command stream.",
+        "Reservation lifecycle: make expiry, late order events, cancellation and compensation observable and idempotent."
+      ]
+    },
+    "a-b-testing-in-tiki-search": {
+      "title": "The useful result is not a winning test; it is a repeatable way to choose one for your own metric distribution.",
+      "problem": "Small CTR differences can be financially meaningful, but random user behaviour can produce differences of the same size even when both ranking variants are identical. A direct comparison therefore confuses sampling noise with a product improvement.",
+      "core_idea": "Model views and each user’s latent click probability, generate many controlled A/A and A/B experiments, then measure both false-positive rate and sensitivity for T-Test, Mann–Whitney and bucketed variants. Real A/A traffic is used as a final calibration check.",
+      "outcome": "Different distribution shapes favour different tests. Mann–Whitney performs well in many simulations, while bucketing becomes competitive under more regular ground-truth CTR distributions. The article deliberately avoids presenting one universal statistical test.",
+      "takeaways": [
+        "Start from the unit of independence. Tiki groups observations by user because treating dependent impressions or sessions as independent makes p-values look more certain than they are.",
+        "Validate a test with A/A data before trusting its A/B verdict. If the null case already exceeds the accepted false-positive rate, product decisions built on it are unsafe.",
+        "Sensitivity and false-positive rate must be evaluated together. A conservative test that never detects a real uplift is not automatically a good test.",
+        "Simulation is most useful when its view counts and latent CTRs resemble production. Elegant assumptions that miss the real distribution can select the wrong method.",
+        "Bucketing changes the observation unit and weighting behaviour; bucket size is a domain parameter to test, not a magic constant."
+      ],
+      "review_lenses": [
+        "Experiment assignment: verify stable user allocation, exclusion rules and independence from concurrent experiments.",
+        "Metric definition: specify the denominator, aggregation unit and treatment of users with very little activity.",
+        "Power planning: connect minimum detectable effect, sample size and full weekly behaviour before setting duration.",
+        "Decision policy: document multiple-testing corrections, guardrail metrics and what happens when statistical and business significance disagree."
+      ]
+    },
+    "tiki-scale-in-10-years": {
+      "title": "Đọc bài này như một bản đồ tiến hóa đồng thời của sản phẩm, kiến trúc và tổ chức kỹ thuật.",
+      "problem": "Một hệ thống phù hợp với nhà sách trực tuyến và một nhóm nhỏ không thể giữ nguyên khi Tiki mở rộng ngành hàng, marketplace, fulfillment, thanh toán và lưu lượng sale. Điểm nghẽn không chỉ nằm ở server mà còn ở ranh giới sở hữu và cách các team phối hợp.",
+      "core_idea": "Tiki đi qua nhiều lớp thay đổi: xây nền tảng Talaria, tách dần kiến trúc và domain, phát triển hệ thống phân tán, củng cố hạ tầng rồi xây đội ngũ có khả năng sở hữu từng phần của bài toán. Mỗi giai đoạn giải một giới hạn mới do giai đoạn trước tạo ra.",
+      "outcome": "Bài viết không mô tả một lần rewrite duy nhất. Nó cho thấy quá trình scale bằng nhiều bước chuyển có chủ đích, xen kẽ với incident, mùa sale và những lần di chuyển hạ tầng buộc tổ chức phải trưởng thành.",
+      "takeaways": [
+        "Scale là bài toán liên kết: traffic, dữ liệu, phạm vi nghiệp vụ, số team và tốc độ ra quyết định tăng cùng lúc.",
+        "Kiến trúc tập trung giúp giai đoạn đầu đi nhanh, nhưng khi domain lớn lên nó làm mờ ownership và khiến thay đổi của một nhóm tác động toàn hệ thống.",
+        "Platform chỉ tạo đòn bẩy khi cung cấp primitive và tiêu chuẩn dùng chung; nó không nên lấy mất quyền sở hữu sản phẩm của các domain team.",
+        "Incident và mùa sale là phép thử của cả kiến trúc lẫn cơ chế vận hành: quan sát, phản ứng, rollback và cách chia sẻ trách nhiệm.",
+        "Năng lực con người là một phần của kiến trúc. Hệ thống chỉ phân quyền được khi team đủ khả năng vận hành và chịu trách nhiệm cho quyết định của mình."
+      ],
+      "review_lenses": [
+        "Xác định tín hiệu nào cho thấy một module hoặc database đã đến lúc cần tách ownership.",
+        "Cân bằng giữa chuẩn hóa toàn công ty và quyền tự chủ công nghệ của từng domain.",
+        "Lập kế hoạch migration có trạng thái trung gian an toàn thay vì phụ thuộc vào một lần cut-over lớn.",
+        "Theo dõi cả chỉ số kỹ thuật và tổ chức: lead time, blast radius, số dependency chéo và tải vận hành của team."
+      ]
+    },
+    "o1-android-build-time-at-tiki": {
+      "title": "The key move is to reduce the local build graph, not merely make the same graph compile faster.",
+      "problem": "A change in the shared data module invalidated most feature modules, turning a normal edit–compile–run loop into a five-to-eight-minute build. With ten to twenty builds per day, the delay became a large and repeated productivity cost.",
+      "core_idea": "A custom Gradle property includes only the feature currently under development. Missing feature references are replaced with small fake source sets, and deep links open the target screen in the reduced debug APK.",
+      "outcome": "The article reports that build time was cut roughly in half and fell to around one or two minutes. The debug APK also became smaller because unrelated features were absent from the local build.",
+      "takeaways": [
+        "Optimizing tasks inside a huge dependency graph has a ceiling. Excluding work from the graph can deliver a larger improvement than tuning individual compilers.",
+        "Feature modularization alone does not guarantee fast builds; dependency direction determines whether a shared-module edit still fans out across every feature.",
+        "Fake source is a compile-time compatibility boundary. It works only when the contract between the app shell and feature modules is deliberately small.",
+        "A reduced APK needs an alternate navigation path. Deep links preserve the developer loop even when the normal home and routing modules are excluded.",
+        "The approach optimizes local feature work, not release builds. CI must still compile and test the complete graph."
+      ],
+      "review_lenses": [
+        "Contract drift: ensure fake declarations fail quickly when the real feature interface changes.",
+        "Test coverage: define which checks run on the reduced graph locally and which must run on the full graph in CI.",
+        "Dependency hygiene: measure how many app-shell references force fake implementations and treat growth as an architecture warning.",
+        "Developer ergonomics: make feature selection discoverable and avoid a command that silently produces an incomplete APK."
+      ]
+    },
+    "scale-and-whats-next": {
+      "title": "Đây là câu chuyện scale vận hành từ “chạy được” sang “tối ưu được”, không chỉ là tăng thêm server.",
+      "problem": "Khi số đơn, kho, sản phẩm và đối tác tăng lên, cách lấy hàng bằng giấy, quản lý tồn kho gần đúng, trao đổi file và xử lý kế toán thủ công không còn đủ nhanh hoặc đủ chính xác. Mỗi bước giao hàng lại mở ra một chuỗi bài toán hậu mãi và tài chính phía sau.",
+      "core_idea": "Operation Product số hóa dần toàn bộ vòng đời: vị trí tồn kho chính xác, pick-by-batch và đường đi tối ưu, PDA trong kho, cấu hình tuyến giao hàng, tích hợp đối tác, proof-of-delivery, hậu mãi và các luồng phải thu/phải trả.",
+      "outcome": "Khi nền tảng cơ bản đã hoạt động, trọng tâm tiếp theo chuyển sang tối ưu tồn kho, ưu tiên đơn, phân tuyến thời gian thực, tự động hóa kế toán và nâng năng lực con người. Bài viết đặt quy trình và chất lượng tổ chức ngang hàng với thuật toán.",
+      "takeaways": [
+        "Một tối ưu cục bộ chỉ có giá trị khi dữ liệu đầu vào đủ chính xác; đường đi lấy hàng tốt không giúp được nếu hệ thống không biết sản phẩm thực sự nằm ở kệ nào.",
+        "Thiết kế cho người vận hành cần giảm tải nhận thức và làm exception rõ ràng, vì sai lệch vật lý thường bắt đầu từ thao tác thủ công.",
+        "Tích hợp logistics là một state machine dài: bàn giao, vận chuyển, thu hộ, cập nhật trạng thái và bằng chứng giao hàng đều cần đối soát.",
+        "Hệ thống tài chính chịu một dạng scale khác: không nhất thiết latency thấp nhất, nhưng số liệu phải truy vết và chính xác đến từng giao dịch.",
+        "Giai đoạn tiếp theo của scale thường là tối ưu quyết định và con người, không phải chỉ thay công nghệ mới."
+      ],
+      "review_lenses": [
+        "Vẽ state machine xuyên suốt từ inbound đến hậu mãi và chỉ ra owner của từng transition.",
+        "Thiết kế cơ chế reconcile khi dữ liệu hệ thống khác tồn kho vật lý hoặc dữ liệu đối tác.",
+        "Đặt metric end-to-end như thời gian giao, chi phí mỗi đơn và tỷ lệ sai thay vì chỉ metric của từng service.",
+        "Đánh giá UX của công cụ nội bộ bằng lỗi thao tác, thời gian đào tạo và năng suất thực tế của người vận hành."
+      ]
+    },
+    "tai-sao-tiki-chon-react-native": {
+      "title": "Quyết định quan trọng không phải React Native hay Native cho toàn app, mà là chọn đúng công nghệ cho từng module.",
+      "problem": "Native cho hiệu năng và quyền truy cập nền tảng tốt nhưng tốn hai luồng phát triển; cross-platform giúp thử nghiệm nhanh nhưng tăng phụ thuộc framework, kích thước ứng dụng và rủi ro hiệu năng. Một lựa chọn duy nhất cho toàn bộ app khiến trade-off trở nên cứng nhắc.",
+      "core_idea": "Tiki dùng kiến trúc đa module với native app làm nền. Mỗi tính năng có thể chọn Native hoặc React Native tùy vòng đời và yêu cầu; các module liên kết với app chính qua Android library hoặc iOS Pod.",
+      "outcome": "Mô hình cho phép các tính năng thử nghiệm hoặc ngắn hạn đi nhanh bằng React Native, trong khi phần cần kiểm soát nền tảng vẫn giữ Native. React Native cũng tận dụng được nguồn lực ReactJS sẵn có tại thời điểm quyết định.",
+      "takeaways": [
+        "Architecture boundary quan trọng hơn framework: module độc lập làm cho lựa chọn công nghệ có thể thay đổi mà không kéo theo toàn ứng dụng.",
+        "Cross-platform phù hợp nhất khi tốc độ thử nghiệm và khả năng chia sẻ nhân lực quan trọng hơn việc tối ưu tuyệt đối từng millisecond.",
+        "Native shell tạo escape hatch cho SDK mới, tích hợp thiết bị và các màn hình có yêu cầu hiệu năng đặc biệt.",
+        "Chi phí không biến mất mà chuyển vị trí: bridge, navigation, dependency, release coordination và kỹ năng debug hai phía phải được tính vào quyết định.",
+        "Chất lượng đội ngũ và kỷ luật triển khai có thể ảnh hưởng hiệu năng thực tế nhiều hơn nhãn công nghệ được chọn."
+      ],
+      "review_lenses": [
+        "Định nghĩa contract cho navigation, authentication, analytics và data sharing giữa native và cross-platform.",
+        "Xác định tiêu chí module nào được dùng React Native và khi nào cần chuyển về Native.",
+        "Quản lý version framework, native dependency và lịch release để một module không khóa toàn app.",
+        "Đo startup time, memory, crash-free rate và kích thước binary theo từng module thay vì tranh luận bằng cảm tính."
+      ]
+    },
+    "into-the-demand-forecast-of-tiki-operations": {
+      "title": "Forecast quality matters only when it changes replenishment, placement and workforce decisions safely.",
+      "problem": "Millions of products, multiple warehouses and promotions make manual purchasing decisions impossible to scale. Too little inventory causes stock-outs, too much locks cash, and placing the right quantity in the wrong region still increases delivery time.",
+      "core_idea": "Combine several classical time-series methods with DeepAR, let models compete per product, maintain a reusable signal pool and run tagged experiments against the production baseline. SMAPE provides the principal weekly evaluation metric.",
+      "outcome": "The article reports forecasts up to 60% more accurate and describes the next operational steps: regional forecasts, automated replenishment for reliable product segments and daily forecasts for warehouse workforce planning.",
+      "takeaways": [
+        "One model is unlikely to fit the mixture of smooth, seasonal, sparse and intermittent demand found across a large catalog.",
+        "Model competition moves selection to the SKU level; evaluation data must stay out of training or the apparent winner will be biased.",
+        "A signal pool turns feature engineering into platform capability, allowing promotions, traffic and other hypotheses to be tested repeatedly.",
+        "Under-forecasting and over-forecasting have different business costs. A single symmetric error metric is useful but cannot express every inventory consequence.",
+        "Automation should begin with segments where historical forecast reliability crosses a defined threshold, leaving uncertain cases with human review."
+      ],
+      "review_lenses": [
+        "Backtesting: preserve temporal order and reproduce the information that would actually have been available at forecast time.",
+        "Business loss: translate forecast error into stock-out, holding cost, markdown risk and delivery distance.",
+        "Drift: monitor new products, promotion changes and regional behaviour that can invalidate historical patterns.",
+        "Decision integration: record which purchase or staffing action used which forecast version so outcomes can be audited."
+      ]
+    },
+    "applying-machine-learning-to-solve-brand-logo-detection-problem": {
+      "title": "The production design separates finding a logo from deciding which brand it represents.",
+      "problem": "Marketplace scale makes manual image verification expensive, while product appearance alone often cannot distinguish brands. The system must also handle an open world where most images do not belong to any of the seven initially supported brands.",
+      "core_idea": "Use YOLO v3 through Darknet to localize candidate logo regions, then pass those crops to a ResNet classifier for more accurate brand prediction. The model acts as an early signal for content QC rather than an unquestioned replacement for human decisions.",
+      "outcome": "Darknet reaches 91.73% mAP at IoU 0.5 in the reported validation. On 10,000 unknown production images, adding ResNet reduces mistaken assignment to the seven known brands from 2.18% to 0.26%; the combined system reports a 94.01% average F1 score on the mixed evaluation set.",
+      "takeaways": [
+        "Decomposing localization and classification lets each model solve the task it handles best and exposes separate failure modes.",
+        "Closed-set accuracy is not enough for marketplace moderation. Unknown brands and images without logos dominate the production distribution.",
+        "A human-in-the-loop recommender can create value before recall is high enough for fully automated rejection.",
+        "Request-level agreement with QC decisions is a more operational metric than image-level accuracy alone.",
+        "False negatives remain difficult when logos are modified, obscured or removed; the product workflow must make that limitation explicit."
+      ],
+      "review_lenses": [
+        "Threshold policy: use different confidence thresholds for suggestion, manual review and automatic action.",
+        "Open-set monitoring: track unknown-brand false positives separately from confusion among supported brands.",
+        "Dataset health: review seller, category and image-style bias as the marketplace and manipulation tactics change.",
+        "Feedback loop: distinguish verified QC labels from noisy historical decisions before retraining."
+      ]
+    },
+    "pegasus-catalog-product-api-architecture": {
+      "title": "Pegasus is a read-path design built around ownership, cache coherence and payload cost.",
+      "problem": "Catalog data lived inside a large system where modules shared databases and ownership boundaries were unclear. Product data appears on nearly every customer touchpoint, so the replacement API needed high throughput, low latency and a migration path away from direct database access.",
+      "core_idea": "Mercury replicates product changes from the MySQL write side to MongoDB, Pegasus owns the read API and local Guava cache, and Kafka invalidation events keep cached products fresh. Compression and gRPC address CPU, network and connection-management costs.",
+      "outcome": "The article reports 24k requests per second with TP99 around 20 ms for a single-product API under one benchmark setup. It also shows why L4 load balancing and persistent gRPC connections can outperform a PHP client that opens many HTTP connections.",
+      "takeaways": [
+        "Separating reads from writes is also an ownership migration: clients must stop treating the catalog database as a shared integration interface.",
+        "Cache invalidation is event-driven, but a miss still needs a reliable path through MongoDB; both hot and cold behaviour matter.",
+        "Batch APIs require different loading logic from single-key APIs or repeated cache misses can turn into inefficient database access.",
+        "Compression trades CPU for network and storage. The useful choice depends on payload shape, cache layer and caller capabilities.",
+        "Protocol performance can be dominated by client connection behaviour and load balancers, not only server handler code."
+      ],
+      "review_lenses": [
+        "Freshness contract: define acceptable invalidation lag and recovery when Kafka events are delayed or lost.",
+        "Migration safety: observe and block remaining direct database consumers before changing ownership.",
+        "Cache protection: prevent stampedes and bound memory while preserving the hit rate for hot products.",
+        "Benchmark realism: include payload sizes, batch mixes, connection pools, load balancers and cold-cache periods."
+      ]
+    },
+    "xac-thuc-va-phan-quyen-trong-microservices": {
+      "title": "Bài viết nên được đọc như một chuỗi quyết định về trust boundary, không chỉ là danh sách token và protocol.",
+      "problem": "Trong monolith, session và kiểm tra quyền thường nằm chung một tiến trình. Khi tách microservices, danh tính phải đi qua network, mỗi service có thể bị gọi theo nhiều đường và quyền truy cập cần nhất quán mà không biến một auth service thành điểm nghẽn mới.",
+      "core_idea": "Bài viết so sánh JWT ký RSA với opaque token, đặt OAuth 2 vào bài toán ủy quyền, rồi xem xét hai vị trí enforcement: lớp rìa và từng service. Phần access control đi từ ACL đến RBAC và PBAC để tăng khả năng biểu đạt policy.",
+      "outcome": "Không có một lựa chọn thắng mọi trường hợp. JWT giảm lookup nhưng khó thu hồi tức thời; opaque token tăng quyền kiểm soát phiên nhưng thêm network dependency; gateway đơn giản hóa client nhưng service vẫn cần bảo vệ boundary của chính mình.",
+      "takeaways": [
+        "Authentication trả lời ai đang gọi; authorization quyết định lời gọi đó được làm gì trên tài nguyên cụ thể. Gộp hai bước làm policy khó kiểm chứng.",
+        "Token tự chứa tối ưu đường đọc bằng cách chấp nhận dữ liệu quyền có thể cũ cho tới khi token hết hạn.",
+        "Ký bất đối xứng cho phép nhiều service verify mà không giữ secret có khả năng phát hành token mới.",
+        "Gateway là điểm enforcement hữu ích nhưng không đủ cho service-to-service traffic hoặc những đường gọi bỏ qua lớp rìa.",
+        "RBAC dễ quản trị hơn ACL khi quy mô tăng; PBAC linh hoạt hơn nhưng cần ngôn ngữ policy, precedence và công cụ giải thích quyết định."
+      ],
+      "review_lenses": [
+        "Vẽ trust boundary và chỉ ra nơi phát hành, verify, refresh và revoke credential.",
+        "Chọn thời gian sống token dựa trên rủi ro quyền cũ, độ sẵn sàng của auth service và trải nghiệm người dùng.",
+        "Quy định service nào là nguồn sự thật cho role, permission và thuộc tính dùng trong policy.",
+        "Log quyết định phân quyền đủ để trả lời ai bị từ chối, bởi rule nào và với phiên bản policy nào."
+      ]
+    },
+    "how-to-handle-hot-deals-at-the-peak-time": {
+      "title": "The difficult invariant spans price, promotional quantity and physical inventory at the same time.",
+      "problem": "A flash deal is not safe merely because its displayed price changes on time. Thousands of concurrent checkouts can oversell the special quantity, race with normal inventory and continue seeing stale price data while deal and catalog systems converge.",
+      "core_idea": "Give each price version a unique identifier, use the deal id as the special-price id and send that identity with inventory reservations. Arcturus validates both warehouse stock and deal quantity, while sold-out events turn off the deal and propagate the normal price.",
+      "outcome": "The new flow removes the split responsibility that previously required the deal system to close promotions reactively. Price replication, inventory reservation and checkout now share explicit identifiers and events for the deal lifecycle.",
+      "takeaways": [
+        "Correctness needs an identity for the price a customer actually saw; comparing only numeric price values cannot distinguish versions or overlapping updates.",
+        "The special-quantity check belongs beside the physical inventory decision so one acceptance cannot violate the other invariant.",
+        "Eventual price propagation is acceptable only when checkout sends the version identity and the reservation service rejects stale or exhausted deals.",
+        "A sold-out event is both a business transition and a cache-invalidation signal; consumers must handle duplicates and reordering.",
+        "Peak handling is a coordinated flow across price, deal, catalog, inventory and checkout—not a throughput optimization inside one service."
+      ],
+      "review_lenses": [
+        "Race analysis: enumerate deal start, price update, final reservation and sold-out event interleavings.",
+        "Idempotency: protect repeated checkout reservations and duplicate quantity-update events.",
+        "Staleness policy: define which price versions remain acceptable during propagation and for how long.",
+        "Load shedding: preserve inventory correctness when downstream price or deal consumers fall behind peak traffic."
+      ]
+    }
+  }
+}

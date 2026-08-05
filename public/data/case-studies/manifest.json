@@ -78,7 +78,7 @@
       "language_label": "Bản gốc tiếng Việt",
       "category": "engineering-evolution",
       "category_label": "Engineering Evolution",
-      "excerpt": "A ten-year retrospective on Tiki's product, architecture, teams and technology organization—from an online bookstore to a multi-platform commerce company.",
+      "excerpt": "Hành trình mười năm phát triển sản phẩm, kiến trúc, đội ngũ và tổ chức công nghệ của Tiki — từ nhà sách trực tuyến đến nền tảng thương mại đa dịch vụ.",
       "tags": [
         "Engineering growth",
         "Organization",
@@ -122,7 +122,7 @@
       "language_label": "Bản gốc tiếng Việt",
       "category": "engineering-evolution",
       "category_label": "Engineering Evolution",
-      "excerpt": "A candid reflection on what scaling means for traffic, teams, systems and engineering judgment—and why the next constraint is often people rather than machines.",
+      "excerpt": "Góc nhìn thẳng thắn về scale trong vận hành: từ lấy hàng, tồn kho, giao nhận đến tài chính — và vì sao giới hạn tiếp theo thường nằm ở con người, quy trình và chất lượng quyết định.",
       "tags": [
         "Scaling",
         "Engineering culture",
@@ -144,7 +144,7 @@
       "language_label": "Bản gốc tiếng Việt",
       "category": "mobile-developer-productivity",
       "category_label": "Mobile & Developer Productivity",
-      "excerpt": "Why Tiki combines native mobile modules with cross-platform development, and why React Native fit its architecture, experimentation needs and available skills.",
+      "excerpt": "Vì sao Tiki kết hợp các module Native với phát triển đa nền tảng, và vì sao React Native phù hợp với kiến trúc, nhu cầu thử nghiệm và năng lực đội ngũ tại thời điểm đó.",
       "tags": [
         "React Native",
         "Mobile architecture",
@@ -188,12 +188,12 @@
       "language_label": "English original",
       "category": "data-ml-experimentation",
       "category_label": "Data, ML & Experimentation",
-      "excerpt": "How Tiki built a logo-detection pipeline with RetinaNet, synthetic training data and image preprocessing to identify branded products in marketplace photos.",
+      "excerpt": "How Tiki built a two-stage logo-detection pipeline with YOLO v3 localization and ResNet classification to identify branded products in marketplace photos.",
       "tags": [
         "Machine learning",
         "Computer vision",
         "Logo detection",
-        "RetinaNet",
+        "YOLO v3",
         "Synthetic data"
       ],
       "source_url": "https://engineering.tiki.vn/applying-machine-learning-to-solve-brand-logo-detection-problem/",
@@ -232,7 +232,7 @@
       "language_label": "Bản gốc tiếng Việt",
       "category": "systems-architecture",
       "category_label": "Systems & Architecture at Scale",
-      "excerpt": "A practical tour of authentication and authorization in microservices, covering JWT, opaque tokens, OAuth 2, edge enforcement and service-level access control.",
+      "excerpt": "Phân tích thực tế về xác thực và phân quyền trong microservices: JWT, opaque token, OAuth 2, enforcement tại lớp rìa và kiểm soát truy cập ở từng service.",
       "tags": [
         "Microservices",
         "Authentication",

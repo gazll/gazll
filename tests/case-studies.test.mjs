@@ -6,6 +6,7 @@ import test from 'node:test';
 const root = path.resolve(import.meta.dirname, '..');
 const publicRoot = path.join(root, 'public');
 const manifest = JSON.parse(await readFile(path.join(publicRoot, 'data/case-studies/manifest.json'), 'utf8'));
+const guides = JSON.parse(await readFile(path.join(publicRoot, 'data/case-studies/guides.json'), 'utf8'));
 
 test('case-study manifest has stable, unique categories and article slugs', () => {
   assert.equal(manifest.version, 1);
@@ -32,6 +33,23 @@ test('case-study manifest has stable, unique categories and article slugs', () =
     assert.match(article.body_file, /^data\/case-studies\/articles\/[a-z0-9-]+\.html$/);
     assert.ok(article.title && article.author && article.excerpt);
     assert.ok(Number.isInteger(article.read_minutes) && article.read_minutes > 0);
+  }
+});
+
+test('every case study has a substantial, clearly separated editorial reading guide', () => {
+  assert.equal(guides.version, 1);
+  assert.deepEqual(Object.keys(guides.guides).sort(), manifest.articles.map(article => article.slug).sort());
+
+  for (const article of manifest.articles) {
+    const guide = guides.guides[article.slug];
+    assert.ok(guide.title.length >= 40, `${article.slug}: guide needs a useful thesis`);
+    for (const key of ['problem', 'core_idea', 'outcome']) {
+      assert.ok(guide[key].length >= 120, `${article.slug}: ${key} is too thin`);
+    }
+    assert.equal(guide.takeaways.length, 5, `${article.slug}: expected five takeaways`);
+    assert.equal(guide.review_lenses.length, 4, `${article.slug}: expected four design-review lenses`);
+    assert.ok(guide.takeaways.every(item => item.length >= 80));
+    assert.ok(guide.review_lenses.every(item => item.length >= 60));
   }
 });
 
@@ -75,6 +93,9 @@ test('the panel exposes Experience while case studies remain outside Study Track
   assert.match(app, /id: 'case-studies', sec: 'experience'/);
   assert.match(app, /showView\(currentRouteState\.id, currentRouteState\.parts\)/,
     'hash subroutes should reach the case-study reader');
+  const view = await readFile(path.join(publicRoot, 'views/case-studies.js'), 'utf8');
+  assert.match(view, /renderGuide\(article, guide\)/);
+  assert.match(view, /Editorial synthesis/);
   assert.doesNotMatch(topicManifest, /case-stud/i,
     'case studies must not change Study Track topics or its progress denominator');
 });
