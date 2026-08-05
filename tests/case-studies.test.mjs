@@ -66,7 +66,8 @@ test('case studies use stable Topic-style numbering and separate localized metad
     assert.match(article.source_url, /^https:\/\/engineering\.tiki\.vn\//,
       `${article.slug}: public source must stay on Tiki Engineering`);
     assert.ok(['en', 'vi'].includes(article.original_language));
-    assert.ok(article.author && article.company);
+    assert.ok(article.company);
+    assert.equal('author' in article, false, `${article.slug}: author attribution must not be stored`);
     assert.ok(Number.isInteger(article.read_minutes) && article.read_minutes > 0);
     for (const lang of ['en', 'vi']) {
       const localized = meta.articles[String(article.n)][lang];
@@ -116,6 +117,8 @@ test('paired long-form bodies preserve structure, code and all local figures', a
         `${key}: body must not hotlink assets`);
       assert.doesNotMatch(body, /medium\.com|__GAZLSEG/i,
         `${key}: body contains a publisher mirror or translation artifact`);
+      assert.doesNotMatch(body, /\bcontributors?\b|người đóng góp/i,
+        `${key}: contributor attribution must not appear in the archived body`);
 
       const headings = [...body.matchAll(/<h[23][^>]*\sid="([^"]+)"/g)].map(match => match[1]);
       assert.ok(headings.length >= 1, `${key}: long-form TOC needs section headings`);
@@ -146,11 +149,11 @@ test('paired long-form bodies preserve structure, code and all local figures', a
     assert.deepEqual(codeBlocks(bodies.vi), codeBlocks(bodies.en), `${key}: code blocks must never be translated`);
   }
 
-  assert.equal(englishImages, 96, 'English should preserve all source figures');
-  assert.equal(vietnameseImages, 96, 'Vietnamese should preserve all source figures');
+  assert.equal(englishImages, 94, 'English should preserve all non-attribution source figures');
+  assert.equal(vietnameseImages, 94, 'Vietnamese should preserve all non-attribution source figures');
   const physicalAssets = (await filesBelow(path.join(publicRoot, 'assets/case-studies')))
     .map(file => path.relative(publicRoot, file).split(path.sep).join('/'));
-  assert.equal(physicalAssets.length, 96);
+  assert.equal(physicalAssets.length, 94);
   assert.deepEqual([...physicalAssets].sort(), [...referencedAssets].sort(), 'there should be no orphaned figures');
 });
 
@@ -203,6 +206,11 @@ test('Experience exposes the global language switch while remaining outside Stud
     'hash subroutes should reach the case-study reader');
   assert.match(view, /CaseStudies\.load\(Content\.lang\)/);
   assert.match(view, /renderGuide\(guide\)/);
+  assert.match(view, /class="cs-origin"/);
+  assert.match(view, /TOC_STATE_KEY = 'gazl\.caseTocCollapsed'/);
+  assert.ok(view.indexOf("'<aside class=\"cs-toc\"") < view.indexOf("'<article class=\"cs-article-body\""),
+    'desktop contents must render to the left of the article body');
+  assert.doesNotMatch(view, /article\.author|text\(\)\.by/);
   assert.doesNotMatch(styles, /view-case-studies\s+\.hdr-lang\s*\{\s*display:\s*none/,
     'Case Studies must expose the same header language switch as Topics');
   assert.doesNotMatch(topicManifest, /case-stud/i,

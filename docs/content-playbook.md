@@ -380,8 +380,10 @@ vào Study Track hay mẫu question/answer:
    `<pre><code>`.
 5. Đặt toàn bộ hình tại `assets/case-studies/NN-slug/`; cấm hotlink ảnh từ
    publisher và không để asset mồ côi.
+6. Manifest chỉ giữ ngày xuất bản và `source_url` của Tiki Engineering, không
+   lưu tên tác giả. Xóa các section/ảnh Contributors khỏi cả hai body.
 
-`tests/case-studies.test.mjs` khóa các quy tắc trên, đồng thời kiểm tra đủ 96
+`tests/case-studies.test.mjs` khóa các quy tắc trên, đồng thời kiểm tra đủ 94
 hình hiện tại trong cả hai nguồn. Header EN/VI dùng chung `Content.lang`; không
 tạo language state riêng cho Case Studies.
 

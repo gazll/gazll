@@ -99,7 +99,23 @@ jobs:
             tests/interviews.merge.test.mjs \
             tests/auth.state.test.mjs \
             tests/content.i18n.test.mjs \
-            tests/case-studies.test.mjs
+            tests/case-studies.test.mjs \
+            tests/assets.version.test.mjs
+
+      # Stamp only the artifact that will be uploaded. Tests intentionally run
+      # against the source module paths before their deploy-only ?v= query.
+      - name: Stamp deploy version
+        env:
+          GAZL_DEPLOY_SHA: ${{ github.sha }}
+        run: node tools/stamp-assets.mjs "$GAZL_DEPLOY_SHA"
+
+      - name: Check stamped JavaScript syntax
+        run: |
+          fail=0
+          for f in $(find public -name '*.js' | sort); do
+            node --input-type=module --check < "$f" || { echo "FAIL $f"; fail=1; }
+          done
+          [ "$fail" -eq 0 ] || exit 1
 
       - uses: actions/configure-pages@v6
 

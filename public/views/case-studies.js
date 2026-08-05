@@ -3,17 +3,19 @@ import { Content } from '../lib/content.js';
 import { CaseStudies } from '../lib/case-studies.js';
 
 let mountToken = 0;
+const TOC_STATE_KEY = 'gazl.caseTocCollapsed';
 
 const COPY = {
   en: {
     collection: 'Collection', cases: count => count === 1 ? 'case study' : 'case studies', company: 'company',
-    availableLanguage: 'English · Vietnamese', minuteRead: 'min read', number: 'No.', by: 'By',
+    availableLanguage: 'English · Vietnamese', minuteRead: 'min read', number: 'No.',
     allCases: 'All case studies', historical: 'Historical case study',
     historicalNote: 'Architecture, technology choices and benchmark figures reflect the system and workload described at publication time.',
     original: 'English original', translation: 'English translation', guideEyebrow: 'Reading guide · Editorial synthesis',
     problem: 'Problem', coreIdea: 'Core idea', outcome: 'Reported outcome', takeaways: 'Key takeaways',
     review: 'Design review lens', guideNote: 'The guide above is editorial synthesis; the preserved Tiki Engineering article continues below.',
-    toc: 'On this page', contents: 'Article contents', readSource: 'Read at Tiki Engineering', source: 'Source',
+    toc: 'On this page', contents: 'Article contents', hideToc: 'Hide contents', showToc: 'Show contents',
+    readSource: 'Read at Tiki Engineering', source: 'Source',
     originalArticle: 'original article', closeImage: 'Close image', notFound: 'Case study not found',
     missing: 'That article is not in this collection.', back: 'Back to case studies', loading: 'Loading case studies…',
     unavailable: 'Could not load this collection', unavailableTitle: 'The case-study files are unavailable.', retry: 'Try again',
@@ -21,13 +23,14 @@ const COPY = {
   },
   vi: {
     collection: 'Bộ sưu tập', cases: () => 'case study', company: 'công ty',
-    availableLanguage: 'Tiếng Việt · Tiếng Anh', minuteRead: 'phút đọc', number: 'Số', by: 'Tác giả',
+    availableLanguage: 'Tiếng Việt · Tiếng Anh', minuteRead: 'phút đọc', number: 'Số',
     allCases: 'Tất cả case study', historical: 'Case study theo thời điểm',
     historicalNote: 'Kiến trúc, lựa chọn công nghệ và số liệu benchmark phản ánh hệ thống cùng tải thực tế tại thời điểm bài viết được xuất bản.',
     original: 'Bản gốc tiếng Việt', translation: 'Bản dịch tiếng Việt', guideEyebrow: 'Gợi ý đọc · Tổng hợp biên tập',
     problem: 'Bài toán', coreIdea: 'Ý tưởng cốt lõi', outcome: 'Kết quả trong bài', takeaways: 'Điểm nên ghi nhớ',
     review: 'Góc review thiết kế', guideNote: 'Phần trên là tổng hợp biên tập để hỗ trợ đọc; bài viết Tiki Engineering được bảo toàn bên dưới.',
-    toc: 'Trong bài này', contents: 'Mục lục bài viết', readSource: 'Đọc tại Tiki Engineering', source: 'Nguồn',
+    toc: 'Trong bài này', contents: 'Mục lục bài viết', hideToc: 'Ẩn mục lục', showToc: 'Hiện mục lục',
+    readSource: 'Đọc tại Tiki Engineering', source: 'Nguồn',
     originalArticle: 'bài viết gốc', closeImage: 'Đóng ảnh', notFound: 'Không tìm thấy case study',
     missing: 'Bài viết này không có trong bộ sưu tập.', back: 'Quay lại Case Studies', loading: 'Đang tải case study…',
     unavailable: 'Không thể tải bộ sưu tập', unavailableTitle: 'Các file case study hiện không khả dụng.', retry: 'Thử lại',
@@ -87,14 +90,16 @@ function renderLibrary(collection) {
 
 function articleMeta(article) {
   const tags = (article.tags || []).map(tag => '<span>' + escapeHtml(tag) + '</span>').join('');
+  const href = sourceHref(article.source_url);
   return '<header class="cs-article-head">'
     + '<a class="cs-back" href="#/case-studies">← ' + text().allCases + '</a>'
     + '<p class="cs-eyebrow">' + text().number + ' ' + numberLabel(article) + ' · '
     + escapeHtml(article.company) + ' · ' + escapeHtml(article.category_label) + '</p>'
     + '<h1>' + escapeHtml(article.title) + '</h1>'
     + '<p class="cs-deck">' + escapeHtml(article.excerpt) + '</p>'
-    + '<div class="cs-byline"><span>' + text().by + ' <b>' + escapeHtml(article.author) + '</b></span><span>'
-    + formatDate(article.published_at) + '</span><span>' + article.read_minutes + ' ' + text().minuteRead + '</span>'
+    + '<div class="cs-byline"><span>' + formatDate(article.published_at) + '</span>'
+    + '<a class="cs-origin" href="' + href + '" target="_blank" rel="noopener noreferrer">'
+    + escapeHtml(article.company) + ' ↗</a>'
     + '<span class="cs-language">' + escapeHtml(languageLabel(article)) + '</span></div>'
     + '<div class="cs-tags">' + tags + '</div>'
     + '<div class="cs-archive-note"><b>' + text().historical + '</b><span>' + text().historicalNote + '</span></div>'
@@ -124,9 +129,13 @@ function renderArticle(article, body, guide) {
     + renderGuide(guide)
     + '<details class="cs-toc-mobile"><summary>' + text().toc + '</summary><nav data-case-toc-mobile></nav></details>'
     + '<div class="cs-article-grid">'
+    + '<aside class="cs-toc" data-case-toc-panel aria-label="' + text().contents + '">'
+    + '<div class="cs-toc-head"><p>' + text().toc + '</p>'
+    + '<button type="button" data-case-toc-toggle aria-expanded="true" aria-controls="cs-toc-content" aria-label="'
+    + text().hideToc + '" title="' + text().hideToc + '"><span aria-hidden="true">‹</span></button></div>'
+    + '<div class="cs-toc-content" id="cs-toc-content" data-case-toc-content><nav data-case-toc></nav>'
+    + '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + text().readSource + ' ↗</a></div></aside>'
     + '<article class="cs-article-body" data-case-body>' + body + '</article>'
-    + '<aside class="cs-toc" aria-label="' + text().contents + '"><p>' + text().toc + '</p><nav data-case-toc></nav>'
-    + '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + text().readSource + ' ↗</a></aside>'
     + '</div>'
     + '<footer class="cs-source"><span>' + text().source + '</span><a href="' + href + '" target="_blank" rel="noopener noreferrer">'
     + escapeHtml(article.company) + ' — ' + text().originalArticle + ' ↗</a></footer>'
@@ -146,6 +155,35 @@ function buildToc(root, slug) {
       event.preventDefault();
       root.querySelector('#' + link.dataset.caseSection)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+  });
+}
+
+function readTocState() {
+  try { return localStorage.getItem(TOC_STATE_KEY) === '1'; } catch (e) { return false; }
+}
+
+function wireTocToggle(root) {
+  const grid = root.querySelector('.cs-article-grid');
+  const panel = root.querySelector('[data-case-toc-panel]');
+  const content = root.querySelector('[data-case-toc-content]');
+  const button = root.querySelector('[data-case-toc-toggle]');
+  if (!grid || !panel || !content || !button) return;
+
+  const apply = collapsed => {
+    grid.classList.toggle('is-toc-collapsed', collapsed);
+    panel.classList.toggle('is-collapsed', collapsed);
+    content.hidden = collapsed;
+    button.setAttribute('aria-expanded', String(!collapsed));
+    button.setAttribute('aria-label', collapsed ? text().showToc : text().hideToc);
+    button.title = collapsed ? text().showToc : text().hideToc;
+    button.querySelector('span').textContent = collapsed ? '›' : '‹';
+  };
+
+  apply(readTocState());
+  button.addEventListener('click', () => {
+    const collapsed = !panel.classList.contains('is-collapsed');
+    try { localStorage.setItem(TOC_STATE_KEY, collapsed ? '1' : '0'); } catch (e) {}
+    apply(collapsed);
   });
 }
 
@@ -183,6 +221,7 @@ async function showArticle(root, collection, slug, token) {
   root.innerHTML = renderArticle(article, body, article.guide);
   document.title = article.title + ' · Backend Engineering';
   buildToc(root, article.slug);
+  wireTocToggle(root);
   wireLightbox(root);
 }
 

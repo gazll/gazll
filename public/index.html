@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css" data-app-styles>
 </head>
 <body>
 <a class="skiplink" href="#view-track">Skip to content</a>
@@ -115,7 +115,7 @@
   <section id="view-host" class="view" hidden></section>
 </main>
 
-<!-- type="module" is required: app.js imports from lib/ and views/ -->
-<script type="module" src="app.js"></script>
+<!-- boot.js resolves the deployed commit version before loading CSS + the app module graph. -->
+<script type="module" src="boot.js"></script>
 </body>
 </html>

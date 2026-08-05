@@ -92,13 +92,6 @@
 <p><strong>Step 5:</strong> Arcturus will check in warehouses for inventory, and if price-type == ‘deal’; Arcturus will check in deal_quantity of a deal (now price-id is deal id); If inventory satisfied and deal quantity is satisfied, then Arcturus return ACCEPT or not, Arcturus return REJECT.</p>
 <p>When Arcturus returns ACCEPT it will save quantity_ordered of a deal (if price-type is ‘deal’) and fire an event update quantity_ordered of a deal for Dealer updated this number to Database.</p>
 <p>When a deal is sold out, Arcturus will fire a SOLD_OUT event; then price-system will consume this event to turn off that deal (it mean deal-price switch to normal price immediately, don’t need to Dealer stop deal). Dealers also consume this event then stop the deal; normal price will sync to Pegasus after a while (1–2s to 5–6s).</p>
-<p><strong>Contributors:</strong></p>
-<figure class="cs-figure cs-figure-wide">
-  <button type="button" data-zoom-image aria-label="Open figure 9 at full size">
-    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/09-figure.png" width="1128" height="508" loading="lazy" decoding="async" alt="Figure 9 for 3.4. System architecture.">
-  </button>
-  <figcaption>Figure 9 · 3.4. System architecture.</figcaption>
-</figure>
 <p>The next article:<em> </em><em><strong>How to handle inventory transactions at peak time — Project Arcturus.</strong></em></p>
 <p>Read more: <strong>Pegasus — Catalog Product API Architecture.</strong></p>
 <p><a href="https://engineering.tiki.vn/pegasus-catalog-product-api-architecture-f217c8623c9b" target="_blank" rel="noopener noreferrer">https://engineering.tiki.vn/pegasus-catalog-product-api-architecture-f217c8623c9b</a></p>

@@ -314,8 +314,8 @@
   .cs-card-arrow{font-size:24px;color:var(--emerald);transition:transform .18s ease}
   .cs-card:hover .cs-card-arrow{transform:translateX(3px)}
 
-  .cs-article{max-width:1220px;margin:0 auto}
-  .cs-article-head{max-width:920px;margin:0 auto 28px;padding:8px 18px 0}
+  .cs-article{max-width:1120px;margin:0 auto}
+  .cs-article-head{max-width:1120px;margin:0 auto 28px;padding:8px 0 0}
   .cs-back{display:inline-flex;color:var(--emerald-deep);font-family:"IBM Plex Mono",monospace;font-size:11px;
     text-decoration:none;margin:0 0 26px;padding:5px 0;border-bottom:1px solid transparent}
   .cs-back:hover{border-color:var(--emerald)}
@@ -324,8 +324,9 @@
   .cs-deck{font-size:18px;line-height:1.65;color:var(--ink-soft);margin:0;max-width:800px}
   .cs-byline{display:flex;align-items:center;gap:9px 18px;flex-wrap:wrap;margin-top:22px;color:var(--muted);
     font-family:"IBM Plex Mono",monospace;font-size:11px}
-  .cs-byline span+span::before{content:"";display:inline-block;width:3px;height:3px;border-radius:50%;background:var(--line-strong);margin:0 18px 2px 0}
-  .cs-byline b{color:var(--ink);font-weight:600}
+  .cs-byline>*+*::before{content:"";display:inline-block;width:3px;height:3px;border-radius:50%;background:var(--line-strong);margin:0 18px 2px 0}
+  .cs-origin{color:var(--emerald-deep);text-decoration:none}
+  .cs-origin:hover{text-decoration:underline;text-underline-offset:3px}
   .cs-language{color:var(--emerald-deep)!important;background:var(--emerald-soft);border:1px solid #cfe6da;border-radius:999px;padding:3px 8px}
   .cs-language::before{display:none!important}
   .cs-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:15px}
@@ -352,7 +353,8 @@
   .cs-guide-depth li::marker{color:var(--emerald)}
   .cs-guide-note{margin:15px 2px 0;font-family:"IBM Plex Mono",monospace;font-size:10.5px;line-height:1.55;color:var(--muted)}
 
-  .cs-article-grid{display:grid;grid-template-columns:minmax(0,900px) 230px;gap:28px;align-items:start;justify-content:center}
+  .cs-article-grid{display:grid;grid-template-columns:212px minmax(0,1fr);gap:28px;align-items:start;width:100%;max-width:1120px;margin:0 auto;transition:grid-template-columns .2s ease,gap .2s ease}
+  .cs-article-grid.is-toc-collapsed{grid-template-columns:38px minmax(0,1fr);gap:18px}
   .cs-article-body{min-width:0;padding:48px clamp(26px,5vw,62px) 58px;border:1px solid var(--line);border-radius:16px;
     background:var(--surface);box-shadow:var(--shadow);color:var(--ink-soft)}
   .cs-article-body h2,.cs-article-body h3,.cs-article-body h4{font-family:"Space Grotesk",sans-serif;color:var(--ink);line-height:1.22;scroll-margin-top:90px}
@@ -381,16 +383,23 @@
   .cs-figure-compact img{padding:22px 12px}
   .cs-figure figcaption{padding:9px 4px 0;color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:10.5px;line-height:1.5}
 
-  .cs-toc{position:sticky;top:calc(var(--hdr-h,64px) + 18px);border-left:1px solid var(--line);padding:7px 0 8px 18px}
-  .cs-toc>p{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:0 0 9px}
+  .cs-toc{position:sticky;top:calc(var(--hdr-h,64px) + 18px);min-width:0;border-right:1px solid var(--line);padding:7px 16px 8px 0}
+  .cs-toc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+  .cs-toc-head p{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:0}
+  .cs-toc-head button{flex:none;display:grid;place-items:center;width:27px;height:27px;padding:0;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--emerald-deep);font-size:20px;line-height:1;cursor:pointer}
+  .cs-toc-head button:hover{border-color:#9dcfba;background:var(--emerald-soft)}
+  .cs-toc-head button:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
+  .cs-toc.is-collapsed{padding-right:5px}
+  .cs-toc.is-collapsed .cs-toc-head{justify-content:center;margin:0}
+  .cs-toc.is-collapsed .cs-toc-head p{display:none}
   .cs-toc nav{display:flex;flex-direction:column;gap:1px}
   .cs-toc nav a,.cs-toc-mobile nav a{font-size:12px;line-height:1.35;color:var(--ink-soft);text-decoration:none;padding:5px 7px;border-radius:6px}
   .cs-toc nav a:hover,.cs-toc-mobile nav a:hover{color:var(--emerald-deep);background:var(--emerald-soft)}
   .cs-toc nav a.is-sub,.cs-toc-mobile nav a.is-sub{padding-left:17px;color:var(--muted)}
-  .cs-toc>a{display:inline-block;margin-top:18px;color:var(--emerald-deep);font-family:"IBM Plex Mono",monospace;font-size:10px;text-decoration:none}
-  .cs-toc>a:hover{text-decoration:underline;text-underline-offset:3px}
+  .cs-toc-content>a{display:inline-block;margin-top:18px;color:var(--emerald-deep);font-family:"IBM Plex Mono",monospace;font-size:10px;text-decoration:none}
+  .cs-toc-content>a:hover{text-decoration:underline;text-underline-offset:3px}
   .cs-toc-mobile{display:none}
-  .cs-source{max-width:900px;margin:24px auto 0;display:flex;align-items:center;gap:12px;padding:15px 18px;border:1px solid var(--line);
+  .cs-source{max-width:1120px;margin:24px auto 0;display:flex;align-items:center;gap:12px;padding:15px 18px;border:1px solid var(--line);
     border-radius:11px;background:var(--surface);font-size:13px}
   .cs-source span{font-family:"IBM Plex Mono",monospace;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
   .cs-source a{color:var(--emerald-deep);text-decoration:none}
@@ -627,7 +636,7 @@
     .cs-article-head{padding:2px 2px 0}
     .cs-article-head h1{font-size:36px}
     .cs-deck{font-size:16px}
-    .cs-byline span+span::before{margin-right:9px}
+    .cs-byline>*+*::before{margin-right:9px}
     .cs-archive-note{grid-template-columns:1fr;gap:5px}
     .cs-guide{padding:22px 20px;margin-bottom:18px}
     .cs-guide-brief{grid-template-columns:1fr}
@@ -700,7 +709,7 @@
     .cs-guide>header h2{font-size:24px}
     .cs-guide-brief article,.cs-guide-depth article{padding:14px}
     .cs-byline{gap:7px 10px}
-    .cs-byline span+span::before{display:none}
+    .cs-byline>*+*::before{display:none}
     .cs-article-body{padding:26px 16px 34px}
     .cs-figure{margin-left:-7px;margin-right:-7px;padding:7px}
     .qid{min-width:30px}

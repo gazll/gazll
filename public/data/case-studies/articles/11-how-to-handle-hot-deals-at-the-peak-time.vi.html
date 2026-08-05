@@ -92,13 +92,6 @@
 <p><strong>Bước 5:</strong> Arcturus sẽ kiểm tra kho hàng để tìm hàng tồn kho và nếu loại giá == 'thỏa thuận'; Arcturus sẽ kiểm tra deal_quantity của một giao dịch (bây giờ price-id là id giao dịch); Nếu hàng tồn kho được đáp ứng và số lượng giao dịch được đáp ứng, thì Arcturus trả về CHẤP NHẬN hoặc không, Arcturus trả về TỪ CHỐI.</p>
 <p>Khi Arcturus trả về CHẤP NHẬN, nó sẽ lưu số lượng_ordered của một giao dịch (nếu loại giá là 'giao dịch') và kích hoạt cập nhật sự kiện số_ordered của một giao dịch cho Đại lý đã cập nhật số này vào Cơ sở dữ liệu.</p>
 <p>Khi hết hàng, Arcturus sẽ tổ chức sự kiện SOLD_OUT; thì hệ thống giá sẽ sử dụng sự kiện này để tắt giao dịch đó (nghĩa là giá giao dịch chuyển về giá bình thường ngay lập tức, không cần Dealer dừng giao dịch). Các đại lý cũng tiêu thụ sự kiện này sau đó dừng giao dịch; giá bình thường sẽ đồng bộ với Pegasus sau một thời gian (1–2 giây đến 5–6 giây).</p>
-<p><strong>Người đóng góp:</strong></p>
-<figure class="cs-figure cs-figure-wide">
-  <button type="button" data-zoom-image aria-label="Mở hình 9 ở kích thước đầy đủ">
-    <img src="assets/case-studies/11-how-to-handle-hot-deals-at-the-peak-time/09-figure.png" width="1128" height="508" loading="lazy" decoding="async" alt="Hình 9 cho 3.4. Kiến trúc hệ thống.">
-  </button>
-  <figcaption>Hình 9 · 3.4. Kiến trúc hệ thống.</figcaption>
-</figure>
 <p>Bài viết tiếp theo:<em> </em><em><strong>Cách xử lý các giao dịch hàng tồn kho vào thời điểm cao điểm - Project Arcturus.</strong></em></p>
 <p>Đọc thêm: <strong>Pegasus - Kiến trúc API sản phẩm danh mục.</strong></p>
 <p><a href="https://engineering.tiki.vn/pegasus-catalog-product-api-architecture-f217c8623c9b" target="_blank" rel="noopener noreferrer">https://engineering.tiki.vn/pegasus-catalog-product-api-architecture-f217c8623c9b</a></p>

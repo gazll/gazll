@@ -28,7 +28,9 @@ says what it does. Keep them short.
 
 ```
 public/
-  index.html         shell; loads app.js as <script type="module">
+  index.html         shell; loads the version-aware boot.js module
+  boot.js            fetches version.json no-store, then loads matching CSS + app graph
+  version.json       local "dev" release; deploy overwrites it with commit SHA + timestamp
   app.js             entry: hash router, topic track view (all 25 topics, including Microservices)
   config.js          GITIGNORED. Generated at deploy time from repo variables
   config.example.js  template to copy for local dev
@@ -61,8 +63,8 @@ public/
     interviews.json     seed entries, merged under everyone's own Sheet rows
   assets/case-studies/  local article figures; never hotlinked from a publisher
 apps-script/Code.gs  the entire backend (Google Sheet as database)
-tests/               security · interviews.merge · auth.state · content.i18n · case-studies
-tools/               validate-content.mjs · audit-content.mjs · add-content.mjs
+tests/               security · interviews.merge · auth.state · content.i18n · case-studies · assets.version
+tools/               validate-content.mjs · audit-content.mjs · add-content.mjs · stamp-assets.mjs
 docs/content-playbook.md  how to add/update study content end to end
 secret/              GITIGNORED. Personal setup notes and credentials
 ```
@@ -169,7 +171,18 @@ secret/              GITIGNORED. Personal setup notes and credentials
   the matching `assets/case-studies/NN-slug/` directory because the CSP permits
   local images, not publisher hotlinks. The visible URL deliberately keeps the
   unnumbered slug (for example `#/case-studies/arcturus-inventory-processing-system`),
-  so reorganizing source files never breaks bookmarks.
+  so reorganizing source files never breaks bookmarks. Do not store author names
+  or retain contributor sections/images: article attribution is publication date
+  plus the original Tiki Engineering URL only. Desktop TOC is the collapsible
+  left column; its persisted state must not affect the mobile `<details>` TOC.
+
+- **Every Pages deploy is one immutable asset version.** `tools/stamp-assets.mjs`
+  writes the first 12 characters of `github.sha` plus `deployed_at` to
+  `public/version.json`, versions local JS/CSS references in HTML, and versions
+  every relative ESM import. Stamping only `app.js` is insufficient because its
+  dependencies would still be cacheable under old URLs. `boot.js` always fetches
+  `version.json` with `no-store`, swaps in that release's stylesheet, then imports
+  the matching app entry. Keep the bootstrap small, stable and free of app logic.
 
 - **The nav panel is `inert` while closed.** Without it the off-screen links
   stay in the tab order — the drawer is moved by `transform`, not `display`.
