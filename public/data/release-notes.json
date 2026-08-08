@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "releases": [
+    {
+      "date": "2026-08-08",
+      "title": "Keycloak, and the 15 patterns traced step by step",
+      "items_added": 21,
+      "changes": [
+        {
+          "kind": "topic",
+          "target": "13-security-oauth2",
+          "section": "Keycloak in practice",
+          "count": 6,
+          "text": "New section on Keycloak as a concrete identity provider: realms and clients, resource-server validation (including the audience claim Spring does not check by default), where roles actually land in the token, token exchange vs client credentials, production failure modes, and how to argue Keycloak against a managed IdP."
+        },
+        {
+          "kind": "topic",
+          "target": "19-dsa-leetcode",
+          "section": "The 15 patterns, traced step by step",
+          "count": 15,
+          "text": "Every recurring pattern now has a diagram that traces the algorithm one step at a time — pointers converging, a window sliding by one add and one remove, a monotonic stack resolving two pending indices at once, a DP table filling cell by cell. Each entry pairs the trace with the template, a decision table, and the traps."
+        }
+      ]
+    },
+    {
+      "date": "2026-08-05",
+      "title": "Case Studies library and versioned assets",
+      "changes": [
+        {
+          "kind": "feature",
+          "target": "case-studies",
+          "count": 11,
+          "text": "New Experience section: long-form engineering case studies with bilingual article bodies, figures served locally, and a collapsible table of contents. Case studies are reading material, so they carry no item ids and never move the progress ring."
+        },
+        {
+          "kind": "feature",
+          "target": "boot",
+          "text": "Every deploy is now one immutable asset version: boot.js reads version.json with no-store, then loads the stylesheet and app graph stamped with that release."
+        }
+      ]
+    },
+    {
+      "date": "2026-08-04",
+      "title": "Editorial pass over every topic",
+      "changes": [
+        {
+          "kind": "content",
+          "target": "all-topics",
+          "text": "Answers across all 25 topics were rewritten for density: long paragraphs broken into short runs, sentence chains turned into lists, and wide table cells split. The audit tool grew a --dense report so a wall of prose shows up before it ships."
+        }
+      ]
+    },
+    {
+      "date": "2026-08-03",
+      "title": "SQL vs NoSQL depth, and a concurrency deep dive",
+      "items_added": 3,
+      "changes": [
+        {
+          "kind": "topic",
+          "target": "07-sql-nosql-db-engines",
+          "count": 2,
+          "text": "Added engine-level comparison detail, including how Oracle and MySQL differ in process model, durability settings and operating contract rather than product name."
+        },
+        {
+          "kind": "topic",
+          "target": "01-java-core-jvm",
+          "count": 1,
+          "text": "HashMap vs ConcurrentHashMap deep dive: treeification, resize behaviour, and why the concurrent variant is not simply a synchronized map."
+        }
+      ]
+    },
+    {
+      "date": "2026-08-01",
+      "title": "Content language switch moved to the header",
+      "changes": [
+        {
+          "kind": "feature",
+          "target": "language",
+          "text": "The EN/VI switch for study material now sits in the header beside the progress ring — it was inside the nav panel and nobody could find it. Interface text stays English; only the material switches."
+        }
+      ]
+    }
+  ]
+}

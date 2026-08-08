@@ -236,6 +236,39 @@
   .page strong{color:var(--ink);font-weight:600}
   .page em{color:var(--clay);font-style:normal;font-weight:500}
 
+  /* ---------- Release notes: newest release first, one block each ---------- */
+  .rn-intro{max-width:70ch}
+  .rn-loading,.rn-empty,.rn-error{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
+  .rn-error{color:var(--clay)}
+  /* The rail is drawn on the list, so it spans the changes and stops with them. */
+  .rn-rel{margin:22px 0 0}
+  .rn-rel + .rn-rel{border-top:1px solid var(--line);padding-top:18px}
+  .rn-relhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin-bottom:12px}
+  .rn-date{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;letter-spacing:.4px;
+    text-transform:uppercase;color:var(--emerald);white-space:nowrap}
+  .page .rn-title{font-size:17px;margin:0;flex:1 1 14ch}
+  .rn-added{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--emerald-deep);
+    background:var(--emerald-soft);border:1px solid #cfe6da;border-radius:999px;padding:3px 9px;white-space:nowrap}
+  .page .rn-changes{list-style:none;margin:0;padding:0 0 0 15px;border-left:2px solid var(--line)}
+  .page .rn-change{margin:0 0 14px;position:relative}
+  .page .rn-change:last-child{margin-bottom:0}
+  .rn-change::before{content:"";position:absolute;left:-21px;top:6px;width:9px;height:9px;border-radius:50%;
+    background:var(--surface);border:2px solid var(--line-strong)}
+  .rn-cmeta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-bottom:5px}
+  .rn-kind{font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;letter-spacing:.6px;
+    text-transform:uppercase;border-radius:6px;padding:2px 7px;border:1px solid var(--line-strong);color:var(--ink-soft)}
+  .rn-k-topic{color:var(--indigo);background:var(--indigo-soft);border-color:#cdd5ef}
+  .rn-k-content{color:var(--emerald-deep);background:var(--emerald-soft);border-color:#cfe6da}
+  .rn-k-feature{color:var(--brass);background:#faf5e9;border-color:#e3d6b8}
+  /* data-topic-type supplies --g/--g-soft/--g-line, so a topic badge carries its own accent. */
+  .rn-target{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--g,var(--ink-soft));
+    background:var(--g-soft,var(--paper));border:1px solid var(--g-line,var(--line));border-radius:6px;padding:2px 7px}
+  .rn-section{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-soft)}
+  .rn-section::before{content:"› "}
+  .rn-count{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--emerald)}
+  .page .rn-text p{margin:0;font-size:14.5px}
+  .page .rn-text p + p{margin-top:7px}
+
   /* ---------- Experience: long-form engineering case studies ---------- */
   .cs-shell{animation:fade .35s ease}
   .cs-loading{min-height:48vh;display:grid;place-items:center;align-content:center;gap:12px;color:var(--muted)}

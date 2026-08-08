@@ -87,6 +87,9 @@ export const Content = {
       const sections = cloneSections(this.lang === 'vi' && vi ? vi.sections : en.sections);
       const topic = {
         n,
+        // The filename stem, and the prefix of every item id in this topic —
+        // the stable handle other views use to name a topic.
+        key: this._meta.topics[String(n)]?.key || '',
         topic_type: row.topic_type,
         tags: [...(en.tags || [])],
         sections

@@ -18,6 +18,7 @@ import { renderInterviews, mountInterviews } from './views/interviews.js';
 import { renderStats, mountStats } from './views/stats.js';
 import { renderAdmin, mountAdmin } from './views/admin.js';
 import { renderCaseStudies, mountCaseStudies } from './views/case-studies.js';
+import { renderReleaseNotes, mountReleaseNotes } from './views/release-notes.js';
 
 let TOPICS = [];
 let current = 0;
@@ -69,6 +70,8 @@ const GUIDE_MD = [
   'Every topic carries a `topic_type` field (`core` · `data` · `design` · `platform` · `algorithm` · `microservice`, from `lib/constants.js`) — that is what drives the filter chips in the topic picker. Every item carries a `difficulty` (`core` · `hard` · `ext`) — the ESSENTIAL/ADVANCED/EXTRA badge.',
   '',
   'Raw HTML (SVG diagrams, tables) can be embedded straight into the Markdown. To update content: edit the topic\'s file under `data/topics/`, then `git push` — GitHub Actions deploys it.',
+  '',
+  '**Release Notes** (last entry in `Other`) records what material arrived and when. Entries live in `data/release-notes.json`, newest release first, so adding one never touches `app.js`. A change may name a topic by its `key` — the view resolves that to the topic\'s current label, so renaming a topic never leaves a stale note behind.',
   ':::'
 ].join('\n');
 
@@ -102,7 +105,10 @@ const VIEWS = [
     icon: 'tool', href: 'fshare-tool/' },
 
   { id: 'guide', sec: 'about', label: 'Guide', desc: 'Site structure & syntax', icon: 'guide',
-    md: GUIDE_MD }
+    md: GUIDE_MD },
+  // Last entry, last section: the changelog belongs at the foot of the panel.
+  { id: 'release-notes', sec: 'about', label: 'Release Notes', desc: 'What content was added, and when',
+    icon: 'release', render: renderReleaseNotes, mount: mountReleaseNotes }
 ];
 
 /* Inline so the panel needs no network and no icon font. */
@@ -113,7 +119,8 @@ const ICONS = {
   admin: '<path d="M12 3l7 3v5c0 4.2-2.8 7.6-7 10-4.2-2.4-7-5.8-7-10V6z"/>',
   case: '<path d="M5 5h14v14H5z"/><path d="M8 9h8M8 13h5M9 5V3h6v2"/>',
   tool: '<path d="M14.5 3.5a5 5 0 0 0-6.1 6.7L3.5 15v5.5H9l4.8-4.9a5 5 0 0 0 6.7-6.1L17 12l-2.5-.5L14 9z"/>',
-  guide: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.2 3.1c-.6.3-.8.7-.8 1.4"/><path d="M12 17h.01"/>'
+  guide: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.2 3.1c-.6.3-.8.7-.8 1.4"/><path d="M12 17h.01"/>',
+  release: '<path d="M4 8.5V5h3.5L18 15.5 14.5 19z"/><path d="M7.5 8.5h.01"/><path d="M13 4h7v7"/>'
 };
 const iconSVG = name => '<svg class="nv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
   + ' stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
