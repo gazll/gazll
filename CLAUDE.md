@@ -50,11 +50,13 @@ public/
     stats.js         streak + heatmap + per-topic progress
     admin.js         all-user overview (admin role only)
     case-studies.js  long-form case-study library + article reader/lightbox
+    release-notes.js bilingual changelog of the material; chrome stays English
   data/
     manifest.json       ordered list of every topic (n, topic_type, file) — 25 rows, Microservices is n=25
     meta.json            label/title/intro/tags/key/topic_type per topic, VI + EN in one file
-    topics/NN-slug.json     complete English base, one file per topic (324 items total across 25 files)
+    topics/NN-slug.json     complete English base, one file per topic (360 items total across 25 files)
     topics/NN-slug.vi.json  complete Vietnamese companion, same shape and item IDs
+    release-notes.json   dated changelog of the material, VI + EN in one file
     case-studies/manifest.json  ordered case-study rows (n, file, slug, immutable source fields)
     case-studies/meta.json      library/category/article metadata, VI + EN in one file
     case-studies/NN-slug.json     English guide + numbered English body path
@@ -63,7 +65,7 @@ public/
     interviews.json     seed entries, merged under everyone's own Sheet rows
   assets/case-studies/  local article figures; never hotlinked from a publisher
 apps-script/Code.gs  the entire backend (Google Sheet as database)
-tests/               security · interviews.merge · auth.state · content.i18n · case-studies · assets.version
+tests/               security · interviews.merge · auth.state · content.i18n · case-studies · assets.version · release-notes
 tools/               validate-content.mjs · audit-content.mjs · add-content.mjs · stamp-assets.mjs
 docs/content-playbook.md  how to add/update study content end to end
 secret/              GITIGNORED. Personal setup notes and credentials

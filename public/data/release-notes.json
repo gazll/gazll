@@ -3,80 +3,127 @@
   "releases": [
     {
       "date": "2026-08-08",
-      "title": "Keycloak, and the 15 patterns traced step by step",
       "items_added": 21,
+      "en": { "title": "Keycloak, and the 15 patterns traced step by step" },
+      "vi": { "title": "Keycloak, và 15 dạng bài được lần theo từng bước" },
       "changes": [
         {
           "kind": "topic",
           "target": "13-security-oauth2",
-          "section": "Keycloak in practice",
           "count": 6,
-          "text": "New section on Keycloak as a concrete identity provider: realms and clients, resource-server validation (including the audience claim Spring does not check by default), where roles actually land in the token, token exchange vs client credentials, production failure modes, and how to argue Keycloak against a managed IdP."
+          "en": {
+            "section": "Keycloak in practice",
+            "text": "New section on Keycloak as a concrete identity provider: realms and clients, resource-server validation (including the audience claim Spring does not check by default), where roles actually land in the token, token exchange vs client credentials, production failure modes, and how to argue Keycloak against a managed IdP."
+          },
+          "vi": {
+            "section": "Keycloak trong thực tế",
+            "text": "Section mới về Keycloak như một identity provider cụ thể: realm và client, cách resource server validate token (kể cả claim `aud` mà Spring không kiểm mặc định), role thực sự nằm ở đâu trong token, token exchange so với client credentials, các kiểu vỡ khi chạy production, và cách lập luận chọn Keycloak thay vì IdP managed."
+          }
         },
         {
           "kind": "topic",
           "target": "19-dsa-leetcode",
-          "section": "The 15 patterns, traced step by step",
           "count": 15,
-          "text": "Every recurring pattern now has a diagram that traces the algorithm one step at a time — pointers converging, a window sliding by one add and one remove, a monotonic stack resolving two pending indices at once, a DP table filling cell by cell. Each entry pairs the trace with the template, a decision table, and the traps."
+          "en": {
+            "section": "The 15 patterns, traced step by step",
+            "text": "Every recurring pattern now has a diagram that traces the algorithm one step at a time — pointers converging, a window sliding by one add and one remove, a monotonic stack resolving two pending indices at once, a DP table filling cell by cell. Each entry pairs the trace with the template, a decision table, and the traps."
+          },
+          "vi": {
+            "section": "15 dạng bài, lần theo từng bước",
+            "text": "Mỗi dạng bài hay gặp giờ có một diagram lần theo thuật toán từng bước một — hai con trỏ hội tụ, cửa sổ trượt bằng một phép cộng và một phép trừ, monotonic stack giải hai index đang chờ cùng lúc, bảng DP điền dần từng ô. Mỗi mục đi kèm template, bảng quyết định và các cái bẫy."
+          }
         }
       ]
     },
     {
       "date": "2026-08-05",
-      "title": "Case Studies library and versioned assets",
+      "en": { "title": "Case Studies library and versioned assets" },
+      "vi": { "title": "Thư viện Case Study và asset có version" },
       "changes": [
         {
           "kind": "feature",
           "target": "case-studies",
           "count": 11,
-          "text": "New Experience section: long-form engineering case studies with bilingual article bodies, figures served locally, and a collapsible table of contents. Case studies are reading material, so they carry no item ids and never move the progress ring."
+          "en": {
+            "text": "New Experience section: long-form engineering case studies with bilingual article bodies, figures served locally, and a collapsible table of contents. Case studies are reading material, so they carry no item ids and never move the progress ring."
+          },
+          "vi": {
+            "text": "Mục Experience mới: các case study kỹ thuật dạng dài, nội dung song ngữ, hình ảnh phục vụ tại chỗ, và mục lục thu gọn được. Case study là tài liệu đọc, nên không có item id và không bao giờ làm đổi vòng tiến độ."
+          }
         },
         {
           "kind": "feature",
           "target": "boot",
-          "text": "Every deploy is now one immutable asset version: boot.js reads version.json with no-store, then loads the stylesheet and app graph stamped with that release."
+          "en": {
+            "text": "Every deploy is now one immutable asset version: `boot.js` reads `version.json` with no-store, then loads the stylesheet and app graph stamped with that release."
+          },
+          "vi": {
+            "text": "Mỗi lần deploy giờ là một version asset bất biến: `boot.js` đọc `version.json` với no-store, rồi nạp stylesheet và app graph đã đóng dấu theo release đó."
+          }
         }
       ]
     },
     {
       "date": "2026-08-04",
-      "title": "Editorial pass over every topic",
+      "en": { "title": "Editorial pass over every topic" },
+      "vi": { "title": "Rà soát biên tập toàn bộ topic" },
       "changes": [
         {
           "kind": "content",
           "target": "all-topics",
-          "text": "Answers across all 25 topics were rewritten for density: long paragraphs broken into short runs, sentence chains turned into lists, and wide table cells split. The audit tool grew a --dense report so a wall of prose shows up before it ships."
+          "en": {
+            "text": "Answers across all 25 topics were rewritten for density: long paragraphs broken into short runs, sentence chains turned into lists, and wide table cells split. The audit tool grew a `--dense` report so a wall of prose shows up before it ships."
+          },
+          "vi": {
+            "text": "Câu trả lời của cả 25 topic được viết lại cho thoáng: đoạn dài cắt thành nhiều đoạn ngắn, chuỗi câu dài đổi thành list, ô bảng rộng được tách ra. Công cụ audit có thêm báo cáo `--dense` để một khối chữ dày bị phát hiện trước khi lên site."
+          }
         }
       ]
     },
     {
       "date": "2026-08-03",
-      "title": "SQL vs NoSQL depth, and a concurrency deep dive",
       "items_added": 3,
+      "en": { "title": "SQL vs NoSQL depth, and a concurrency deep dive" },
+      "vi": { "title": "Đào sâu SQL vs NoSQL, và một deep dive concurrency" },
       "changes": [
         {
           "kind": "topic",
           "target": "07-sql-nosql-db-engines",
           "count": 2,
-          "text": "Added engine-level comparison detail, including how Oracle and MySQL differ in process model, durability settings and operating contract rather than product name."
+          "en": {
+            "text": "Added engine-level comparison detail, including how Oracle and MySQL differ in process model, durability settings and operating contract rather than product name."
+          },
+          "vi": {
+            "text": "Thêm phần so sánh ở mức engine, gồm cả việc Oracle và MySQL khác nhau ở process model, cấu hình durability và hợp đồng vận hành — chứ không phải khác ở tên sản phẩm."
+          }
         },
         {
           "kind": "topic",
           "target": "01-java-core-jvm",
           "count": 1,
-          "text": "HashMap vs ConcurrentHashMap deep dive: treeification, resize behaviour, and why the concurrent variant is not simply a synchronized map."
+          "en": {
+            "text": "HashMap vs ConcurrentHashMap deep dive: treeification, resize behaviour, and why the concurrent variant is not simply a synchronized map."
+          },
+          "vi": {
+            "text": "Deep dive HashMap vs ConcurrentHashMap: treeification, hành vi khi resize, và vì sao bản concurrent không đơn giản là một map có synchronized."
+          }
         }
       ]
     },
     {
       "date": "2026-08-01",
-      "title": "Content language switch moved to the header",
+      "en": { "title": "Content language switch moved to the header" },
+      "vi": { "title": "Chuyển công tắc ngôn ngữ lên header" },
       "changes": [
         {
           "kind": "feature",
           "target": "language",
-          "text": "The EN/VI switch for study material now sits in the header beside the progress ring — it was inside the nav panel and nobody could find it. Interface text stays English; only the material switches."
+          "en": {
+            "text": "The EN/VI switch for study material now sits in the header beside the progress ring — it was inside the nav panel and nobody could find it. Interface text stays English; only the material switches."
+          },
+          "vi": {
+            "text": "Công tắc EN/VI cho tài liệu học giờ nằm ở header, cạnh vòng tiến độ — trước đó nó ở trong nav panel và không ai tìm ra. Chữ giao diện vẫn là tiếng Anh; chỉ tài liệu mới đổi."
+          }
         }
       ]
     }

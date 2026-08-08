@@ -1,10 +1,14 @@
 /* Release notes — what content arrived, and when.
 
    Data-driven on purpose: entries live in data/release-notes.json so adding a
-   note never touches app.js. Interface text is English like every other view;
-   the entries describe study material rather than being study material, so
-   they carry no item ids and no EN/VI companion. */
-import { fetchJson } from '../lib/i18n.js';
+   note never touches app.js.
+
+   The notes describe study material, so they follow the material's language:
+   each release and change carries `en` and `vi` blocks in one file, resolved
+   by the header switch exactly like meta.json. Chrome around them — the menu
+   label, the heading, the kind chips — stays English per CLAUDE.md. Entries
+   are not study items: no ids, no difficulty, no effect on the progress ring. */
+import { fetchJson, localizedRecord } from '../lib/i18n.js';
 import { renderMarkdown, escapeHtml } from '../lib/markdown.js';
 import { Content } from '../lib/content.js';
 
@@ -20,10 +24,13 @@ const KIND = {
 
 let cache = null;
 
-/** "2026-08-08" -> "8 Aug 2026", without pulling in a date library. */
-function humanDate(iso) {
+/* "2026-08-08" -> "8 Aug 2026" / "08/08/2026". Formatted by hand rather than
+   with toLocaleDateString, whose output depends on the browser's locale rather
+   than on the language the reader picked here. */
+function humanDate(iso, lang) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
   if (!m) return escapeHtml(String(iso || ''));
+  if (lang === 'vi') return m[3] + '/' + m[2] + '/' + m[1];
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return Number(m[3]) + ' ' + months[Number(m[2]) - 1] + ' ' + m[1];
 }
@@ -39,14 +46,17 @@ function targetLabel(change) {
     + escapeHtml(pad2(topic.n) + ' · ' + (topic.label || key)) + '</span>';
 }
 
-function changeRow(change) {
+function changeRow(change, lang) {
   const kind = KIND[change.kind] || { label: change.kind || 'Change', cls: '' };
+  // localizedRecord falls back to the other language rather than rendering an
+  // empty row, so a note added in one language only still shows up.
+  const local = localizedRecord(change, lang);
   const target = targetLabel(change);
   const count = Number(change.count) > 0
     ? '<span class="rn-count">+' + Number(change.count) + '</span>'
     : '';
-  const where = change.section
-    ? '<span class="rn-section">' + escapeHtml(change.section) + '</span>'
+  const where = local.section
+    ? '<span class="rn-section">' + escapeHtml(local.section) + '</span>'
     : '';
   return '<li class="rn-change">'
     + '<div class="rn-cmeta">'
@@ -55,22 +65,25 @@ function changeRow(change) {
     + '</div>'
     // renderMarkdown, not escapeHtml: the notes use the same inline syntax as
     // the study material (bold, code, coloured spans).
-    + '<div class="rn-text">' + renderMarkdown(String(change.text || '')) + '</div>'
+    + '<div class="rn-text">' + renderMarkdown(String(local.text || '')) + '</div>'
     + '</li>';
 }
 
-function releaseBlock(release) {
+function releaseBlock(release, lang) {
+  const local = localizedRecord(release, lang);
   const added = Number(release.items_added) > 0
     ? '<span class="rn-added">' + Number(release.items_added) + ' new questions</span>'
     : '';
   return '<section class="rn-rel">'
     + '<header class="rn-relhead">'
     + '<time class="rn-date" datetime="' + escapeHtml(String(release.date || '')) + '">'
-    + humanDate(release.date) + '</time>'
-    + '<h3 class="rn-title">' + escapeHtml(String(release.title || '')) + '</h3>'
+    + humanDate(release.date, lang) + '</time>'
+    + '<h3 class="rn-title">' + escapeHtml(String(local.title || '')) + '</h3>'
     + added
     + '</header>'
-    + '<ul class="rn-changes">' + (release.changes || []).map(changeRow).join('') + '</ul>'
+    + '<ul class="rn-changes">'
+    + (release.changes || []).map(c => changeRow(c, lang)).join('')
+    + '</ul>'
     + '</section>';
 }
 
@@ -78,7 +91,8 @@ export function renderReleaseNotes() {
   return '<div class="page rn-page">'
     + '<h2>Release Notes</h2>'
     + '<p class="rn-intro">What was added to the study material, newest first — new topics and '
-    + 'questions, rewritten answers, and changes to how the site works.</p>'
+    + 'questions, rewritten answers, and changes to how the site works. '
+    + 'These notes follow the <b>EN/VI</b> switch in the header.</p>'
     + '<div class="rn-body" data-rn-body>'
     + '<p class="rn-loading">Loading…</p>'
     + '</div></div>';
@@ -89,12 +103,13 @@ export async function mountReleaseNotes(host) {
   if (!body) return;
   try {
     // Topics may not be loaded yet when this view is the entry point; without
-    // them targetLink has no label to resolve and would silently drop links.
+    // them targetLabel has no label to resolve and would drop the topic badge.
     if (!Content.loaded) await Content.load(Content.lang);
     if (!cache) cache = await fetchJson(DATA_URL);
+    const lang = Content.lang;
     const releases = cache.releases || [];
     body.innerHTML = releases.length
-      ? releases.map(releaseBlock).join('')
+      ? releases.map(r => releaseBlock(r, lang)).join('')
       : '<p class="rn-empty">No release notes yet.</p>';
   } catch (e) {
     body.innerHTML = '<p class="rn-error">Release notes could not be loaded. '

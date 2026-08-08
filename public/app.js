@@ -71,7 +71,7 @@ const GUIDE_MD = [
   '',
   'Raw HTML (SVG diagrams, tables) can be embedded straight into the Markdown. To update content: edit the topic\'s file under `data/topics/`, then `git push` — GitHub Actions deploys it.',
   '',
-  '**Release Notes** (last entry in `Other`) records what material arrived and when. Entries live in `data/release-notes.json`, newest release first, so adding one never touches `app.js`. A change may name a topic by its `key` — the view resolves that to the topic\'s current label, so renaming a topic never leaves a stale note behind.',
+  '**Release Notes** (last entry in `Other`) records what material arrived and when. Entries live in `data/release-notes.json`, newest release first, so adding one never touches `app.js`. Each release and change carries `en` and `vi` blocks in that one file and follows the header switch like any other material; a note written in only one language falls back rather than rendering blank. A change may name a topic by its `key` — the view resolves that to the topic\'s current label, so renaming a topic never leaves a stale note behind.',
   ':::'
 ].join('\n');
 

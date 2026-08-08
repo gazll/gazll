@@ -100,7 +100,8 @@ jobs:
             tests/auth.state.test.mjs \
             tests/content.i18n.test.mjs \
             tests/case-studies.test.mjs \
-            tests/assets.version.test.mjs
+            tests/assets.version.test.mjs \
+            tests/release-notes.test.mjs
 
       # Stamp only the artifact that will be uploaded. Tests intentionally run
       # against the source module paths before their deploy-only ?v= query.
