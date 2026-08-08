@@ -415,7 +415,8 @@
           "Access/Refresh",
           "mTLS",
           "OWASP",
-          "Secrets"
+          "Secrets",
+          "Keycloak"
         ]
       },
       "en": {
@@ -430,7 +431,8 @@
           "Access/Refresh",
           "mTLS",
           "OWASP",
-          "Secrets"
+          "Secrets",
+          "Keycloak"
         ]
       }
     },
@@ -606,12 +608,16 @@
         "title": "DSA & LeetCode — dạng bài và khung trình bày",
         "intro": "Vòng coding của backend senior hiếm khi hỏi bài lạ; nó hỏi bài quen và xem bạn *trình bày* thế nào. Chủ đề này gom các dạng hay gặp, kèm khung nói ra thành tiếng khi làm bài — trong đó có bài Rakuten đã hỏi (LC 30).",
         "tags": [
+          "15 patterns",
           "Sliding window",
           "Two pointers",
           "Hash + prefix sum",
           "Heap / top-K",
           "Binary search on answer",
+          "Monotonic stack",
           "BFS/DFS",
+          "Backtracking",
+          "DP",
           "LC 30"
         ]
       },
@@ -620,12 +626,16 @@
         "title": "DSA & LeetCode — the patterns and how to present them",
         "intro": "A senior backend coding round rarely asks something exotic; it asks something familiar and watches how you present it. This collects the recurring patterns plus the script for thinking out loud — including the one Rakuten actually asked (LC 30).",
         "tags": [
+          "15 patterns",
           "Sliding window",
           "Two pointers",
           "Hash + prefix sum",
           "Heap / top-K",
           "Binary search on answer",
+          "Monotonic stack",
           "BFS/DFS",
+          "Backtracking",
+          "DP",
           "LC 30"
         ]
       }
