@@ -236,17 +236,79 @@
   .page strong{color:var(--ink);font-weight:600}
   .page em{color:var(--clay);font-style:normal;font-weight:500}
 
-  /* ---------- Release notes: newest release first, one block each ---------- */
+  /* ---------- DSA step player (views/dsa-player.js) ----------
+     The placeholder keeps .dgm's frame; .da fills it once mounted. */
+  .dsa-anim{min-height:150px}
+  .da{margin:0;display:grid;gap:10px}
+  .da-stage{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 4px}
+  .da-svg{width:100%;height:auto;display:block;font-family:"IBM Plex Mono",monospace}
+  .da-error{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--clay);margin:0;padding:12px}
+
+  /* Frame primitives. Fills are flat so the state, not the styling, reads. */
+  .da-svg .da-cell rect{fill:#fff;stroke:var(--line-strong);stroke-width:1.4}
+  .da-svg .da-val{fill:var(--ink);font-size:13px;text-anchor:middle;font-weight:500}
+  .da-svg .da-cap{fill:var(--muted);font-size:9.5px;text-anchor:middle}
+  .da-svg .da-lbl{fill:var(--ink-soft);font-size:10px}
+  .da-svg .da-title{fill:var(--ink);font-size:11.5px;font-weight:600}
+  .da-svg .da-s-active rect,.da-svg .da-s-active circle{fill:#FBEFD5;stroke:var(--brass);stroke-width:2}
+  .da-svg .da-s-done rect,.da-svg .da-s-done circle{fill:var(--emerald-soft);stroke:var(--emerald);stroke-width:1.8}
+  .da-svg .da-s-window rect,.da-svg .da-s-window circle{fill:var(--indigo-soft);stroke:var(--indigo);stroke-width:1.6}
+  .da-svg .da-s-dropped rect,.da-svg .da-s-dropped circle{fill:var(--paper);stroke:var(--line)}
+  .da-svg .da-s-dropped .da-val{fill:var(--line-strong)}
+  .da-svg .da-ptr path{stroke:var(--emerald);stroke-width:1.8}
+  .da-svg .da-ptr text{fill:var(--emerald-deep);font-size:10.5px;font-weight:600;text-anchor:middle}
+  .da-svg .da-t-amber path{stroke:var(--brass)} .da-svg .da-t-amber text{fill:var(--brass)}
+  .da-svg .da-span rect{fill:none;stroke:var(--brass);stroke-width:2}
+  .da-svg .da-span text{fill:var(--brass);font-size:10px;text-anchor:middle}
+  .da-svg .da-t-green rect{stroke:var(--emerald)} .da-svg .da-t-green text{fill:var(--emerald-deep)}
+  .da-svg .da-edge{stroke:var(--line-strong);stroke-width:1.5}
+  .da-svg .da-base{stroke:var(--line-strong);stroke-width:1.5}
+  .da-svg .da-node circle{fill:#fff;stroke:var(--line-strong);stroke-width:1.5}
+
+  /* Controls */
+  .da-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .da-btn{width:32px;height:32px;flex:none;display:grid;place-items:center;padding:0;cursor:pointer;
+    border:1px solid var(--line-strong);border-radius:9px;background:var(--surface);color:var(--ink-soft);
+    transition:.15s ease}
+  .da-btn svg{width:18px;height:18px;fill:currentColor}
+  .da-btn:hover{border-color:var(--emerald);color:var(--emerald)}
+  .da-btn:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
+  .da-btn.on{background:var(--emerald);border-color:var(--emerald);color:#fff}
+  .da-scrub{flex:1 1 120px;min-width:90px;accent-color:var(--emerald);cursor:pointer}
+  .da-scrub:focus-visible{outline:2px solid var(--emerald);outline-offset:3px}
+  .da-count{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);white-space:nowrap}
+  .da-count b{color:var(--emerald-deep)}
+  .da-speeds{display:flex;gap:4px}
+  .da-speed{font-family:"IBM Plex Mono",monospace;font-size:11px;cursor:pointer;padding:4px 7px;
+    border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--muted)}
+  .da-speed:hover{border-color:var(--line-strong);color:var(--ink-soft)}
+  .da-speed.on{background:var(--emerald-soft);border-color:var(--emerald);color:var(--emerald-deep);font-weight:600}
+  .da-speed:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
+
+  /* The caption is the point of the step, so it gets real weight. */
+  .da-note-box{margin:0;min-height:38px;background:var(--indigo-soft);border-left:3px solid var(--indigo);
+    border-radius:0 8px 8px 0;padding:9px 12px;font-size:13.5px;line-height:1.5;color:var(--ink)}
+
+  /* ---------- Release notes: grouped by day, newest day first ----------
+     Two levels: .rn-day carries the date once, .rn-rel is one release inside
+     it. Several releases on a date therefore share a single heading. */
   .rn-intro{max-width:70ch}
   .rn-loading,.rn-empty,.rn-error{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
   .rn-error{color:var(--clay)}
-  /* The rail is drawn on the list, so it spans the changes and stops with them. */
-  .rn-rel{margin:22px 0 0}
-  .rn-rel + .rn-rel{border-top:1px solid var(--line);padding-top:18px}
-  .rn-relhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin-bottom:12px}
+  .rn-day{margin:24px 0 0}
+  .rn-day + .rn-day{border-top:1px solid var(--line);padding-top:20px}
+  .rn-dayhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:7px 10px;margin-bottom:4px}
   .rn-date{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;letter-spacing:.4px;
     text-transform:uppercase;color:var(--emerald);white-space:nowrap}
-  .page .rn-title{font-size:17px;margin:0;flex:1 1 14ch}
+  .rn-daymeta{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);white-space:nowrap}
+  .rn-daymeta::before{content:"· "}
+  /* The rail is drawn on the list, so it spans the changes and stops with them. */
+  .rn-rel{margin:12px 0 0}
+  /* Sibling releases in one day get a light divider, not a full rule. */
+  .rn-rel + .rn-rel{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+  .rn-relhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin-bottom:10px}
+  .page .rn-title{font-size:16px;margin:0;flex:1 1 14ch;font-family:"Space Grotesk",sans-serif;
+    font-weight:600;color:var(--ink)}
   .rn-added{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--emerald-deep);
     background:var(--emerald-soft);border:1px solid #cfe6da;border-radius:999px;padding:3px 9px;white-space:nowrap}
   .page .rn-changes{list-style:none;margin:0;padding:0 0 0 15px;border-left:2px solid var(--line)}
@@ -631,6 +693,10 @@
     .answer{padding:2px 14px 16px 14px}
     /* page (markdown views) */
     .page{padding:20px 18px}
+    /* Player: the scrub takes its own row so the buttons keep a tappable size. */
+    .da-bar{gap:6px}
+    .da-scrub{order:5;flex:1 1 100%}
+    .da-note-box{font-size:13px;padding:8px 10px}
     .cs-library-hero{padding:28px 22px}
     .cs-library-hero>p:not(.cs-eyebrow){font-size:15px}
     .cs-card-grid{grid-template-columns:1fr}

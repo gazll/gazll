@@ -2,6 +2,53 @@
   "version": 1,
   "releases": [
     {
+      "date": "2026-08-09",
+      "en": { "title": "The 15 DSA patterns now animate" },
+      "vi": { "title": "15 dạng bài DSA giờ có animation" },
+      "changes": [
+        {
+          "kind": "feature",
+          "target": "19-dsa-leetcode",
+          "count": 15,
+          "en": {
+            "section": "The 15 patterns, traced step by step",
+            "text": "Each pattern's static trace became a player: press play and the steps run in turn, or scrub, step and arrow-key through them at your own pace. Every frame was produced by running the real algorithm, so the animation cannot disagree with the code beside it — and the drawing is shared between languages, with only the step captions translated."
+          },
+          "vi": {
+            "section": "15 dạng bài, lần theo từng bước",
+            "text": "Diagram tĩnh của mỗi dạng bài đã thành một player: bấm play là các bước chạy lần lượt, hoặc bạn tự kéo thanh trượt, bấm từng bước và dùng mũi tên theo nhịp của mình. Mọi frame đều sinh ra từ việc chạy thuật toán thật, nên animation không thể lệch với code bên cạnh — và hình vẽ dùng chung cho hai ngôn ngữ, chỉ chú thích từng bước là được dịch."
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-09",
+      "en": { "title": "Release notes became bilingual, and group by day" },
+      "vi": { "title": "Release note thành song ngữ, và gom theo ngày" },
+      "changes": [
+        {
+          "kind": "feature",
+          "target": "release-notes",
+          "en": {
+            "text": "This page follows the header's EN/VI switch like the rest of the material. A note written in only one language falls back rather than showing a blank row."
+          },
+          "vi": {
+            "text": "Trang này theo công tắc EN/VI ở header như mọi tài liệu khác. Ghi chú chỉ viết một ngôn ngữ sẽ hiển thị bản có sẵn thay vì để trống."
+          }
+        },
+        {
+          "kind": "feature",
+          "target": "release-notes",
+          "en": {
+            "text": "Releases that share a date are now collected under one heading instead of repeating it, since a single day often carries several. The data file still holds one entry per release — appending is what you actually do — and the grouping happens when the page renders."
+          },
+          "vi": {
+            "text": "Các release cùng ngày giờ được gom dưới một tiêu đề thay vì lặp lại ngày, vì một ngày thường có nhiều release. File dữ liệu vẫn giữ một entry cho mỗi release — vì thực tế bạn chỉ thêm vào cuối — còn việc gom nhóm diễn ra lúc render trang."
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-08-08",
       "items_added": 21,
       "en": { "title": "Keycloak, and the 15 patterns traced step by step" },

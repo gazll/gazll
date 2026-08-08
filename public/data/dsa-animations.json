@@ -1,0 +1,6945 @@
+{
+  "version": 1,
+  "animations": {
+    "two-pointers": {
+      "frames": [
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "active",
+                  "caption": ""
+                },
+                {
+                  "v": 3,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 5,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 9,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 11,
+                  "state": "active",
+                  "caption": ""
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 0,
+                  "label": "L",
+                  "tone": "green"
+                },
+                {
+                  "at": 4,
+                  "label": "R",
+                  "tone": "green"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "active",
+                  "caption": ""
+                },
+                {
+                  "v": 3,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 5,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 9,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 11,
+                  "state": "active",
+                  "caption": ""
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 0,
+                  "label": "L",
+                  "tone": "green"
+                },
+                {
+                  "at": 4,
+                  "label": "R",
+                  "tone": "green"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "dropped",
+                  "caption": ""
+                },
+                {
+                  "v": 3,
+                  "state": "done",
+                  "caption": ""
+                },
+                {
+                  "v": 5,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 9,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 11,
+                  "state": "done",
+                  "caption": ""
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 1,
+                  "label": "L",
+                  "tone": "green"
+                },
+                {
+                  "at": 4,
+                  "label": "R",
+                  "tone": "green"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Sorted array, target 14. L at the smallest, R at the largest.",
+          "1": "1 + 11 = 12 < 14 — too small, so L++ (every pair using 1 is now ruled out).",
+          "2": "3 + 11 = 14 — found the pair."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Mảng đã sort, target 14. L ở số nhỏ nhất, R ở số lớn nhất.",
+          "1": "1 + 11 = 12 < 14 — nhỏ quá, nên L++ (mọi cặp dùng 1 đã bị loại).",
+          "2": "3 + 11 = 14 — tìm thấy cặp."
+        }
+      }
+    },
+    "sliding-window": {
+      "frames": [
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 2,
+                  "state": "window"
+                },
+                {
+                  "v": 1,
+                  "state": "window"
+                },
+                {
+                  "v": 5,
+                  "state": "window"
+                },
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                }
+              ],
+              "span": {
+                "from": 0,
+                "to": 2,
+                "label": "window",
+                "tone": "green"
+              }
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 2,
+                  "state": "dropped"
+                },
+                {
+                  "v": 1,
+                  "state": "window"
+                },
+                {
+                  "v": 5,
+                  "state": "window"
+                },
+                {
+                  "v": 1,
+                  "state": "window"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                }
+              ],
+              "span": {
+                "from": 1,
+                "to": 3,
+                "label": "window",
+                "tone": "amber"
+              }
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 2,
+                  "state": "dropped"
+                },
+                {
+                  "v": 1,
+                  "state": "dropped"
+                },
+                {
+                  "v": 5,
+                  "state": "window"
+                },
+                {
+                  "v": 1,
+                  "state": "window"
+                },
+                {
+                  "v": 3,
+                  "state": "window"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                }
+              ],
+              "span": {
+                "from": 2,
+                "to": 4,
+                "label": "window",
+                "tone": "green"
+              }
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 2,
+                  "state": "dropped"
+                },
+                {
+                  "v": 1,
+                  "state": "dropped"
+                },
+                {
+                  "v": 5,
+                  "state": "dropped"
+                },
+                {
+                  "v": 1,
+                  "state": "window"
+                },
+                {
+                  "v": 3,
+                  "state": "window"
+                },
+                {
+                  "v": 2,
+                  "state": "window"
+                }
+              ],
+              "span": {
+                "from": 3,
+                "to": 5,
+                "label": "window",
+                "tone": "amber"
+              }
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 2,
+                  "state": "dropped"
+                },
+                {
+                  "v": 1,
+                  "state": "dropped"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "dropped"
+                }
+              ],
+              "span": {
+                "from": 2,
+                "to": 4,
+                "label": "best",
+                "tone": "green"
+              }
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Window [0..2] sums to 8. New best = 8.",
+          "1": "Window [1..3] sums to 7. Best stays 8. One add, one remove — not a re-sum.",
+          "2": "Window [2..4] sums to 9. New best = 9. One add, one remove — not a re-sum.",
+          "3": "Window [3..5] sums to 6. Best stays 9. One add, one remove — not a re-sum.",
+          "4": "Every element entered once and left once → O(n), and the answer is 9."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Cửa sổ [0..2] có tổng 8. Best mới = 8.",
+          "1": "Cửa sổ [1..3] có tổng 7. Best vẫn là 8. Một phép cộng, một phép trừ — không tính lại cả cửa sổ.",
+          "2": "Cửa sổ [2..4] có tổng 9. Best mới = 9. Một phép cộng, một phép trừ — không tính lại cả cửa sổ.",
+          "3": "Cửa sổ [3..5] có tổng 6. Best vẫn là 9. Một phép cộng, một phép trừ — không tính lại cả cửa sổ.",
+          "4": "Mỗi phần tử vào một lần, ra một lần → O(n), và đáp án là 9."
+        }
+      }
+    },
+    "binary-search": {
+      "frames": [
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                },
+                {
+                  "v": 11,
+                  "state": "idle"
+                },
+                {
+                  "v": 13,
+                  "state": "idle"
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 0,
+                  "label": "lo",
+                  "tone": "green"
+                },
+                {
+                  "at": 6,
+                  "label": "hi",
+                  "tone": "green"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "active"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                },
+                {
+                  "v": 11,
+                  "state": "idle"
+                },
+                {
+                  "v": 13,
+                  "state": "idle"
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 0,
+                  "label": "lo",
+                  "tone": "green"
+                },
+                {
+                  "at": 3,
+                  "label": "mid",
+                  "tone": "amber"
+                },
+                {
+                  "at": 6,
+                  "label": "hi",
+                  "tone": "green"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "dropped"
+                },
+                {
+                  "v": 3,
+                  "state": "dropped"
+                },
+                {
+                  "v": 5,
+                  "state": "dropped"
+                },
+                {
+                  "v": 7,
+                  "state": "dropped"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                },
+                {
+                  "v": 11,
+                  "state": "done"
+                },
+                {
+                  "v": 13,
+                  "state": "idle"
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 4,
+                  "label": "lo",
+                  "tone": "green"
+                },
+                {
+                  "at": 5,
+                  "label": "mid",
+                  "tone": "amber"
+                },
+                {
+                  "at": 6,
+                  "label": "hi",
+                  "tone": "green"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Searching for 11. The invariant: if it exists, it is inside [lo, hi].",
+          "1": "mid = 3: 7 < 11 — the whole left half is gone, lo = mid + 1.",
+          "2": "mid = 5: a[mid] = 11 = target — found it in 2 comparisons."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Tìm 11. Invariant: nếu nó tồn tại, nó nằm trong [lo, hi].",
+          "1": "mid = 3: 7 < 11 — cả nửa trái bị loại, lo = mid + 1.",
+          "2": "mid = 5: a[mid] = 11 = target — tìm thấy sau 2 phép so sánh."
+        }
+      }
+    },
+    "frequency-counting": {
+      "frames": [
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": "a",
+                  "state": "active"
+                },
+                {
+                  "v": "b",
+                  "state": "idle"
+                },
+                {
+                  "v": "a",
+                  "state": "idle"
+                },
+                {
+                  "v": "c",
+                  "state": "idle"
+                },
+                {
+                  "v": "b",
+                  "state": "idle"
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 0,
+                  "label": "i",
+                  "tone": "green"
+                }
+              ]
+            },
+            {
+              "label": "counts",
+              "cells": [
+                {
+                  "v": "a:1",
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": "a",
+                  "state": "done"
+                },
+                {
+                  "v": "b",
+                  "state": "active"
+                },
+                {
+                  "v": "a",
+                  "state": "idle"
+                },
+                {
+                  "v": "c",
+                  "state": "idle"
+                },
+                {
+                  "v": "b",
+                  "state": "idle"
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 1,
+                  "label": "i",
+                  "tone": "green"
+                }
+              ]
+            },
+            {
+              "label": "counts",
+              "cells": [
+                {
+                  "v": "a:1",
+                  "state": "done"
+                },
+                {
+                  "v": "b:1",
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": "a",
+                  "state": "done"
+                },
+                {
+                  "v": "b",
+                  "state": "done"
+                },
+                {
+                  "v": "a",
+                  "state": "active"
+                },
+                {
+                  "v": "c",
+                  "state": "idle"
+                },
+                {
+                  "v": "b",
+                  "state": "idle"
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 2,
+                  "label": "i",
+                  "tone": "green"
+                }
+              ]
+            },
+            {
+              "label": "counts",
+              "cells": [
+                {
+                  "v": "a:2",
+                  "state": "active"
+                },
+                {
+                  "v": "b:1",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": "a",
+                  "state": "done"
+                },
+                {
+                  "v": "b",
+                  "state": "done"
+                },
+                {
+                  "v": "a",
+                  "state": "done"
+                },
+                {
+                  "v": "c",
+                  "state": "active"
+                },
+                {
+                  "v": "b",
+                  "state": "idle"
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 3,
+                  "label": "i",
+                  "tone": "green"
+                }
+              ]
+            },
+            {
+              "label": "counts",
+              "cells": [
+                {
+                  "v": "a:2",
+                  "state": "done"
+                },
+                {
+                  "v": "b:1",
+                  "state": "done"
+                },
+                {
+                  "v": "c:1",
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": "a",
+                  "state": "done"
+                },
+                {
+                  "v": "b",
+                  "state": "done"
+                },
+                {
+                  "v": "a",
+                  "state": "done"
+                },
+                {
+                  "v": "c",
+                  "state": "done"
+                },
+                {
+                  "v": "b",
+                  "state": "active"
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 4,
+                  "label": "i",
+                  "tone": "green"
+                }
+              ]
+            },
+            {
+              "label": "counts",
+              "cells": [
+                {
+                  "v": "a:2",
+                  "state": "done"
+                },
+                {
+                  "v": "b:2",
+                  "state": "active"
+                },
+                {
+                  "v": "c:1",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": "a",
+                  "state": "done"
+                },
+                {
+                  "v": "b",
+                  "state": "done"
+                },
+                {
+                  "v": "a",
+                  "state": "done"
+                },
+                {
+                  "v": "c",
+                  "state": "done"
+                },
+                {
+                  "v": "b",
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "counts",
+              "cells": [
+                {
+                  "v": "a:2",
+                  "state": "done"
+                },
+                {
+                  "v": "b:2",
+                  "state": "done"
+                },
+                {
+                  "v": "c:1",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Read 'a' → count becomes 1. One pass, O(1) per lookup.",
+          "1": "Read 'b' → count becomes 1. One pass, O(1) per lookup.",
+          "2": "Read 'a' → count becomes 2. One pass, O(1) per lookup.",
+          "3": "Read 'c' → count becomes 1. One pass, O(1) per lookup.",
+          "4": "Read 'b' → count becomes 2. One pass, O(1) per lookup.",
+          "5": "Final map: a=2, b=2, c=1. Mode, distinct count and \"seen once\" are now all O(1) reads."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Đọc 'a' → count thành 1. Một lượt quét, tra cứu O(1).",
+          "1": "Đọc 'b' → count thành 1. Một lượt quét, tra cứu O(1).",
+          "2": "Đọc 'a' → count thành 2. Một lượt quét, tra cứu O(1).",
+          "3": "Đọc 'c' → count thành 1. Một lượt quét, tra cứu O(1).",
+          "4": "Đọc 'b' → count thành 2. Một lượt quét, tra cứu O(1).",
+          "5": "Map cuối: a=2, b=2, c=1. Mode, số phần tử distinct và \"chỉ gặp một lần\" giờ đều là phép đọc O(1)."
+        }
+      }
+    },
+    "monotonic-stack": {
+      "frames": [
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "active",
+                  "caption": ""
+                },
+                {
+                  "v": 3,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 2,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 4,
+                  "state": "idle",
+                  "caption": ""
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 0,
+                  "label": "i",
+                  "tone": "green"
+                }
+              ]
+            }
+          ],
+          "stack": {
+            "label": "stack (indices)",
+            "items": [
+              {
+                "v": 1,
+                "state": "window"
+              }
+            ]
+          }
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done",
+                  "caption": "→3"
+                },
+                {
+                  "v": 3,
+                  "state": "active",
+                  "caption": ""
+                },
+                {
+                  "v": 2,
+                  "state": "idle",
+                  "caption": ""
+                },
+                {
+                  "v": 4,
+                  "state": "idle",
+                  "caption": ""
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 1,
+                  "label": "i",
+                  "tone": "green"
+                }
+              ]
+            }
+          ],
+          "stack": {
+            "label": "stack (indices)",
+            "items": [
+              {
+                "v": 3,
+                "state": "window"
+              }
+            ]
+          }
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done",
+                  "caption": "→3"
+                },
+                {
+                  "v": 3,
+                  "state": "window",
+                  "caption": ""
+                },
+                {
+                  "v": 2,
+                  "state": "active",
+                  "caption": ""
+                },
+                {
+                  "v": 4,
+                  "state": "idle",
+                  "caption": ""
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 2,
+                  "label": "i",
+                  "tone": "green"
+                }
+              ]
+            }
+          ],
+          "stack": {
+            "label": "stack (indices)",
+            "items": [
+              {
+                "v": 3,
+                "state": "window"
+              },
+              {
+                "v": 2,
+                "state": "window"
+              }
+            ]
+          }
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done",
+                  "caption": "→3"
+                },
+                {
+                  "v": 3,
+                  "state": "done",
+                  "caption": "→4"
+                },
+                {
+                  "v": 2,
+                  "state": "done",
+                  "caption": "→4"
+                },
+                {
+                  "v": 4,
+                  "state": "active",
+                  "caption": ""
+                }
+              ],
+              "pointers": [
+                {
+                  "at": 3,
+                  "label": "i",
+                  "tone": "green"
+                }
+              ]
+            }
+          ],
+          "stack": {
+            "label": "stack (indices)",
+            "items": [
+              {
+                "v": 4,
+                "state": "window"
+              }
+            ]
+          }
+        },
+        {
+          "rows": [
+            {
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done",
+                  "caption": "→3"
+                },
+                {
+                  "v": 3,
+                  "state": "done",
+                  "caption": "→4"
+                },
+                {
+                  "v": 2,
+                  "state": "done",
+                  "caption": "→4"
+                },
+                {
+                  "v": 4,
+                  "state": "dropped",
+                  "caption": "→ -1"
+                }
+              ]
+            }
+          ],
+          "stack": {
+            "label": "stack (drained)",
+            "items": []
+          }
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Nothing on the stack is smaller than 1, so just push it; the stack stays decreasing.",
+          "1": "3 is greater than 1 — pop each, their answer is 3. Then push 3.",
+          "2": "Nothing on the stack is smaller than 2, so just push it; the stack stays decreasing.",
+          "3": "4 is greater than 2 and 3 — pop each, their answer is 4. Then push 4.",
+          "4": "Whatever is left never found a greater element → -1. Each index was pushed once and popped once: amortised O(n)."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Không có gì trong stack nhỏ hơn 1, nên chỉ push; stack vẫn giảm dần.",
+          "1": "3 lớn hơn 1 — pop từng cái, đáp án của chúng là 3. Rồi push 3.",
+          "2": "Không có gì trong stack nhỏ hơn 2, nên chỉ push; stack vẫn giảm dần.",
+          "3": "4 lớn hơn 2 và 3 — pop từng cái, đáp án của chúng là 4. Rồi push 4.",
+          "4": "Cái gì còn lại thì không bao giờ tìm được phần tử lớn hơn → -1. Mỗi index push một lần, pop một lần: O(n) khấu hao."
+        }
+      }
+    },
+    "prefix-sum": {
+      "frames": [
+        {
+          "rows": [
+            {
+              "label": "nums",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 4,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "P",
+              "cells": [
+                {
+                  "v": 0,
+                  "state": "done",
+                  "caption": "sentinel"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "nums",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "active"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 4,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "P",
+              "cells": [
+                {
+                  "v": 0,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "nums",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "active"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 4,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "P",
+              "cells": [
+                {
+                  "v": 0,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "nums",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                },
+                {
+                  "v": 4,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "P",
+              "cells": [
+                {
+                  "v": 0,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "nums",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "active"
+                }
+              ]
+            },
+            {
+              "label": "P",
+              "cells": [
+                {
+                  "v": 0,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                },
+                {
+                  "v": 10,
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "nums",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "dropped"
+                },
+                {
+                  "v": 2,
+                  "state": "window"
+                },
+                {
+                  "v": 3,
+                  "state": "window"
+                },
+                {
+                  "v": 4,
+                  "state": "dropped"
+                }
+              ],
+              "span": {
+                "from": 1,
+                "to": 2,
+                "label": "sum(1..2)",
+                "tone": "green"
+              }
+            },
+            {
+              "label": "P",
+              "cells": [
+                {
+                  "v": 0,
+                  "state": "idle"
+                },
+                {
+                  "v": 1,
+                  "state": "active"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "active"
+                },
+                {
+                  "v": 10,
+                  "state": "idle"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "P[0] = 0 is the sentinel — it is what removes the special case for ranges that start at index 0.",
+          "1": "P[1] = P[0] + 1 = 1 — the sum of the first 1 values.",
+          "2": "P[2] = P[1] + 2 = 3 — the sum of the first 2 values.",
+          "3": "P[3] = P[2] + 3 = 6 — the sum of the first 3 values.",
+          "4": "P[4] = P[3] + 4 = 10 — the sum of the first 4 values.",
+          "5": "Any range is now one subtraction: sum(1..2) = P[3] − P[1] = 6 − 1 = 5. Build O(n), query O(1)."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "P[0] = 0 là sentinel — chính nó xoá bỏ trường hợp đặc biệt cho khoảng bắt đầu từ index 0.",
+          "1": "P[1] = P[0] + 1 = 1 — tổng của 1 giá trị đầu tiên.",
+          "2": "P[2] = P[1] + 2 = 3 — tổng của 2 giá trị đầu tiên.",
+          "3": "P[3] = P[2] + 3 = 6 — tổng của 3 giá trị đầu tiên.",
+          "4": "P[4] = P[3] + 4 = 10 — tổng của 4 giá trị đầu tiên.",
+          "5": "Mọi khoảng giờ chỉ là một phép trừ: sum(1..2) = P[3] − P[1] = 6 − 1 = 5. Dựng O(n), truy vấn O(1)."
+        }
+      }
+    },
+    "overlapping-intervals": {
+      "frames": [
+        {
+          "rows": [
+            {
+              "label": "[1,4]",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "window"
+                },
+                {
+                  "v": 2,
+                  "state": "window"
+                },
+                {
+                  "v": 3,
+                  "state": "window"
+                },
+                {
+                  "v": 4,
+                  "state": "window"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "[3,6]",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "window"
+                },
+                {
+                  "v": 4,
+                  "state": "window"
+                },
+                {
+                  "v": 5,
+                  "state": "window"
+                },
+                {
+                  "v": 6,
+                  "state": "window"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "[8,9]",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 4,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "[1,4]",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "incoming",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "active"
+                },
+                {
+                  "v": 2,
+                  "state": "active"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                },
+                {
+                  "v": 4,
+                  "state": "active"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "merged",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ],
+              "span": {
+                "from": 0,
+                "to": 5,
+                "label": "[1,6]",
+                "tone": "green"
+              }
+            },
+            {
+              "label": "incoming",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                },
+                {
+                  "v": 4,
+                  "state": "active"
+                },
+                {
+                  "v": 5,
+                  "state": "active"
+                },
+                {
+                  "v": 6,
+                  "state": "active"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "[1,6]",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "[8,9]",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 4,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "done"
+                },
+                {
+                  "v": 9,
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "incoming",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 4,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "active"
+                },
+                {
+                  "v": 9,
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "[1,6]",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "[8,9]",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 4,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "done"
+                },
+                {
+                  "v": 9,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Sorted by start. Because of that, a new interval can only overlap the last one emitted.",
+          "1": "Nothing to merge with yet; [1,4] becomes the current interval.",
+          "2": "3 ≤ 4, so they overlap: extend the end to max(4, 6) = 6. Using max is what stops [1,10] then [2,3] truncating to [1,3].",
+          "3": "8 > 6 — no overlap, so emit the previous interval and start a new one at 8.",
+          "4": "Result: [1,6] and [8,9] — one pass after the sort, O(n log n) overall."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Đã sort theo start. Chính vì thế, một khoảng mới chỉ có thể chồng lên khoảng vừa xuất cuối cùng.",
+          "1": "Chưa có gì để merge; [1,4] thành khoảng hiện tại.",
+          "2": "3 ≤ 4, nên chúng chồng nhau: nối end thành max(4, 6) = 6. Dùng max chính là thứ ngăn [1,10] rồi [2,3] bị cắt thành [1,3].",
+          "3": "8 > 6 — không chồng, nên xuất khoảng trước và mở khoảng mới tại 8.",
+          "4": "Kết quả: [1,6] và [8,9] — một lượt quét sau khi sort, tổng O(n log n)."
+        }
+      }
+    },
+    "greedy": {
+      "frames": [
+        {
+          "rows": [
+            {
+              "label": "coins",
+              "cells": [
+                {
+                  "v": 25,
+                  "state": "idle"
+                },
+                {
+                  "v": 10,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 1,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "remaining",
+              "cells": [
+                {
+                  "v": 40,
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "coins",
+              "cells": [
+                {
+                  "v": 25,
+                  "state": "active"
+                },
+                {
+                  "v": 10,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 1,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "used",
+              "cells": [
+                {
+                  "v": 25,
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "remaining",
+              "cells": [
+                {
+                  "v": 15,
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "coins",
+              "cells": [
+                {
+                  "v": 25,
+                  "state": "idle"
+                },
+                {
+                  "v": 10,
+                  "state": "active"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 1,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "used",
+              "cells": [
+                {
+                  "v": 25,
+                  "state": "done"
+                },
+                {
+                  "v": 10,
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "remaining",
+              "cells": [
+                {
+                  "v": 5,
+                  "state": "active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "coins",
+              "cells": [
+                {
+                  "v": 25,
+                  "state": "idle"
+                },
+                {
+                  "v": 10,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "active"
+                },
+                {
+                  "v": 1,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "used",
+              "cells": [
+                {
+                  "v": 25,
+                  "state": "done"
+                },
+                {
+                  "v": 10,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "remaining",
+              "cells": [
+                {
+                  "v": 0,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "used",
+              "cells": [
+                {
+                  "v": 25,
+                  "state": "done"
+                },
+                {
+                  "v": 10,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "counter-example",
+              "cells": [
+                {
+                  "v": 4,
+                  "state": "dropped"
+                },
+                {
+                  "v": 1,
+                  "state": "dropped"
+                },
+                {
+                  "v": 1,
+                  "state": "dropped"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Target 40 with {25, 10, 5, 1}: repeatedly take the largest coin that still fits.",
+          "1": "Take 25 → remaining 15.",
+          "2": "Take 10 → remaining 5.",
+          "3": "Take 5 → remaining 0.",
+          "4": "3 coins — optimal here. But greedy is only valid with a proof: with coins {1,3,4} and target 6 it takes 4+1+1 = 3 coins when 3+3 = 2 is optimal."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Cần 40 với {25, 10, 5, 1}: liên tục lấy đồng lớn nhất còn vừa.",
+          "1": "Lấy 25 → còn lại 15.",
+          "2": "Lấy 10 → còn lại 5.",
+          "3": "Lấy 5 → còn lại 0.",
+          "4": "3 đồng — ở đây là tối ưu. Nhưng greedy chỉ hợp lệ khi có chứng minh: với {1,3,4} và target 6 nó lấy 4+1+1 = 3 đồng, trong khi 3+3 = 2 mới tối ưu."
+        }
+      }
+    },
+    "top-k": {
+      "frames": [
+        {
+          "rows": [
+            {
+              "label": "stream",
+              "cells": [
+                {
+                  "v": 7,
+                  "state": "active"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "min-heap (K=3)",
+              "cells": [
+                {
+                  "v": 7,
+                  "state": "active",
+                  "caption": "root"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "stream",
+              "cells": [
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "min-heap (K=3)",
+              "cells": [
+                {
+                  "v": 3,
+                  "state": "active",
+                  "caption": "root"
+                },
+                {
+                  "v": 7,
+                  "state": "window",
+                  "caption": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "stream",
+              "cells": [
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "active"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "min-heap (K=3)",
+              "cells": [
+                {
+                  "v": 3,
+                  "state": "active",
+                  "caption": "root"
+                },
+                {
+                  "v": 5,
+                  "state": "window",
+                  "caption": ""
+                },
+                {
+                  "v": 7,
+                  "state": "window",
+                  "caption": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "stream",
+              "cells": [
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "active"
+                },
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "min-heap (K=3)",
+              "cells": [
+                {
+                  "v": 3,
+                  "state": "active",
+                  "caption": "root"
+                },
+                {
+                  "v": 5,
+                  "state": "window",
+                  "caption": ""
+                },
+                {
+                  "v": 7,
+                  "state": "window",
+                  "caption": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "stream",
+              "cells": [
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 1,
+                  "state": "active"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "min-heap (K=3)",
+              "cells": [
+                {
+                  "v": 3,
+                  "state": "active",
+                  "caption": "root"
+                },
+                {
+                  "v": 5,
+                  "state": "window",
+                  "caption": ""
+                },
+                {
+                  "v": 7,
+                  "state": "window",
+                  "caption": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "stream",
+              "cells": [
+                {
+                  "v": 7,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "active"
+                }
+              ]
+            },
+            {
+              "label": "min-heap (K=3)",
+              "cells": [
+                {
+                  "v": 5,
+                  "state": "active",
+                  "caption": "root"
+                },
+                {
+                  "v": 7,
+                  "state": "window",
+                  "caption": ""
+                },
+                {
+                  "v": 9,
+                  "state": "window",
+                  "caption": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "top-K",
+              "cells": [
+                {
+                  "v": 5,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                },
+                {
+                  "v": 9,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Heap not full yet — push 7. The root 7 is the weakest value kept so far.",
+          "1": "Heap not full yet — push 3. The root 3 is the weakest value kept so far.",
+          "2": "Heap not full yet — push 5. The root 3 is the weakest value kept so far.",
+          "3": "2 is smaller than the root 3 — discard it immediately, no sifting needed.",
+          "4": "1 is smaller than the root 3 — discard it immediately, no sifting needed.",
+          "5": "9 beats the root 3 — poll 3, push 9. The root is now 5.",
+          "6": "The K largest are 5, 7, 9, and the root 5 is the Kth largest. O(n log K) time, O(K) space — a min-heap for the K largest is the counter-intuitive part."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Heap chưa đầy — push 7. Gốc 7 là giá trị yếu nhất đang giữ.",
+          "1": "Heap chưa đầy — push 3. Gốc 3 là giá trị yếu nhất đang giữ.",
+          "2": "Heap chưa đầy — push 5. Gốc 3 là giá trị yếu nhất đang giữ.",
+          "3": "2 nhỏ hơn gốc 3 — loại ngay, không cần sàng lại.",
+          "4": "1 nhỏ hơn gốc 3 — loại ngay, không cần sàng lại.",
+          "5": "9 hơn gốc 3 — poll 3, push 9. Gốc giờ là 5.",
+          "6": "K số lớn nhất là 5, 7, 9, và gốc 5 là số lớn thứ K. O(n log K) thời gian, O(K) bộ nhớ — dùng min-heap để lấy K số lớn nhất chính là chỗ phản trực giác."
+        }
+      }
+    },
+    "matrix-traversal": {
+      "frames": [
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                },
+                {
+                  "v": 4,
+                  "state": "idle"
+                }
+              ],
+              [
+                {
+                  "v": 12,
+                  "state": "idle"
+                },
+                {
+                  "v": 13,
+                  "state": "idle"
+                },
+                {
+                  "v": 14,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                }
+              ],
+              [
+                {
+                  "v": 11,
+                  "state": "idle"
+                },
+                {
+                  "v": 16,
+                  "state": "idle"
+                },
+                {
+                  "v": 15,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "idle"
+                }
+              ],
+              [
+                {
+                  "v": 10,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 12,
+                  "state": "idle"
+                },
+                {
+                  "v": 13,
+                  "state": "idle"
+                },
+                {
+                  "v": 14,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "idle"
+                }
+              ],
+              [
+                {
+                  "v": 11,
+                  "state": "idle"
+                },
+                {
+                  "v": 16,
+                  "state": "idle"
+                },
+                {
+                  "v": 15,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "idle"
+                }
+              ],
+              [
+                {
+                  "v": 10,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "idle"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 12,
+                  "state": "idle"
+                },
+                {
+                  "v": 13,
+                  "state": "idle"
+                },
+                {
+                  "v": 14,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 11,
+                  "state": "idle"
+                },
+                {
+                  "v": 16,
+                  "state": "idle"
+                },
+                {
+                  "v": 15,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 10,
+                  "state": "idle"
+                },
+                {
+                  "v": 9,
+                  "state": "idle"
+                },
+                {
+                  "v": 8,
+                  "state": "idle"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 12,
+                  "state": "idle"
+                },
+                {
+                  "v": 13,
+                  "state": "idle"
+                },
+                {
+                  "v": 14,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 11,
+                  "state": "idle"
+                },
+                {
+                  "v": 16,
+                  "state": "idle"
+                },
+                {
+                  "v": 15,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 10,
+                  "state": "done"
+                },
+                {
+                  "v": 9,
+                  "state": "done"
+                },
+                {
+                  "v": 8,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 12,
+                  "state": "done"
+                },
+                {
+                  "v": 13,
+                  "state": "idle"
+                },
+                {
+                  "v": 14,
+                  "state": "idle"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 11,
+                  "state": "done"
+                },
+                {
+                  "v": 16,
+                  "state": "idle"
+                },
+                {
+                  "v": 15,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 10,
+                  "state": "done"
+                },
+                {
+                  "v": 9,
+                  "state": "done"
+                },
+                {
+                  "v": 8,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 12,
+                  "state": "done"
+                },
+                {
+                  "v": 13,
+                  "state": "done"
+                },
+                {
+                  "v": 14,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 11,
+                  "state": "done"
+                },
+                {
+                  "v": 16,
+                  "state": "idle"
+                },
+                {
+                  "v": 15,
+                  "state": "idle"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 10,
+                  "state": "done"
+                },
+                {
+                  "v": 9,
+                  "state": "done"
+                },
+                {
+                  "v": 8,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 12,
+                  "state": "done"
+                },
+                {
+                  "v": 13,
+                  "state": "done"
+                },
+                {
+                  "v": 14,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 11,
+                  "state": "done"
+                },
+                {
+                  "v": 16,
+                  "state": "idle"
+                },
+                {
+                  "v": 15,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 10,
+                  "state": "done"
+                },
+                {
+                  "v": 9,
+                  "state": "done"
+                },
+                {
+                  "v": 8,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 12,
+                  "state": "done"
+                },
+                {
+                  "v": 13,
+                  "state": "done"
+                },
+                {
+                  "v": 14,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 11,
+                  "state": "done"
+                },
+                {
+                  "v": 16,
+                  "state": "done"
+                },
+                {
+                  "v": 15,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 10,
+                  "state": "done"
+                },
+                {
+                  "v": 9,
+                  "state": "done"
+                },
+                {
+                  "v": 8,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 12,
+                  "state": "done"
+                },
+                {
+                  "v": 13,
+                  "state": "done"
+                },
+                {
+                  "v": 14,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 11,
+                  "state": "done"
+                },
+                {
+                  "v": 16,
+                  "state": "done"
+                },
+                {
+                  "v": 15,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 10,
+                  "state": "done"
+                },
+                {
+                  "v": 9,
+                  "state": "done"
+                },
+                {
+                  "v": 8,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 12,
+                  "state": "done"
+                },
+                {
+                  "v": 13,
+                  "state": "done"
+                },
+                {
+                  "v": 14,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 11,
+                  "state": "done"
+                },
+                {
+                  "v": 16,
+                  "state": "done"
+                },
+                {
+                  "v": 15,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 10,
+                  "state": "done"
+                },
+                {
+                  "v": 9,
+                  "state": "done"
+                },
+                {
+                  "v": 8,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Four boundaries: top, bottom, left, right. Walk one edge, then close that boundary in.",
+          "1": "Top row left→right, then top++ — that row is consumed.",
+          "2": "Right column top→bottom, then right--.",
+          "3": "Bottom row right→left — guarded by top ≤ bot, or a single leftover row would be read twice.",
+          "4": "Left column bottom→top, then left++ — and the ring closes inward.",
+          "5": "Top row left→right, then top++ — that row is consumed.",
+          "6": "Right column top→bottom, then right--.",
+          "7": "Bottom row right→left — guarded by top ≤ bot, or a single leftover row would be read twice.",
+          "8": "Left column bottom→top, then left++ — and the ring closes inward.",
+          "9": "Every cell visited exactly once, in spiral order: O(m·n) with O(1) extra space."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Bốn biên: top, bottom, left, right. Đi một cạnh, rồi khép biên đó vào.",
+          "1": "Hàng trên trái→phải, rồi top++ — hàng đó đã lấy xong.",
+          "2": "Cột phải trên→dưới, rồi right--.",
+          "3": "Hàng dưới phải→trái — có chốt canh top ≤ bot, nếu không một hàng lẻ còn lại sẽ bị đọc hai lần.",
+          "4": "Cột trái dưới→lên, rồi left++ — và vòng khép vào trong.",
+          "5": "Hàng trên trái→phải, rồi top++ — hàng đó đã lấy xong.",
+          "6": "Cột phải trên→dưới, rồi right--.",
+          "7": "Hàng dưới phải→trái — có chốt canh top ≤ bot, nếu không một hàng lẻ còn lại sẽ bị đọc hai lần.",
+          "8": "Cột trái dưới→lên, rồi left++ — và vòng khép vào trong.",
+          "9": "Mỗi ô được thăm đúng một lần, theo thứ tự xoắn ốc: O(m·n) với O(1) bộ nhớ thêm."
+        }
+      }
+    },
+    "backtracking": {
+      "frames": [
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                },
+                {
+                  "v": "1",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "window"
+                },
+                {
+                  "v": 2,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                },
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "window"
+                },
+                {
+                  "v": 2,
+                  "state": "window"
+                },
+                {
+                  "v": 3,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                },
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "window"
+                },
+                {
+                  "v": 2,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                },
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "active"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                },
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "window"
+                },
+                {
+                  "v": 3,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                },
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                },
+                {
+                  "v": "13",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                },
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                },
+                {
+                  "v": "13",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "active"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                },
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                },
+                {
+                  "v": "13",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 2,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                },
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                },
+                {
+                  "v": "13",
+                  "state": "done"
+                },
+                {
+                  "v": "2",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 2,
+                  "state": "window"
+                },
+                {
+                  "v": 3,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                },
+                {
+                  "v": "13",
+                  "state": "done"
+                },
+                {
+                  "v": "2",
+                  "state": "done"
+                },
+                {
+                  "v": "23",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 2,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                },
+                {
+                  "v": "13",
+                  "state": "done"
+                },
+                {
+                  "v": "2",
+                  "state": "done"
+                },
+                {
+                  "v": "23",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "active"
+                },
+                {
+                  "v": 3,
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                },
+                {
+                  "v": "13",
+                  "state": "done"
+                },
+                {
+                  "v": "2",
+                  "state": "done"
+                },
+                {
+                  "v": "23",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": 3,
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                },
+                {
+                  "v": "13",
+                  "state": "done"
+                },
+                {
+                  "v": "2",
+                  "state": "done"
+                },
+                {
+                  "v": "23",
+                  "state": "done"
+                },
+                {
+                  "v": "3",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "input",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "idle"
+                },
+                {
+                  "v": 2,
+                  "state": "idle"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                }
+              ]
+            },
+            {
+              "label": "path",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "found",
+              "cells": [
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                },
+                {
+                  "v": "13",
+                  "state": "done"
+                },
+                {
+                  "v": "2",
+                  "state": "done"
+                },
+                {
+                  "v": "23",
+                  "state": "done"
+                },
+                {
+                  "v": "3",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "label": "all subsets",
+              "cells": [
+                {
+                  "v": "∅",
+                  "state": "done"
+                },
+                {
+                  "v": "1",
+                  "state": "done"
+                },
+                {
+                  "v": "12",
+                  "state": "done"
+                },
+                {
+                  "v": "123",
+                  "state": "done"
+                },
+                {
+                  "v": "13",
+                  "state": "done"
+                },
+                {
+                  "v": "2",
+                  "state": "done"
+                },
+                {
+                  "v": "23",
+                  "state": "done"
+                },
+                {
+                  "v": "3",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Start with the empty subset — every node of the tree is itself a result.",
+          "1": "Choose 1 → path [1]. Record a copy, then recurse from 1 so nothing repeats.",
+          "2": "Choose 2 → path [1,2]. Record a copy, then recurse from 2 so nothing repeats.",
+          "3": "Choose 3 → path [1,2,3]. Record a copy, then recurse from 3 so nothing repeats.",
+          "4": "Undo 3 → path [1,2]. The pop is what lets one buffer serve the whole search.",
+          "5": "Undo 2 → path [1]. The pop is what lets one buffer serve the whole search.",
+          "6": "Choose 3 → path [1,3]. Record a copy, then recurse from 3 so nothing repeats.",
+          "7": "Undo 3 → path [1]. The pop is what lets one buffer serve the whole search.",
+          "8": "Undo 1 → path [∅]. The pop is what lets one buffer serve the whole search.",
+          "9": "Choose 2 → path [2]. Record a copy, then recurse from 2 so nothing repeats.",
+          "10": "Choose 3 → path [2,3]. Record a copy, then recurse from 3 so nothing repeats.",
+          "11": "Undo 3 → path [2]. The pop is what lets one buffer serve the whole search.",
+          "12": "Undo 2 → path [∅]. The pop is what lets one buffer serve the whole search.",
+          "13": "Choose 3 → path [3]. Record a copy, then recurse from 3 so nothing repeats.",
+          "14": "Undo 3 → path [∅]. The pop is what lets one buffer serve the whole search.",
+          "15": "2³ = 8 subsets. Complexity is exponential by nature, so pruning — not micro-optimising — is what makes these finish."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Bắt đầu với tập rỗng — mỗi nút của cây đều là một kết quả.",
+          "1": "Chọn 1 → path [1]. Lưu một bản copy, rồi đệ quy từ 1 để không lặp lại.",
+          "2": "Chọn 2 → path [1,2]. Lưu một bản copy, rồi đệ quy từ 2 để không lặp lại.",
+          "3": "Chọn 3 → path [1,2,3]. Lưu một bản copy, rồi đệ quy từ 3 để không lặp lại.",
+          "4": "Hoàn tác 3 → path [1,2]. Chính phép pop cho phép một buffer phục vụ cả quá trình.",
+          "5": "Hoàn tác 2 → path [1]. Chính phép pop cho phép một buffer phục vụ cả quá trình.",
+          "6": "Chọn 3 → path [1,3]. Lưu một bản copy, rồi đệ quy từ 3 để không lặp lại.",
+          "7": "Hoàn tác 3 → path [1]. Chính phép pop cho phép một buffer phục vụ cả quá trình.",
+          "8": "Hoàn tác 1 → path [∅]. Chính phép pop cho phép một buffer phục vụ cả quá trình.",
+          "9": "Chọn 2 → path [2]. Lưu một bản copy, rồi đệ quy từ 2 để không lặp lại.",
+          "10": "Chọn 3 → path [2,3]. Lưu một bản copy, rồi đệ quy từ 3 để không lặp lại.",
+          "11": "Hoàn tác 3 → path [2]. Chính phép pop cho phép một buffer phục vụ cả quá trình.",
+          "12": "Hoàn tác 2 → path [∅]. Chính phép pop cho phép một buffer phục vụ cả quá trình.",
+          "13": "Chọn 3 → path [3]. Lưu một bản copy, rồi đệ quy từ 3 để không lặp lại.",
+          "14": "Hoàn tác 3 → path [∅]. Chính phép pop cho phép một buffer phục vụ cả quá trình.",
+          "15": "2³ = 8 tập con. Độ phức tạp vốn là hàm mũ, nên pruning — không phải tối ưu vi mô — mới là thứ giúp chạy xong."
+        }
+      }
+    },
+    "tree-traversal": {
+      "frames": [
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "4",
+                "v": 4,
+                "x": 150,
+                "y": 10,
+                "state": "active"
+              },
+              {
+                "id": "2",
+                "v": 2,
+                "x": 90,
+                "y": 60,
+                "state": "idle"
+              },
+              {
+                "id": "6",
+                "v": 6,
+                "x": 210,
+                "y": 60,
+                "state": "idle"
+              },
+              {
+                "id": "1",
+                "v": 1,
+                "x": 55,
+                "y": 110,
+                "state": "idle"
+              },
+              {
+                "id": "3",
+                "v": 3,
+                "x": 125,
+                "y": 110,
+                "state": "idle"
+              },
+              {
+                "id": "5",
+                "v": 5,
+                "x": 175,
+                "y": 110,
+                "state": "idle"
+              },
+              {
+                "id": "7",
+                "v": 7,
+                "x": 245,
+                "y": 110,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "4",
+                "2"
+              ],
+              [
+                "4",
+                "6"
+              ],
+              [
+                "2",
+                "1"
+              ],
+              [
+                "2",
+                "3"
+              ],
+              [
+                "6",
+                "5"
+              ],
+              [
+                "6",
+                "7"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "output",
+              "cells": [
+                {
+                  "v": "—",
+                  "state": "idle"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "4",
+                "v": 4,
+                "x": 150,
+                "y": 10,
+                "state": "idle"
+              },
+              {
+                "id": "2",
+                "v": 2,
+                "x": 90,
+                "y": 60,
+                "state": "idle"
+              },
+              {
+                "id": "6",
+                "v": 6,
+                "x": 210,
+                "y": 60,
+                "state": "idle"
+              },
+              {
+                "id": "1",
+                "v": 1,
+                "x": 55,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "3",
+                "v": 3,
+                "x": 125,
+                "y": 110,
+                "state": "idle"
+              },
+              {
+                "id": "5",
+                "v": 5,
+                "x": 175,
+                "y": 110,
+                "state": "idle"
+              },
+              {
+                "id": "7",
+                "v": 7,
+                "x": 245,
+                "y": 110,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "4",
+                "2"
+              ],
+              [
+                "4",
+                "6"
+              ],
+              [
+                "2",
+                "1"
+              ],
+              [
+                "2",
+                "3"
+              ],
+              [
+                "6",
+                "5"
+              ],
+              [
+                "6",
+                "7"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "output",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "4",
+                "v": 4,
+                "x": 150,
+                "y": 10,
+                "state": "idle"
+              },
+              {
+                "id": "2",
+                "v": 2,
+                "x": 90,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "6",
+                "v": 6,
+                "x": 210,
+                "y": 60,
+                "state": "idle"
+              },
+              {
+                "id": "1",
+                "v": 1,
+                "x": 55,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "3",
+                "v": 3,
+                "x": 125,
+                "y": 110,
+                "state": "idle"
+              },
+              {
+                "id": "5",
+                "v": 5,
+                "x": 175,
+                "y": 110,
+                "state": "idle"
+              },
+              {
+                "id": "7",
+                "v": 7,
+                "x": 245,
+                "y": 110,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "4",
+                "2"
+              ],
+              [
+                "4",
+                "6"
+              ],
+              [
+                "2",
+                "1"
+              ],
+              [
+                "2",
+                "3"
+              ],
+              [
+                "6",
+                "5"
+              ],
+              [
+                "6",
+                "7"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "output",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "4",
+                "v": 4,
+                "x": 150,
+                "y": 10,
+                "state": "idle"
+              },
+              {
+                "id": "2",
+                "v": 2,
+                "x": 90,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "6",
+                "v": 6,
+                "x": 210,
+                "y": 60,
+                "state": "idle"
+              },
+              {
+                "id": "1",
+                "v": 1,
+                "x": 55,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "3",
+                "v": 3,
+                "x": 125,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "5",
+                "v": 5,
+                "x": 175,
+                "y": 110,
+                "state": "idle"
+              },
+              {
+                "id": "7",
+                "v": 7,
+                "x": 245,
+                "y": 110,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "4",
+                "2"
+              ],
+              [
+                "4",
+                "6"
+              ],
+              [
+                "2",
+                "1"
+              ],
+              [
+                "2",
+                "3"
+              ],
+              [
+                "6",
+                "5"
+              ],
+              [
+                "6",
+                "7"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "output",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "4",
+                "v": 4,
+                "x": 150,
+                "y": 10,
+                "state": "done"
+              },
+              {
+                "id": "2",
+                "v": 2,
+                "x": 90,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "6",
+                "v": 6,
+                "x": 210,
+                "y": 60,
+                "state": "idle"
+              },
+              {
+                "id": "1",
+                "v": 1,
+                "x": 55,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "3",
+                "v": 3,
+                "x": 125,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "5",
+                "v": 5,
+                "x": 175,
+                "y": 110,
+                "state": "idle"
+              },
+              {
+                "id": "7",
+                "v": 7,
+                "x": 245,
+                "y": 110,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "4",
+                "2"
+              ],
+              [
+                "4",
+                "6"
+              ],
+              [
+                "2",
+                "1"
+              ],
+              [
+                "2",
+                "3"
+              ],
+              [
+                "6",
+                "5"
+              ],
+              [
+                "6",
+                "7"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "output",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "4",
+                "v": 4,
+                "x": 150,
+                "y": 10,
+                "state": "done"
+              },
+              {
+                "id": "2",
+                "v": 2,
+                "x": 90,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "6",
+                "v": 6,
+                "x": 210,
+                "y": 60,
+                "state": "idle"
+              },
+              {
+                "id": "1",
+                "v": 1,
+                "x": 55,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "3",
+                "v": 3,
+                "x": 125,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "5",
+                "v": 5,
+                "x": 175,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "7",
+                "v": 7,
+                "x": 245,
+                "y": 110,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "4",
+                "2"
+              ],
+              [
+                "4",
+                "6"
+              ],
+              [
+                "2",
+                "1"
+              ],
+              [
+                "2",
+                "3"
+              ],
+              [
+                "6",
+                "5"
+              ],
+              [
+                "6",
+                "7"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "output",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "4",
+                "v": 4,
+                "x": 150,
+                "y": 10,
+                "state": "done"
+              },
+              {
+                "id": "2",
+                "v": 2,
+                "x": 90,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "6",
+                "v": 6,
+                "x": 210,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "1",
+                "v": 1,
+                "x": 55,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "3",
+                "v": 3,
+                "x": 125,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "5",
+                "v": 5,
+                "x": 175,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "7",
+                "v": 7,
+                "x": 245,
+                "y": 110,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "4",
+                "2"
+              ],
+              [
+                "4",
+                "6"
+              ],
+              [
+                "2",
+                "1"
+              ],
+              [
+                "2",
+                "3"
+              ],
+              [
+                "6",
+                "5"
+              ],
+              [
+                "6",
+                "7"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "output",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "4",
+                "v": 4,
+                "x": 150,
+                "y": 10,
+                "state": "done"
+              },
+              {
+                "id": "2",
+                "v": 2,
+                "x": 90,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "6",
+                "v": 6,
+                "x": 210,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "1",
+                "v": 1,
+                "x": 55,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "3",
+                "v": 3,
+                "x": 125,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "5",
+                "v": 5,
+                "x": 175,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "7",
+                "v": 7,
+                "x": 245,
+                "y": 110,
+                "state": "done"
+              }
+            ],
+            "edges": [
+              [
+                "4",
+                "2"
+              ],
+              [
+                "4",
+                "6"
+              ],
+              [
+                "2",
+                "1"
+              ],
+              [
+                "2",
+                "3"
+              ],
+              [
+                "6",
+                "5"
+              ],
+              [
+                "6",
+                "7"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "output",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "4",
+                "v": 4,
+                "x": 150,
+                "y": 10,
+                "state": "done"
+              },
+              {
+                "id": "2",
+                "v": 2,
+                "x": 90,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "6",
+                "v": 6,
+                "x": 210,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "1",
+                "v": 1,
+                "x": 55,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "3",
+                "v": 3,
+                "x": 125,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "5",
+                "v": 5,
+                "x": 175,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "7",
+                "v": 7,
+                "x": 245,
+                "y": 110,
+                "state": "done"
+              }
+            ],
+            "edges": [
+              [
+                "4",
+                "2"
+              ],
+              [
+                "4",
+                "6"
+              ],
+              [
+                "2",
+                "1"
+              ],
+              [
+                "2",
+                "3"
+              ],
+              [
+                "6",
+                "5"
+              ],
+              [
+                "6",
+                "7"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "inorder",
+              "cells": [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                },
+                {
+                  "v": 5,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                },
+                {
+                  "v": 7,
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Inorder = left, node, right. On a BST that yields sorted order, which is the cleanest proof a tree is a valid BST.",
+          "1": "Visit 1. Everything smaller is already out; this branch is done.",
+          "2": "Visit 2. Everything smaller is already out; now the right subtree.",
+          "3": "Visit 3. Everything smaller is already out; this branch is done.",
+          "4": "Visit 4. Everything smaller is already out; now the right subtree.",
+          "5": "Visit 5. Everything smaller is already out; this branch is done.",
+          "6": "Visit 6. Everything smaller is already out; now the right subtree.",
+          "7": "Visit 7. Everything smaller is already out; this branch is done.",
+          "8": "Output 1 2 3 4 5 6 7 — sorted. Move the visit line to get preorder (clone/serialise) or postorder (height, delete)."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Inorder = trái, nút, phải. Trên BST nó cho ra thứ tự tăng — bằng chứng gọn nhất rằng cây là BST hợp lệ.",
+          "1": "Thăm 1. Mọi thứ nhỏ hơn đã ra hết; nhánh này xong.",
+          "2": "Thăm 2. Mọi thứ nhỏ hơn đã ra hết; giờ tới cây con phải.",
+          "3": "Thăm 3. Mọi thứ nhỏ hơn đã ra hết; nhánh này xong.",
+          "4": "Thăm 4. Mọi thứ nhỏ hơn đã ra hết; giờ tới cây con phải.",
+          "5": "Thăm 5. Mọi thứ nhỏ hơn đã ra hết; nhánh này xong.",
+          "6": "Thăm 6. Mọi thứ nhỏ hơn đã ra hết; giờ tới cây con phải.",
+          "7": "Thăm 7. Mọi thứ nhỏ hơn đã ra hết; nhánh này xong.",
+          "8": "Kết quả 1 2 3 4 5 6 7 — đã sort. Dịch dòng visit để có preorder (clone/serialise) hoặc postorder (chiều cao, xoá)."
+        }
+      }
+    },
+    "graph-dfs-bfs": {
+      "frames": [
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 70,
+                "y": 14,
+                "state": "active"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 170,
+                "y": 60,
+                "state": "idle"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 110,
+                "state": "idle"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 235,
+                "y": 120,
+                "state": "idle"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 140,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "D"
+              ],
+              [
+                "B",
+                "C"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "D",
+                "E"
+              ],
+              [
+                "C",
+                "E"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "queue",
+              "cells": [
+                {
+                  "v": "A",
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "dist",
+              "cells": [
+                {
+                  "v": "A:0",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 70,
+                "y": 14,
+                "state": "active"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 170,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 235,
+                "y": 120,
+                "state": "idle"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 140,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "D"
+              ],
+              [
+                "B",
+                "C"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "D",
+                "E"
+              ],
+              [
+                "C",
+                "E"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "queue",
+              "cells": [
+                {
+                  "v": "B",
+                  "state": "window"
+                },
+                {
+                  "v": "D",
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "dist",
+              "cells": [
+                {
+                  "v": "A:0",
+                  "state": "done"
+                },
+                {
+                  "v": "B:1",
+                  "state": "done"
+                },
+                {
+                  "v": "D:1",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 70,
+                "y": 14,
+                "state": "done"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 170,
+                "y": 60,
+                "state": "active"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 235,
+                "y": 120,
+                "state": "done"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 140,
+                "state": "done"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "D"
+              ],
+              [
+                "B",
+                "C"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "D",
+                "E"
+              ],
+              [
+                "C",
+                "E"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "queue",
+              "cells": [
+                {
+                  "v": "D",
+                  "state": "window"
+                },
+                {
+                  "v": "C",
+                  "state": "window"
+                },
+                {
+                  "v": "E",
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "dist",
+              "cells": [
+                {
+                  "v": "A:0",
+                  "state": "done"
+                },
+                {
+                  "v": "B:1",
+                  "state": "done"
+                },
+                {
+                  "v": "D:1",
+                  "state": "done"
+                },
+                {
+                  "v": "C:2",
+                  "state": "done"
+                },
+                {
+                  "v": "E:2",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 70,
+                "y": 14,
+                "state": "done"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 170,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 110,
+                "state": "active"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 235,
+                "y": 120,
+                "state": "done"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 140,
+                "state": "done"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "D"
+              ],
+              [
+                "B",
+                "C"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "D",
+                "E"
+              ],
+              [
+                "C",
+                "E"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "queue",
+              "cells": [
+                {
+                  "v": "C",
+                  "state": "window"
+                },
+                {
+                  "v": "E",
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "dist",
+              "cells": [
+                {
+                  "v": "A:0",
+                  "state": "done"
+                },
+                {
+                  "v": "B:1",
+                  "state": "done"
+                },
+                {
+                  "v": "D:1",
+                  "state": "done"
+                },
+                {
+                  "v": "C:2",
+                  "state": "done"
+                },
+                {
+                  "v": "E:2",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 70,
+                "y": 14,
+                "state": "done"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 170,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 235,
+                "y": 120,
+                "state": "active"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 140,
+                "state": "done"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "D"
+              ],
+              [
+                "B",
+                "C"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "D",
+                "E"
+              ],
+              [
+                "C",
+                "E"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "queue",
+              "cells": [
+                {
+                  "v": "E",
+                  "state": "window"
+                }
+              ]
+            },
+            {
+              "label": "dist",
+              "cells": [
+                {
+                  "v": "A:0",
+                  "state": "done"
+                },
+                {
+                  "v": "B:1",
+                  "state": "done"
+                },
+                {
+                  "v": "D:1",
+                  "state": "done"
+                },
+                {
+                  "v": "C:2",
+                  "state": "done"
+                },
+                {
+                  "v": "E:2",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 70,
+                "y": 14,
+                "state": "done"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 170,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 235,
+                "y": 120,
+                "state": "done"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 140,
+                "state": "active"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "D"
+              ],
+              [
+                "B",
+                "C"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "D",
+                "E"
+              ],
+              [
+                "C",
+                "E"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "queue",
+              "cells": [
+                {
+                  "v": "—",
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "label": "dist",
+              "cells": [
+                {
+                  "v": "A:0",
+                  "state": "done"
+                },
+                {
+                  "v": "B:1",
+                  "state": "done"
+                },
+                {
+                  "v": "D:1",
+                  "state": "done"
+                },
+                {
+                  "v": "C:2",
+                  "state": "done"
+                },
+                {
+                  "v": "E:2",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 70,
+                "y": 14,
+                "state": "done"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 170,
+                "y": 60,
+                "state": "done"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 110,
+                "state": "done"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 235,
+                "y": 120,
+                "state": "done"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 140,
+                "state": "done"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "D"
+              ],
+              [
+                "B",
+                "C"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "D",
+                "E"
+              ],
+              [
+                "C",
+                "E"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "dist",
+              "cells": [
+                {
+                  "v": "A:0",
+                  "state": "done"
+                },
+                {
+                  "v": "B:1",
+                  "state": "done"
+                },
+                {
+                  "v": "D:1",
+                  "state": "done"
+                },
+                {
+                  "v": "C:2",
+                  "state": "done"
+                },
+                {
+                  "v": "E:2",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "BFS from A. Mark on ENQUEUE, not on dequeue — otherwise a node reachable from several frontier nodes gets queued repeatedly.",
+          "1": "Dequeue A (distance 0) → enqueue B, D at distance 1.",
+          "2": "Dequeue B (distance 1) → enqueue C, E at distance 2.",
+          "3": "Dequeue D — every neighbour already has a distance, so nothing new is queued.",
+          "4": "Dequeue C — every neighbour already has a distance, so nothing new is queued.",
+          "5": "Dequeue E — every neighbour already has a distance, so nothing new is queued.",
+          "6": "Visited in non-decreasing distance order, so the first time a node is reached is its shortest path. DFS would reach E in 3 hops when the real distance is 2 — that is why only BFS answers \"fewest edges\"."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "BFS từ A. Đánh dấu lúc ĐƯA VÀO queue, không phải lúc lấy ra — nếu không, nút tới được từ nhiều nút biên sẽ bị nạp nhiều lần.",
+          "1": "Lấy A ra (khoảng cách 0) → nạp B, D ở khoảng cách 1.",
+          "2": "Lấy B ra (khoảng cách 1) → nạp C, E ở khoảng cách 2.",
+          "3": "Lấy D ra — mọi láng giềng đã có khoảng cách, nên không nạp thêm gì.",
+          "4": "Lấy C ra — mọi láng giềng đã có khoảng cách, nên không nạp thêm gì.",
+          "5": "Lấy E ra — mọi láng giềng đã có khoảng cách, nên không nạp thêm gì.",
+          "6": "Thăm theo thứ tự khoảng cách không giảm, nên lần đầu tới một nút chính là đường ngắn nhất. DFS sẽ tới E sau 3 bước dù khoảng cách thật là 2 — vì thế chỉ BFS trả lời được \"ít cạnh nhất\"."
+        }
+      }
+    },
+    "level-order-bfs": {
+      "frames": [
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 150,
+                "y": 14,
+                "state": "active"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 95,
+                "y": 66,
+                "state": "idle"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 205,
+                "y": 66,
+                "state": "idle"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 118,
+                "state": "idle"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 118,
+                "state": "idle"
+              },
+              {
+                "id": "F",
+                "v": "F",
+                "x": 205,
+                "y": 118,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "C"
+              ],
+              [
+                "B",
+                "D"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "C",
+                "F"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "queue",
+              "cells": [
+                {
+                  "v": "A",
+                  "state": "window"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 150,
+                "y": 14,
+                "state": "active"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 95,
+                "y": 66,
+                "state": "idle"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 205,
+                "y": 66,
+                "state": "idle"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 118,
+                "state": "idle"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 118,
+                "state": "idle"
+              },
+              {
+                "id": "F",
+                "v": "F",
+                "x": 205,
+                "y": 118,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "C"
+              ],
+              [
+                "B",
+                "D"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "C",
+                "F"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "size() = 1",
+              "cells": [
+                {
+                  "v": "A",
+                  "state": "active"
+                }
+              ]
+            },
+            {
+              "label": "next level",
+              "cells": [
+                {
+                  "v": "B",
+                  "state": "window"
+                },
+                {
+                  "v": "C",
+                  "state": "window"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 150,
+                "y": 14,
+                "state": "done"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 95,
+                "y": 66,
+                "state": "active"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 205,
+                "y": 66,
+                "state": "active"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 118,
+                "state": "idle"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 118,
+                "state": "idle"
+              },
+              {
+                "id": "F",
+                "v": "F",
+                "x": 205,
+                "y": 118,
+                "state": "idle"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "C"
+              ],
+              [
+                "B",
+                "D"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "C",
+                "F"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "size() = 2",
+              "cells": [
+                {
+                  "v": "B",
+                  "state": "active"
+                },
+                {
+                  "v": "C",
+                  "state": "active"
+                }
+              ]
+            },
+            {
+              "label": "next level",
+              "cells": [
+                {
+                  "v": "D",
+                  "state": "window"
+                },
+                {
+                  "v": "E",
+                  "state": "window"
+                },
+                {
+                  "v": "F",
+                  "state": "window"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 150,
+                "y": 14,
+                "state": "done"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 95,
+                "y": 66,
+                "state": "done"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 205,
+                "y": 66,
+                "state": "done"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 118,
+                "state": "active"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 118,
+                "state": "active"
+              },
+              {
+                "id": "F",
+                "v": "F",
+                "x": 205,
+                "y": 118,
+                "state": "active"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "C"
+              ],
+              [
+                "B",
+                "D"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "C",
+                "F"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "size() = 3",
+              "cells": [
+                {
+                  "v": "D",
+                  "state": "active"
+                },
+                {
+                  "v": "E",
+                  "state": "active"
+                },
+                {
+                  "v": "F",
+                  "state": "active"
+                }
+              ]
+            },
+            {
+              "label": "next level",
+              "cells": [
+                {
+                  "v": "—",
+                  "state": "idle"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "shape": {
+            "nodes": [
+              {
+                "id": "A",
+                "v": "A",
+                "x": 150,
+                "y": 14,
+                "state": "done"
+              },
+              {
+                "id": "B",
+                "v": "B",
+                "x": 95,
+                "y": 66,
+                "state": "done"
+              },
+              {
+                "id": "C",
+                "v": "C",
+                "x": 205,
+                "y": 66,
+                "state": "done"
+              },
+              {
+                "id": "D",
+                "v": "D",
+                "x": 60,
+                "y": 118,
+                "state": "done"
+              },
+              {
+                "id": "E",
+                "v": "E",
+                "x": 130,
+                "y": 118,
+                "state": "done"
+              },
+              {
+                "id": "F",
+                "v": "F",
+                "x": 205,
+                "y": 118,
+                "state": "done"
+              }
+            ],
+            "edges": [
+              [
+                "A",
+                "B"
+              ],
+              [
+                "A",
+                "C"
+              ],
+              [
+                "B",
+                "D"
+              ],
+              [
+                "B",
+                "E"
+              ],
+              [
+                "C",
+                "F"
+              ]
+            ]
+          },
+          "rows": [
+            {
+              "label": "level 0",
+              "cells": [
+                {
+                  "v": "A",
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "level 1",
+              "cells": [
+                {
+                  "v": "B",
+                  "state": "done"
+                },
+                {
+                  "v": "C",
+                  "state": "done"
+                }
+              ]
+            },
+            {
+              "label": "level 2",
+              "cells": [
+                {
+                  "v": "D",
+                  "state": "done"
+                },
+                {
+                  "v": "E",
+                  "state": "done"
+                },
+                {
+                  "v": "F",
+                  "state": "done"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Level order needs to know where each level ends. Snapshot queue.size() BEFORE draining — reading it inside the loop grows as you enqueue, and the levels blur together.",
+          "1": "size() = 1: drain exactly 1 → emit [A], enqueue B, C.",
+          "2": "size() = 2: drain exactly 2 → emit [B, C], enqueue D, E, F.",
+          "3": "size() = 3: drain exactly 3 → emit [D, E, F], enqueue nothing.",
+          "4": "Result [[A], [B,C], [D,E,F]]. Right-side view, per-level max and zigzag are all this loop with one line changed."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Duyệt theo tầng cần biết mỗi tầng kết thúc ở đâu. Hãy chụp queue.size() TRƯỚC khi rút — đọc nó trong vòng lặp thì nó tăng khi bạn nạp thêm, và các tầng nhoè vào nhau.",
+          "1": "size() = 1: rút đúng 1 → xuất [A], nạp B, C.",
+          "2": "size() = 2: rút đúng 2 → xuất [B, C], nạp D, E, F.",
+          "3": "size() = 3: rút đúng 3 → xuất [D, E, F], nạp không gì cả.",
+          "4": "Kết quả [[A], [B,C], [D,E,F]]. Góc nhìn bên phải, max mỗi tầng và zigzag đều là vòng lặp này chỉ đổi một dòng."
+        }
+      }
+    },
+    "dynamic-programming": {
+      "frames": [
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "active"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "active"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "active"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "active"
+                },
+                {
+                  "v": "",
+                  "state": "idle"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                },
+                {
+                  "v": 10,
+                  "state": "active"
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "grid": {
+            "rows": [
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 1,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 2,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 4,
+                  "state": "done"
+                }
+              ],
+              [
+                {
+                  "v": 1,
+                  "state": "done"
+                },
+                {
+                  "v": 3,
+                  "state": "done"
+                },
+                {
+                  "v": 6,
+                  "state": "done"
+                },
+                {
+                  "v": 10,
+                  "state": "active"
+                }
+              ]
+            ]
+          }
+        }
+      ],
+      "en": {
+        "notes": {
+          "0": "Base case: one way along the top row and the left column — you can only travel in a straight line.",
+          "1": "dp[1][1] = dp[0][1] + dp[1][0] = 1 + 1 = 2 — arrive from above or from the left.",
+          "2": "dp[1][2] = dp[0][2] + dp[1][1] = 1 + 2 = 3 — arrive from above or from the left.",
+          "3": "dp[1][3] = dp[0][3] + dp[1][2] = 1 + 3 = 4 — arrive from above or from the left.",
+          "4": "dp[2][1] = dp[1][1] + dp[2][0] = 2 + 1 = 3 — arrive from above or from the left.",
+          "5": "dp[2][2] = dp[1][2] + dp[2][1] = 3 + 3 = 6 — arrive from above or from the left.",
+          "6": "dp[2][3] = dp[1][3] + dp[2][2] = 4 + 6 = 10 — arrive from above or from the left.",
+          "7": "Answer 10 in the bottom-right. Plain recursion recomputes the shared cells exponentially; memoising the same recurrence makes it O(m·n) — and since each row reads only the one above, O(n) space is enough."
+        }
+      },
+      "vi": {
+        "notes": {
+          "0": "Cơ sở: chỉ một lối dọc hàng trên và cột trái — bạn chỉ có thể đi thẳng.",
+          "1": "dp[1][1] = dp[0][1] + dp[1][0] = 1 + 1 = 2 — tới từ trên hoặc từ trái.",
+          "2": "dp[1][2] = dp[0][2] + dp[1][1] = 1 + 2 = 3 — tới từ trên hoặc từ trái.",
+          "3": "dp[1][3] = dp[0][3] + dp[1][2] = 1 + 3 = 4 — tới từ trên hoặc từ trái.",
+          "4": "dp[2][1] = dp[1][1] + dp[2][0] = 2 + 1 = 3 — tới từ trên hoặc từ trái.",
+          "5": "dp[2][2] = dp[1][2] + dp[2][1] = 3 + 3 = 6 — tới từ trên hoặc từ trái.",
+          "6": "dp[2][3] = dp[1][3] + dp[2][2] = 4 + 6 = 10 — tới từ trên hoặc từ trái.",
+          "7": "Đáp án 10 ở góc dưới-phải. Đệ quy thường tính lại các ô dùng chung theo hàm mũ; memo cùng công thức đó là O(m·n) — và vì mỗi hàng chỉ đọc hàng ngay trên, O(n) bộ nhớ là đủ."
+        }
+      }
+    }
+  }
+}

@@ -19,6 +19,7 @@ import { renderStats, mountStats } from './views/stats.js';
 import { renderAdmin, mountAdmin } from './views/admin.js';
 import { renderCaseStudies, mountCaseStudies } from './views/case-studies.js';
 import { renderReleaseNotes, mountReleaseNotes } from './views/release-notes.js';
+import { mountDsaPlayers, stopDsaPlayers } from './views/dsa-player.js';
 
 let TOPICS = [];
 let current = 0;
@@ -71,7 +72,11 @@ const GUIDE_MD = [
   '',
   'Raw HTML (SVG diagrams, tables) can be embedded straight into the Markdown. To update content: edit the topic\'s file under `data/topics/`, then `git push` — GitHub Actions deploys it.',
   '',
+  'The 15 patterns in **DSA & LeetCode** are *animated*: press play and each step runs in turn, or scrub and arrow-key through them. Frames live in `data/dsa-animations.json` and were produced by running the real algorithm, so the animation cannot disagree with the code beside it. The drawing is shared between languages and only the step captions are translated.',
+  '',
   '**Release Notes** (last entry in `Other`) records what material arrived and when. Entries live in `data/release-notes.json`, newest release first, so adding one never touches `app.js`. Each release and change carries `en` and `vi` blocks in that one file and follows the header switch like any other material; a note written in only one language falls back rather than rendering blank. A change may name a topic by its `key` — the view resolves that to the topic\'s current label, so renaming a topic never leaves a stale note behind.',
+  '',
+  'Write **one entry per release** and keep them newest-first; releases that share a date are grouped under a single date heading when the page renders, with a `2 releases · 3 changes` roll-up. So several releases in one day cost nothing extra — do not merge them by hand.',
   ':::'
 ].join('\n');
 
@@ -199,6 +204,11 @@ function wireQcards(root, onMark) {
         Store.logOpen(card.dataset.qid);
         if (Store.markReviewed(card.dataset.qid)) card.classList.add('done');
         if (onMark) onMark();
+        // Animations mount on first open, not on render: a collapsed card must
+        // not fetch the frame data or leave a timer running.
+        mountDsaPlayers(card);
+      } else {
+        stopDsaPlayers(card);
       }
     });
 
@@ -211,7 +221,12 @@ function wireQcards(root, onMark) {
         const next = shown === 'vi' ? 'en' : 'vi';
         const nextText = pair[next] || pair.en;   // en always exists
         card.querySelector('.qtext').textContent = nextText.q;
+        // Replacing .answer-body drops the old player nodes, so stop their
+        // timers first and re-mount into the fresh markup.
+        stopDsaPlayers(card);
         card.querySelector('.answer-body').innerHTML = renderMarkdown(nextText.a);
+        // This card's own language, which may differ from Content.lang.
+        if (card.classList.contains('open')) mountDsaPlayers(card, next);
         langBtn.dataset.itemLang = next;
         langBtn.setAttribute('aria-checked', String(next === 'vi'));
         const knob = langBtn.querySelector('.lang-knob');
@@ -620,6 +635,8 @@ function buildTypeBar() {
 }
 
 function renderDay() {
+  // panel.innerHTML below detaches every card; stop their timers first.
+  stopDsaPlayers(panel);
   const t = TOPICS[current];
   const sectionsHTML = t.sections.map(sec =>
     '<div class="section-h">' + sec.title + '<span class="sline"></span></div>'
@@ -650,6 +667,7 @@ function renderDay() {
       c.querySelector('.qhead').setAttribute('aria-expanded', anyClosed);
       if (anyClosed && Store.markReviewed(c.dataset.qid)) c.classList.add('done');
     });
+    if (anyClosed) mountDsaPlayers(panel); else stopDsaPlayers(panel);
     updateProgress(); paintTopicButton(); syncToggleAllLabel();
   });
   syncToggleAllLabel();

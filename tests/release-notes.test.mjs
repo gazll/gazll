@@ -21,8 +21,12 @@ const MANIFEST = JSON.parse(await readFile(path.join(pub, 'data/manifest.json'),
 const releases = NOTES.releases || [];
 const changes = releases.flatMap(r => (r.changes || []).map(c => ({ release: r, change: c })));
 const LANGS = ['en', 'vi'];
-/* Targets that name something other than a topic: a feature, or the whole tree. */
-const NON_TOPIC_TARGETS = new Set(['case-studies', 'boot', 'language', 'all-topics']);
+/* Targets that name something other than a topic: a feature, or the whole tree.
+   Keep this closed rather than skipping any unresolvable target — a typo in a
+   topic key should fail here, not silently render without its badge. */
+const NON_TOPIC_TARGETS = new Set([
+  'case-studies', 'boot', 'language', 'all-topics', 'release-notes'
+]);
 
 test('there is at least one release, and every release is dated ISO yyyy-mm-dd', () => {
   assert.ok(releases.length > 0);
@@ -35,7 +39,21 @@ test('there is at least one release, and every release is dated ISO yyyy-mm-dd',
 
 test('releases are ordered newest first — the view does not sort', () => {
   const dates = releases.map(r => r.date);
+  // Non-increasing, not strictly decreasing: a day can hold several releases.
   assert.deepEqual(dates, [...dates].sort().reverse());
+});
+
+test('releases sharing a date stay adjacent, so grouping never splits a day', () => {
+  const seen = new Set();
+  let prev = null;
+  for (const r of releases) {
+    if (r.date !== prev) {
+      assert.equal(seen.has(r.date), false,
+        `${r.date} appears again after another date — grouping would show it twice`);
+      seen.add(r.date);
+      prev = r.date;
+    }
+  }
 });
 
 test('every release and every change carries both languages', () => {
@@ -108,6 +126,38 @@ test('release notes are not study items — no ids, difficulty, or progress weig
   assert.equal(/"[0-9]{2}-[a-z0-9-]+\.[a-z0-9-]+\.q\d+"/.test(raw), false);
 });
 
+test('groupByDate collects a day into one group and rolls its totals up', async () => {
+  const { groupByDate } = await import(
+    pathToFileURL(path.join(pub, 'views/release-notes.js')).href);
+
+  const days = groupByDate([
+    { date: '2026-08-09', items_added: 2, changes: [{}, {}] },
+    { date: '2026-08-09', items_added: 3, changes: [{}] },
+    { date: '2026-08-08', changes: [{}] }
+  ]);
+
+  assert.equal(days.length, 2, 'two distinct dates');
+  assert.equal(days[0].date, '2026-08-09');
+  assert.equal(days[0].releases.length, 2, 'both releases land in the same day');
+  assert.equal(days[0].items_added, 5, 'question counts add up across the day');
+  assert.equal(days[0].changeCount, 3);
+  assert.equal(days[1].releases.length, 1);
+  assert.equal(days[1].items_added, 0, 'a release with no items_added counts as zero');
+
+  // Input order is preserved: the data file is already newest-first.
+  assert.deepEqual(groupByDate([]).length, 0);
+});
+
+test('the real data groups without losing a release', async () => {
+  const { groupByDate } = await import(
+    pathToFileURL(path.join(pub, 'views/release-notes.js')).href);
+  const days = groupByDate(releases);
+  assert.equal(days.reduce((n, d) => n + d.releases.length, 0), releases.length);
+  assert.equal(days.length, new Set(releases.map(r => r.date)).size);
+  const dates = days.map(d => d.date);
+  assert.deepEqual(dates, [...new Set(dates)], 'a date was grouped twice');
+});
+
 test('the view renders both languages and falls back rather than blanking', async () => {
   const store = new Map();
   globalThis.localStorage = {
@@ -149,8 +199,13 @@ test('the view renders both languages and falls back rather than blanking', asyn
   const en = await render('en');
   const vi = await render('vi');
 
+  const dayCount = new Set(releases.map(r => r.date)).size;
   for (const html of [en, vi]) {
+    // One block per release, but the date is printed once per day.
     assert.equal((html.match(/class="rn-rel"/g) || []).length, releases.length);
+    assert.equal((html.match(/class="rn-day"/g) || []).length, dayCount);
+    assert.equal((html.match(/class="rn-date"/g) || []).length, dayCount,
+      'a date was repeated instead of grouping its releases');
     assert.equal((html.match(/<li/g) || []).length, (html.match(/<\/li>/g) || []).length);
     assert.equal((html.match(/<div/g) || []).length, (html.match(/<\/div>/g) || []).length);
     assert.equal(/class="rn-text"><\/div>/.test(html), false, 'a change rendered with no text');

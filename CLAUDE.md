@@ -41,6 +41,7 @@ public/
     i18n.js          shared language storage + paired base/.vi JSON loader
     content.js       topic data model; owns the global content language and change events
     case-studies.js  numbered bilingual case-study data model + article-body cache
+    dsa-anim.js      DSA step-frame model + pure SVG frame renderer (no DOM)
     api.js           transport to Apps Script
     auth.js          Google Identity Services + header avatar/state machine
     store.js         offline-first progress, notes, study log
@@ -51,12 +52,14 @@ public/
     admin.js         all-user overview (admin role only)
     case-studies.js  long-form case-study library + article reader/lightbox
     release-notes.js bilingual changelog of the material; chrome stays English
+    dsa-player.js    play/pause/step control for the DSA animations
   data/
     manifest.json       ordered list of every topic (n, topic_type, file) — 25 rows, Microservices is n=25
     meta.json            label/title/intro/tags/key/topic_type per topic, VI + EN in one file
     topics/NN-slug.json     complete English base, one file per topic (360 items total across 25 files)
     topics/NN-slug.vi.json  complete Vietnamese companion, same shape and item IDs
     release-notes.json   dated changelog of the material, VI + EN in one file
+    dsa-animations.json  step frames for topic 19's 15 patterns; shared frames, per-language captions
     case-studies/manifest.json  ordered case-study rows (n, file, slug, immutable source fields)
     case-studies/meta.json      library/category/article metadata, VI + EN in one file
     case-studies/NN-slug.json     English guide + numbered English body path
@@ -65,7 +68,7 @@ public/
     interviews.json     seed entries, merged under everyone's own Sheet rows
   assets/case-studies/  local article figures; never hotlinked from a publisher
 apps-script/Code.gs  the entire backend (Google Sheet as database)
-tests/               security · interviews.merge · auth.state · content.i18n · case-studies · assets.version · release-notes
+tests/               security · interviews.merge · auth.state · content.i18n · case-studies · assets.version · release-notes · dsa-anim
 tools/               validate-content.mjs · audit-content.mjs · add-content.mjs · stamp-assets.mjs
 docs/content-playbook.md  how to add/update study content end to end
 secret/              GITIGNORED. Personal setup notes and credentials
@@ -139,6 +142,38 @@ secret/              GITIGNORED. Personal setup notes and credentials
   card shares one DOM, so `url(#ar6)` resolves to whichever diagram rendered
   first — two diagrams reusing an id silently borrow each other's arrowheads.
   Name them after the item (`ar6_165`) rather than sequentially.
+
+- **Release notes are one entry per release, grouped by day at render time.**
+  `data/release-notes.json` stays append-friendly — a new release is a new row,
+  newest first — and `groupByDate` in `views/release-notes.js` collects rows
+  sharing a `date` under one heading, so the date is printed once however many
+  releases it holds. Do not merge same-day releases by hand: several releases
+  in one day is the normal case and each keeps its own title, with a
+  `2 releases · 3 changes` roll-up on the heading. Grouping keys on the date
+  string through a `Map`, so out-of-order rows are merged rather than
+  duplicated, but the **group order follows first appearance** — keep the file
+  newest-first or a day will surface in the wrong place. Tests pin the grouping
+  and that same-date rows stay adjacent.
+
+- **A DSA animation is mounted, never rendered inline.** `renderMarkdown`
+  returns a string, so topic 19's pattern items carry only
+  `<figure class='dgm dsa-anim' data-dsa='two-pointers'></figure>` and
+  `views/dsa-player.js` fills it. `<figure>` and not `<div>`: `div` is not in
+  `validate-content.mjs`'s `KNOWN` tag list, so a `<div>` placeholder fails
+  validation. Every path that replaces card markup must call `stopDsaPlayers`
+  first and `mountDsaPlayers` after — `renderDay`, "Expand all", collapsing a
+  card, and the per-card language switch all do. Skip the stop and the
+  `setInterval` keeps stepping a detached node. The per-card switch flips one
+  card without touching `Content.lang`, which is why `mountDsaPlayers` takes an
+  explicit language.
+
+- **Animation frames are snapshots, and captions are per language.** A frame
+  carries the whole visual state, so scrubbing to any step is O(1) and cannot
+  drift the way replayed deltas do. `frames` are shared between EN and VI and
+  only `en.notes[i]` / `vi.notes[i]` differ — a translation therefore cannot
+  fall out of step with the drawing. Captions are printed into an HTML
+  `<figcaption>`, never into the SVG: `<text>` does not wrap, and the notes run
+  past 200 characters.
 
 - **Syntax-highlight classes are scoped to `pre code`.** `.k .s .c .n .r .f`
   are one letter long and collide with UI classes — `.f` is also the interview

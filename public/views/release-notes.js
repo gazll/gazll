@@ -69,21 +69,62 @@ function changeRow(change, lang) {
     + '</li>';
 }
 
+/* One release inside a day. The date is on the day heading, not here — several
+   releases can share a date and repeating it just pushed the titles apart. */
 function releaseBlock(release, lang) {
   const local = localizedRecord(release, lang);
   const added = Number(release.items_added) > 0
     ? '<span class="rn-added">' + Number(release.items_added) + ' new questions</span>'
     : '';
+  const title = String(local.title || '').trim();
   return '<section class="rn-rel">'
-    + '<header class="rn-relhead">'
-    + '<time class="rn-date" datetime="' + escapeHtml(String(release.date || '')) + '">'
-    + humanDate(release.date, lang) + '</time>'
-    + '<h3 class="rn-title">' + escapeHtml(String(local.title || '')) + '</h3>'
-    + added
-    + '</header>'
+    + (title || added
+      ? '<header class="rn-relhead">'
+        + (title ? '<h4 class="rn-title">' + escapeHtml(title) + '</h4>' : '')
+        + added + '</header>'
+      : '')
     + '<ul class="rn-changes">'
     + (release.changes || []).map(c => changeRow(c, lang)).join('')
     + '</ul>'
+    + '</section>';
+}
+
+/* Releases sharing a date, newest date first. The data file stays one entry per
+   release — appending is what people actually do — and the grouping happens
+   here, so a second release on a day never repeats its date. */
+export function groupByDate(releases) {
+  const days = new Map();
+  for (const r of releases || []) {
+    const key = String(r.date || '');
+    if (!days.has(key)) days.set(key, []);
+    days.get(key).push(r);
+  }
+  return [...days.entries()].map(([date, items]) => ({
+    date,
+    releases: items,
+    // Totals roll up so the day heading answers "what landed" on its own.
+    items_added: items.reduce((n, r) => n + (Number(r.items_added) || 0), 0),
+    changeCount: items.reduce((n, r) => n + (r.changes || []).length, 0)
+  }));
+}
+
+function dayBlock(day, lang) {
+  const many = day.releases.length > 1;
+  const added = day.items_added > 0
+    ? '<span class="rn-added">' + day.items_added + ' new questions</span>'
+    : '';
+  // With one release the title carries the day, so the roll-up would be noise.
+  const summary = many
+    ? '<span class="rn-daymeta">' + day.releases.length + ' releases · '
+      + day.changeCount + ' change' + (day.changeCount === 1 ? '' : 's') + '</span>'
+    : '';
+  return '<section class="rn-day">'
+    + '<header class="rn-dayhead">'
+    + '<time class="rn-date" datetime="' + escapeHtml(day.date) + '">'
+    + humanDate(day.date, lang) + '</time>'
+    + summary + (many ? added : '')
+    + '</header>'
+    + day.releases.map(r => releaseBlock(r, lang)).join('')
     + '</section>';
 }
 
@@ -107,9 +148,9 @@ export async function mountReleaseNotes(host) {
     if (!Content.loaded) await Content.load(Content.lang);
     if (!cache) cache = await fetchJson(DATA_URL);
     const lang = Content.lang;
-    const releases = cache.releases || [];
-    body.innerHTML = releases.length
-      ? releases.map(r => releaseBlock(r, lang)).join('')
+    const days = groupByDate(cache.releases || []);
+    body.innerHTML = days.length
+      ? days.map(d => dayBlock(d, lang)).join('')
       : '<p class="rn-empty">No release notes yet.</p>';
   } catch (e) {
     body.innerHTML = '<p class="rn-error">Release notes could not be loaded. '
